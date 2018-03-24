@@ -312,9 +312,9 @@ func GenesisBlockForTesting(db epvdb.Database, addr common.Address, balance *big
 func DefaultGenesisBlock() *Genesis {
 	return &Genesis{
 		Config:     params.MainnetChainConfig,
-		Timestamp:  1521859350,
+		Timestamp:  1519957335,
 		ExtraData:  hexutil.MustDecode("0x0000000000000000000000000000000000000000000000000000000000000000d8b06e69a939154b6fbced56e407adc9e4721842c3402ef48ba5e8bbba9c4ef8223a1b81486ef045d2edeb3c991d569e9bf3453032d9bf40fc5f99030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
-		GasLimit:   5000,
+		GasLimit:   4712388, //5000,
 		Difficulty: big.NewInt(1),
 		Alloc:      decodePrealloc(mainnetAllocData),
 	}
