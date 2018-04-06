@@ -12,7 +12,7 @@ type EAPI struct {
 	epvdpos *EPVDpos
 }
 
-func (e *EAPI) GetSnapshot(number *rpc.BlockNumber) (*Snapshot, error) {
+func (e *EAPI) GetSnapshot(number *rpc.BlockNumber) (*Archive, error) {
 	var header *types.Header
 	if number == nil || *number == rpc.LatestBlockNumber {
 		header = e.chain.CurrentHeader()
@@ -43,7 +43,7 @@ func (e *EAPI) Proposals() map[common.Address]bool {
 	return proposals
 }
 
-func (e *EAPI) GetSnapshotAtHash(hash common.Hash) (*Snapshot, error) {
+func (e *EAPI) GetSnapshotAtHash(hash common.Hash) (*Archive, error) {
 	header := e.chain.GetHeaderByHash(hash)
 	if header == nil {
 		return nil, errUnknownBlock
@@ -61,11 +61,11 @@ func (e *EAPI) GetSigners(number *rpc.BlockNumber) ([]common.Address, error) {
 	if header == nil {
 		return nil, errUnknownBlock
 	}
-	snap, err := e.epvdpos.snapshot(e.chain, header.Number.Uint64(), header.Hash(), nil)
+	archive, err := e.epvdpos.snapshot(e.chain, header.Number.Uint64(), header.Hash(), nil)
 	if err != nil {
 		return nil, err
 	}
-	return snap.signers(), nil
+	return archive.signers(), nil
 }
 
 func (e *EAPI) Discard(address common.Address) {
@@ -80,9 +80,9 @@ func (e *EAPI) GetSignersAtHash(hash common.Hash) ([]common.Address, error) {
 	if header == nil {
 		return nil, errUnknownBlock
 	}
-	snap, err := e.epvdpos.snapshot(e.chain, header.Number.Uint64(), header.Hash(), nil)
+	archive, err := e.epvdpos.snapshot(e.chain, header.Number.Uint64(), header.Hash(), nil)
 	if err != nil {
 		return nil, err
 	}
-	return snap.signers(), nil
+	return archive.signers(), nil
 }
