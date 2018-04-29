@@ -179,12 +179,10 @@ func (info *nodeInfos) Report() map[string]string {
 		report["Gas price (minimum accepted)"] = fmt.Sprintf("%0.3f GWei", info.gasPrice)
 
 		if info.epvcbase != "" {
-			// EPVhash proof-of-work miner
 			report["EPVhash directory"] = info.epvhashdir
 			report["Miner account"] = info.epvcbase
 		}
 		if info.keyJSON != "" {
-			// Clique proof-of-authority signer
 			var key struct {
 				Address string `json:"address"`
 			}

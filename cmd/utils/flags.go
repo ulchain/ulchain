@@ -33,7 +33,7 @@ import (
 	"github.com/epvchain/go-epvchain/common"
 	"github.com/epvchain/go-epvchain/common/fdlimit"
 	"github.com/epvchain/go-epvchain/consensus"
-	"github.com/epvchain/go-epvchain/consensus/clique"
+	"github.com/epvchain/go-epvchain/consensus/epvdpos"
 	"github.com/epvchain/go-epvchain/consensus/epvhash"
 	"github.com/epvchain/go-epvchain/core"
 	"github.com/epvchain/go-epvchain/core/state"
@@ -137,11 +137,11 @@ var (
 	}
 	RinkebyFlag = cli.BoolFlag{
 		Name:  "rinkeby",
-		Usage: "Rinkeby network: pre-configured proof-of-authority test network",
+		Usage: "Rinkeby network: pre-configured dpos test network",
 	}
 	DeveloperFlag = cli.BoolFlag{
 		Name:  "dev",
-		Usage: "Ephemeral proof-of-authority network with a pre-funded developer account, mining enabled",
+		Usage: "Ephemeral dpos network with a pre-funded developer account, mining enabled",
 	}
 	DeveloperPeriodFlag = cli.IntFlag{
 		Name:  "dev.period",
@@ -1223,8 +1223,8 @@ func MakeChain(ctx *cli.Context, stack *node.Node) (chain *core.BlockChain, chai
 		Fatalf("%v", err)
 	}
 	var engine consensus.Engine
-	if config.Clique != nil {
-		engine = clique.New(config.Clique, chainDb)
+	if config.DPos != nil {
+		engine = epvdpos.New(config.DPos, chainDb)
 	} else {
 		engine = epvhash.NewFaker()
 		if !ctx.GlobalBool(FakePoWFlag.Name) {

@@ -9,10 +9,10 @@ import (
 
 type EAPI struct {
 	chain  consensus.ChainReader
-	epvdpos *EPVDpos
+	dpos *DPos
 }
 
-func (e *EAPI) GetSnapshot(number *rpc.BlockNumber) (*Archive, error) {
+func (e *EAPI) GetArchive(number *rpc.BlockNumber) (*Archive, error) {
 	var header *types.Header
 	if number == nil || *number == rpc.LatestBlockNumber {
 		header = e.chain.CurrentHeader()
@@ -22,33 +22,33 @@ func (e *EAPI) GetSnapshot(number *rpc.BlockNumber) (*Archive, error) {
 	if header == nil {
 		return nil, errUnknownBlock
 	}
-	return e.epvdpos.snapshot(e.chain, header.Number.Uint64(), header.Hash(), nil)
+	return e.dpos.archive(e.chain, header.Number.Uint64(), header.Hash(), nil)
 }
 
 func (e *EAPI) Propose(address common.Address, auth bool) {
-	e.epvdpos.lock.Lock()
-	defer e.epvdpos.lock.Unlock()
+	e.dpos.lock.Lock()
+	defer e.dpos.lock.Unlock()
 
-	e.epvdpos.proposals[address] = auth
+	e.dpos.proposals[address] = auth
 }
 
 func (e *EAPI) Proposals() map[common.Address]bool {
-	e.epvdpos.lock.RLock()
-	defer e.epvdpos.lock.RUnlock()
+	e.dpos.lock.RLock()
+	defer e.dpos.lock.RUnlock()
 
 	proposals := make(map[common.Address]bool)
-	for address, auth := range e.epvdpos.proposals {
+	for address, auth := range e.dpos.proposals {
 		proposals[address] = auth
 	}
 	return proposals
 }
 
-func (e *EAPI) GetSnapshotAtHash(hash common.Hash) (*Archive, error) {
+func (e *EAPI) GetArchiveAtHash(hash common.Hash) (*Archive, error) {
 	header := e.chain.GetHeaderByHash(hash)
 	if header == nil {
 		return nil, errUnknownBlock
 	}
-	return e.epvdpos.snapshot(e.chain, header.Number.Uint64(), header.Hash(), nil)
+	return e.dpos.archive(e.chain, header.Number.Uint64(), header.Hash(), nil)
 }
 
 func (e *EAPI) GetSigners(number *rpc.BlockNumber) ([]common.Address, error) {
@@ -61,7 +61,7 @@ func (e *EAPI) GetSigners(number *rpc.BlockNumber) ([]common.Address, error) {
 	if header == nil {
 		return nil, errUnknownBlock
 	}
-	archive, err := e.epvdpos.snapshot(e.chain, header.Number.Uint64(), header.Hash(), nil)
+	archive, err := e.dpos.archive(e.chain, header.Number.Uint64(), header.Hash(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -69,10 +69,10 @@ func (e *EAPI) GetSigners(number *rpc.BlockNumber) ([]common.Address, error) {
 }
 
 func (e *EAPI) Discard(address common.Address) {
-	e.epvdpos.lock.Lock()
-	defer e.epvdpos.lock.Unlock()
+	e.dpos.lock.Lock()
+	defer e.dpos.lock.Unlock()
 
-	delete(e.epvdpos.proposals, address)
+	delete(e.dpos.proposals, address)
 }
 
 func (e *EAPI) GetSignersAtHash(hash common.Hash) ([]common.Address, error) {
@@ -80,7 +80,7 @@ func (e *EAPI) GetSignersAtHash(hash common.Hash) ([]common.Address, error) {
 	if header == nil {
 		return nil, errUnknownBlock
 	}
-	archive, err := e.epvdpos.snapshot(e.chain, header.Number.Uint64(), header.Hash(), nil)
+	archive, err := e.dpos.archive(e.chain, header.Number.Uint64(), header.Hash(), nil)
 	if err != nil {
 		return nil, err
 	}

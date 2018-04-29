@@ -29,7 +29,7 @@ import (
 	"github.com/epvchain/go-epvchain/common"
 	"github.com/epvchain/go-epvchain/common/hexutil"
 	"github.com/epvchain/go-epvchain/consensus"
-	"github.com/epvchain/go-epvchain/consensus/clique"
+	"github.com/epvchain/go-epvchain/consensus/epvdpos"
 	"github.com/epvchain/go-epvchain/consensus/epvhash"
 	"github.com/epvchain/go-epvchain/core"
 	"github.com/epvchain/go-epvchain/core/bloombits"
@@ -212,9 +212,8 @@ func CreateDB(ctx *node.ServiceContext, config *Config, name string) (epvdb.Data
 
 // CreateConsensusEngine creates the required type of consensus engine instance for an EPVchain service
 func CreateConsensusEngine(ctx *node.ServiceContext, config *epvhash.Config, chainConfig *params.ChainConfig, db epvdb.Database) consensus.Engine {
-	// If proof-of-authority is requested, set it up
-	if chainConfig.Clique != nil {
-		return clique.New(chainConfig.Clique, db)
+	if chainConfig.DPos != nil {
+		return epvdpos.New(chainConfig.DPos, db)
 	}
 	// Otherwise assume proof-of-work
 	switch {
@@ -340,13 +339,13 @@ func (s *EPVchain) StartMining(local bool) error {
 		log.Error("Cannot start mining without epvcbase", "err", err)
 		return fmt.Errorf("epvcbase missing: %v", err)
 	}
-	if clique, ok := s.engine.(*clique.Clique); ok {
+	if dpos, ok := s.engine.(*epvdpos.DPos); ok {
 		wallet, err := s.accountManager.Find(accounts.Account{Address: eb})
 		if wallet == nil || err != nil {
 			log.Error("EPVCbase account unavailable locally", "err", err)
 			return fmt.Errorf("signer missing: %v", err)
 		}
-		clique.Authorize(eb, wallet.SignHash)
+		dpos.Authorize(eb, wallet.SignHash)
 	}
 	if local {
 		// If local (CPU) mining is started, we can disable the transaction rejection

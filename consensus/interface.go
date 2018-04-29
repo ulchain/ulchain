@@ -1,4 +1,3 @@
-// Copyright 2017 The go-epvchain Authors
 // This file is part of the go-epvchain library.
 //
 // The go-epvchain library is free software: you can redistribute it and/or modify

@@ -24,7 +24,7 @@ import (
 )
 
 var (
-	MainnetGenesisHash = common.HexToHash("0x589cab45b83a5e0c304e8812341d57a73ca0480ae5267daa5bfdb0355665dc5d") // Mainnet genesis hash to enforce below configs on
+	MainnetGenesisHash = common.HexToHash("0x47b581352996c90bf12c73d0796d9e89bc847692407517224b7f70ea8db5de35") // Mainnet genesis hash to enforce below configs on
 	TestnetGenesisHash = common.HexToHash("0x41941023680923e0fe4d74a34bdac8141f2540e3ae90623718e47d66d1ca4a2d") // Testnet genesis hash to enforce below configs on
 )
 
@@ -41,7 +41,7 @@ var (
 		EIP158Block:    big.NewInt(3),
 		ByzantiumBlock: big.NewInt(4),
 
-		Clique: &CliqueConfig{
+		DPos: &DPosConfig{
 			Period: 10,
 			Epoch:  30000,
 		},
@@ -74,25 +74,14 @@ var (
 		EIP158Block:    big.NewInt(3),
 		ByzantiumBlock: big.NewInt(1035301),
 
-		Clique: &CliqueConfig{
+		DPos: &DPosConfig{
 			Period: 15,
 			Epoch:  30000,
 		},
 	}
 
-	// AllEPVhashProtocolChanges contains every protocol change (EIPs) introduced
-	// and accepted by the EPVchain core developers into the EPVhash consensus.
-	//
-	// This configuration is intentionally not using keyed fields to force anyone
-	// adding flags to the config to also have to set these fields.
 	AllEPVhashProtocolChanges = &ChainConfig{big.NewInt(1337), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), new(EPVhashConfig), nil}
-
-	// AllCliqueProtocolChanges contains every protocol change (EIPs) introduced
-	// and accepted by the EPVchain core developers into the Clique consensus.
-	//
-	// This configuration is intentionally not using keyed fields to force anyone
-	// adding flags to the config to also have to set these fields.
-	AllCliqueProtocolChanges = &ChainConfig{big.NewInt(1337), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, &CliqueConfig{Period: 0, Epoch: 30000}}
+	AllDPosProtocolChanges = &ChainConfig{big.NewInt(1337), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, &DPosConfig{Period: 0, Epoch: 30000}}
 
 	TestChainConfig = &ChainConfig{big.NewInt(1), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), new(EPVhashConfig), nil}
 	TestRules       = TestChainConfig.Rules(new(big.Int))
@@ -122,7 +111,7 @@ type ChainConfig struct {
 
 	// Various consensus engines
 	EPVhash *EPVhashConfig `json:"epvhash,omitempty"`
-	Clique *CliqueConfig `json:"clique,omitempty"`
+	DPos *DPosConfig `json:"dpos,omitempty"`
 }
 
 // EPVhashConfig is the consensus engine configs for proof-of-work based sealing.
@@ -133,15 +122,14 @@ func (c *EPVhashConfig) String() string {
 	return "epvhash"
 }
 
-// CliqueConfig is the consensus engine configs for proof-of-authority based sealing.
-type CliqueConfig struct {
-	Period uint64 `json:"period"` // Number of seconds between blocks to enforce
-	Epoch  uint64 `json:"epoch"`  // Epoch length to reset votes and checkpoint
+type DPosConfig struct {
+	Period uint64 `json:"period"`
+	Epoch  uint64 `json:"epoch"`
 }
 
 // String implements the stringer interface, returning the consensus engine details.
-func (c *CliqueConfig) String() string {
-	return "clique"
+func (c *DPosConfig) String() string {
+	return "dpos"
 }
 
 // String implements the fmt.Stringer interface.
@@ -150,8 +138,8 @@ func (c *ChainConfig) String() string {
 	switch {
 	case c.EPVhash != nil:
 		engine = c.EPVhash
-	case c.Clique != nil:
-		engine = c.Clique
+	case c.DPos != nil:
+		engine = c.DPos
 	default:
 		engine = "unknown"
 	}
