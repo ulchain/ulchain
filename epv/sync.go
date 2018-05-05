@@ -21,11 +21,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/epvchain/go-epvchain/common"
-	"github.com/epvchain/go-epvchain/core/types"
+	"github.com/epvchain/go-epvchain/public"
+	"github.com/epvchain/go-epvchain/kernel/types"
 	"github.com/epvchain/go-epvchain/epv/downloader"
-	"github.com/epvchain/go-epvchain/log"
-	"github.com/epvchain/go-epvchain/p2p/discover"
+	"github.com/epvchain/go-epvchain/book"
+	"github.com/epvchain/go-epvchain/peer/discover"
 )
 
 const (

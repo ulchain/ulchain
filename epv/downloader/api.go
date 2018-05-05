@@ -21,8 +21,8 @@ import (
 	"sync"
 
 	epvchain "github.com/epvchain/go-epvchain"
-	"github.com/epvchain/go-epvchain/event"
-	"github.com/epvchain/go-epvchain/rpc"
+	"github.com/epvchain/go-epvchain/notice"
+	"github.com/epvchain/go-epvchain/remote"
 )
 
 // PublicDownloaderAPI provides an API which gives information about the current synchronisation status.

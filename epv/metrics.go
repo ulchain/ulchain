@@ -17,8 +17,8 @@
 package epv
 
 import (
-	"github.com/epvchain/go-epvchain/metrics"
-	"github.com/epvchain/go-epvchain/p2p"
+	"github.com/epvchain/go-epvchain/disk"
+	"github.com/epvchain/go-epvchain/peer"
 )
 
 var (

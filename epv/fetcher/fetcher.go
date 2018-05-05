@@ -22,10 +22,10 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/epvchain/go-epvchain/common"
-	"github.com/epvchain/go-epvchain/consensus"
-	"github.com/epvchain/go-epvchain/core/types"
-	"github.com/epvchain/go-epvchain/log"
+	"github.com/epvchain/go-epvchain/public"
+	"github.com/epvchain/go-epvchain/agreement"
+	"github.com/epvchain/go-epvchain/kernel/types"
+	"github.com/epvchain/go-epvchain/book"
 	"gopkg.in/karalabe/cookiejar.v2/collections/prque"
 )
 

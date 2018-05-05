@@ -5,10 +5,10 @@ package epv
 import (
 	"math/big"
 
-	"github.com/epvchain/go-epvchain/common"
-	"github.com/epvchain/go-epvchain/common/hexutil"
-	"github.com/epvchain/go-epvchain/consensus/epvhash"
-	"github.com/epvchain/go-epvchain/core"
+	"github.com/epvchain/go-epvchain/public"
+	"github.com/epvchain/go-epvchain/public/hexutil"
+	"github.com/epvchain/go-epvchain/agreement/epvhash"
+	"github.com/epvchain/go-epvchain/kernel"
 	"github.com/epvchain/go-epvchain/epv/downloader"
 	"github.com/epvchain/go-epvchain/epv/gasprice"
 )

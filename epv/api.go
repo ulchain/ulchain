@@ -25,17 +25,17 @@ import (
 	"os"
 	"strings"
 
-	"github.com/epvchain/go-epvchain/common"
-	"github.com/epvchain/go-epvchain/common/hexutil"
-	"github.com/epvchain/go-epvchain/core"
-	"github.com/epvchain/go-epvchain/core/state"
-	"github.com/epvchain/go-epvchain/core/types"
-	"github.com/epvchain/go-epvchain/log"
-	"github.com/epvchain/go-epvchain/miner"
-	"github.com/epvchain/go-epvchain/params"
-	"github.com/epvchain/go-epvchain/rlp"
-	"github.com/epvchain/go-epvchain/rpc"
-	"github.com/epvchain/go-epvchain/trie"
+	"github.com/epvchain/go-epvchain/public"
+	"github.com/epvchain/go-epvchain/public/hexutil"
+	"github.com/epvchain/go-epvchain/kernel"
+	"github.com/epvchain/go-epvchain/kernel/state"
+	"github.com/epvchain/go-epvchain/kernel/types"
+	"github.com/epvchain/go-epvchain/book"
+	"github.com/epvchain/go-epvchain/work"
+	"github.com/epvchain/go-epvchain/content"
+	"github.com/epvchain/go-epvchain/process"
+	"github.com/epvchain/go-epvchain/remote"
+	"github.com/epvchain/go-epvchain/fast"
 )
 
 // PublicEPVchainAPI provides an API to access EPVchain full node-related

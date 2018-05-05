@@ -19,13 +19,13 @@ package epv
 import (
 	"time"
 
-	"github.com/epvchain/go-epvchain/common"
-	"github.com/epvchain/go-epvchain/common/bitutil"
-	"github.com/epvchain/go-epvchain/core"
-	"github.com/epvchain/go-epvchain/core/bloombits"
-	"github.com/epvchain/go-epvchain/core/types"
-	"github.com/epvchain/go-epvchain/epvdb"
-	"github.com/epvchain/go-epvchain/params"
+	"github.com/epvchain/go-epvchain/public"
+	"github.com/epvchain/go-epvchain/public/bitutil"
+	"github.com/epvchain/go-epvchain/kernel"
+	"github.com/epvchain/go-epvchain/kernel/bloombits"
+	"github.com/epvchain/go-epvchain/kernel/types"
+	"github.com/epvchain/go-epvchain/data"
+	"github.com/epvchain/go-epvchain/content"
 )
 
 const (

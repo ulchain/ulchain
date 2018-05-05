@@ -26,12 +26,12 @@ import (
 	"time"
 
 	epvchain "github.com/epvchain/go-epvchain"
-	"github.com/epvchain/go-epvchain/common"
-	"github.com/epvchain/go-epvchain/common/hexutil"
-	"github.com/epvchain/go-epvchain/core/types"
-	"github.com/epvchain/go-epvchain/epvdb"
-	"github.com/epvchain/go-epvchain/event"
-	"github.com/epvchain/go-epvchain/rpc"
+	"github.com/epvchain/go-epvchain/public"
+	"github.com/epvchain/go-epvchain/public/hexutil"
+	"github.com/epvchain/go-epvchain/kernel/types"
+	"github.com/epvchain/go-epvchain/data"
+	"github.com/epvchain/go-epvchain/notice"
+	"github.com/epvchain/go-epvchain/remote"
 )
 
 var (

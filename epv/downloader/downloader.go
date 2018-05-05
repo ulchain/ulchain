@@ -26,12 +26,12 @@ import (
 	"time"
 
 	epvchain "github.com/epvchain/go-epvchain"
-	"github.com/epvchain/go-epvchain/common"
-	"github.com/epvchain/go-epvchain/core/types"
-	"github.com/epvchain/go-epvchain/epvdb"
-	"github.com/epvchain/go-epvchain/event"
-	"github.com/epvchain/go-epvchain/log"
-	"github.com/epvchain/go-epvchain/params"
+	"github.com/epvchain/go-epvchain/public"
+	"github.com/epvchain/go-epvchain/kernel/types"
+	"github.com/epvchain/go-epvchain/data"
+	"github.com/epvchain/go-epvchain/notice"
+	"github.com/epvchain/go-epvchain/book"
+	"github.com/epvchain/go-epvchain/content"
 	"github.com/rcrowley/go-metrics"
 )
 

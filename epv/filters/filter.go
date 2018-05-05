@@ -20,13 +20,13 @@ import (
 	"context"
 	"math/big"
 
-	"github.com/epvchain/go-epvchain/common"
-	"github.com/epvchain/go-epvchain/core"
-	"github.com/epvchain/go-epvchain/core/bloombits"
-	"github.com/epvchain/go-epvchain/core/types"
-	"github.com/epvchain/go-epvchain/epvdb"
-	"github.com/epvchain/go-epvchain/event"
-	"github.com/epvchain/go-epvchain/rpc"
+	"github.com/epvchain/go-epvchain/public"
+	"github.com/epvchain/go-epvchain/kernel"
+	"github.com/epvchain/go-epvchain/kernel/bloombits"
+	"github.com/epvchain/go-epvchain/kernel/types"
+	"github.com/epvchain/go-epvchain/data"
+	"github.com/epvchain/go-epvchain/notice"
+	"github.com/epvchain/go-epvchain/remote"
 )
 
 type Backend interface {

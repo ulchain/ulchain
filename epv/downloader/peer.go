@@ -29,9 +29,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/epvchain/go-epvchain/common"
-	"github.com/epvchain/go-epvchain/event"
-	"github.com/epvchain/go-epvchain/log"
+	"github.com/epvchain/go-epvchain/public"
+	"github.com/epvchain/go-epvchain/notice"
+	"github.com/epvchain/go-epvchain/book"
 )
 
 const (

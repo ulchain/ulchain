@@ -26,11 +26,11 @@ import (
 	"time"
 
 	epvchain "github.com/epvchain/go-epvchain"
-	"github.com/epvchain/go-epvchain/common"
-	"github.com/epvchain/go-epvchain/core"
-	"github.com/epvchain/go-epvchain/core/types"
-	"github.com/epvchain/go-epvchain/event"
-	"github.com/epvchain/go-epvchain/rpc"
+	"github.com/epvchain/go-epvchain/public"
+	"github.com/epvchain/go-epvchain/kernel"
+	"github.com/epvchain/go-epvchain/kernel/types"
+	"github.com/epvchain/go-epvchain/notice"
+	"github.com/epvchain/go-epvchain/remote"
 )
 
 // Type determines the kind of filter and is used to put the filter in to

@@ -19,7 +19,7 @@ package downloader
 import (
 	"fmt"
 
-	"github.com/epvchain/go-epvchain/core/types"
+	"github.com/epvchain/go-epvchain/kernel/types"
 )
 
 // peerDropFn is a callback type for dropping a peer detected as malicious.

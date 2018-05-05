@@ -19,7 +19,7 @@
 package downloader
 
 import (
-	"github.com/epvchain/go-epvchain/metrics"
+	"github.com/epvchain/go-epvchain/disk"
 )
 
 var (

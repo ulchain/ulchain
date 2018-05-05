@@ -19,10 +19,10 @@ package downloader
 import (
 	"math/big"
 
-	"github.com/epvchain/go-epvchain/common"
-	"github.com/epvchain/go-epvchain/core"
-	"github.com/epvchain/go-epvchain/core/types"
-	"github.com/epvchain/go-epvchain/epvdb"
+	"github.com/epvchain/go-epvchain/public"
+	"github.com/epvchain/go-epvchain/kernel"
+	"github.com/epvchain/go-epvchain/kernel/types"
+	"github.com/epvchain/go-epvchain/data"
 )
 
 // FakePeer is a mock downloader peer that operates on a local database instance

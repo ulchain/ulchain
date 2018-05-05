@@ -21,11 +21,11 @@ import (
 	"bytes"
 	"time"
 
-	"github.com/epvchain/go-epvchain/common"
-	"github.com/epvchain/go-epvchain/core"
-	"github.com/epvchain/go-epvchain/epvdb"
-	"github.com/epvchain/go-epvchain/log"
-	"github.com/epvchain/go-epvchain/rlp"
+	"github.com/epvchain/go-epvchain/public"
+	"github.com/epvchain/go-epvchain/kernel"
+	"github.com/epvchain/go-epvchain/data"
+	"github.com/epvchain/go-epvchain/book"
+	"github.com/epvchain/go-epvchain/process"
 )
 
 var deduplicateData = []byte("dbUpgrade_20170714deduplicateData")

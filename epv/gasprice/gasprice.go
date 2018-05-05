@@ -22,11 +22,11 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/epvchain/go-epvchain/common"
-	"github.com/epvchain/go-epvchain/core/types"
-	"github.com/epvchain/go-epvchain/internal/epvapi"
-	"github.com/epvchain/go-epvchain/params"
-	"github.com/epvchain/go-epvchain/rpc"
+	"github.com/epvchain/go-epvchain/public"
+	"github.com/epvchain/go-epvchain/kernel/types"
+	"github.com/epvchain/go-epvchain/local/epvapi"
+	"github.com/epvchain/go-epvchain/content"
+	"github.com/epvchain/go-epvchain/remote"
 )
 
 var maxPrice = big.NewInt(500 * params.Shannon)

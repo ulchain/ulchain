@@ -23,10 +23,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/epvchain/go-epvchain/common"
-	"github.com/epvchain/go-epvchain/core/types"
-	"github.com/epvchain/go-epvchain/p2p"
-	"github.com/epvchain/go-epvchain/rlp"
+	"github.com/epvchain/go-epvchain/public"
+	"github.com/epvchain/go-epvchain/kernel/types"
+	"github.com/epvchain/go-epvchain/peer"
+	"github.com/epvchain/go-epvchain/process"
 	"gopkg.in/fatih/set.v0"
 )
 
