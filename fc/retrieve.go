@@ -1,21 +1,21 @@
-// Copyright 2017 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                                
+  
+                                                                                  
+                                                                              
+                                                                    
+                                      
+  
+                                                                             
+                                                                 
+                                                               
+                                                      
+  
+                                                                           
+                                                                                  
 
-// Package light implements on-demand retrieval capable state and chain objects
-// for the EPVchain Light Client.
+                                                                               
+                                 
 package les
 
 import (
@@ -35,8 +35,8 @@ var (
 	hardRequestTimeout = time.Second * 10
 )
 
-// retrieveManager is a layer on top of requestDistributor which takes care of
-// matching replies by request ID and handles timeouts and resends if necessary.
+                                                                              
+                                                                                
 type retrieveManager struct {
 	dist       *requestDistributor
 	peers      *peerSet
@@ -46,15 +46,15 @@ type retrieveManager struct {
 	sentReqs map[uint64]*sentReq
 }
 
-// validatorFunc is a function that processes a reply message
+                                                             
 type validatorFunc func(distPeer, *Msg) error
 
-// peerSelector receives feedback info about response times and timeouts
+                                                                        
 type peerSelector interface {
 	adjustResponseTime(*poolEntry, time.Duration, bool)
 }
 
-// sentReq represents a request sent and tracked by retrieveManager
+                                                                   
 type sentReq struct {
 	rm       *retrieveManager
 	req      *distReq
@@ -66,39 +66,39 @@ type sentReq struct {
 	stopped  bool
 	err      error
 
-	lock   sync.RWMutex // protect access to sentTo map
+	lock   sync.RWMutex                                
 	sentTo map[distPeer]sentReqToPeer
 
-	reqQueued    bool // a request has been queued but not sent
-	reqSent      bool // a request has been sent but not timed out
-	reqSrtoCount int  // number of requests that reached soft (but not hard) timeout
+	reqQueued    bool                                          
+	reqSent      bool                                             
+	reqSrtoCount int                                                                
 }
 
-// sentReqToPeer notifies the request-from-peer goroutine (tryRequest) about a response
-// delivered by the given peer. Only one delivery is allowed per request per peer,
-// after which delivered is set to true, the validity of the response is sent on the
-// valid channel and no more responses are accepted.
+                                                                                       
+                                                                                  
+                                                                                    
+                                                    
 type sentReqToPeer struct {
 	delivered bool
 	valid     chan bool
 }
 
-// reqPeerEvent is sent by the request-from-peer goroutine (tryRequest) to the
-// request state machine (retrieveLoop) through the eventsCh channel.
+                                                                              
+                                                                     
 type reqPeerEvent struct {
 	event int
 	peer  distPeer
 }
 
 const (
-	rpSent = iota // if peer == nil, not sent (no suitable peers)
+	rpSent = iota                                                
 	rpSoftTimeout
 	rpHardTimeout
 	rpDeliveredValid
 	rpDeliveredInvalid
 )
 
-// newRetrieveManager creates the retrieve manager
+                                                  
 func newRetrieveManager(peers *peerSet, dist *requestDistributor, serverPool peerSelector) *retrieveManager {
 	return &retrieveManager{
 		peers:      peers,
@@ -108,10 +108,10 @@ func newRetrieveManager(peers *peerSet, dist *requestDistributor, serverPool pee
 	}
 }
 
-// retrieve sends a request (to multiple peers if necessary) and waits for an answer
-// that is delivered through the deliver function and successfully validated by the
-// validator callback. It returns when a valid answer is delivered or the context is
-// cancelled.
+                                                                                    
+                                                                                   
+                                                                                    
+             
 func (rm *retrieveManager) retrieve(ctx context.Context, reqID uint64, req *distReq, val validatorFunc, shutdown chan struct{}) error {
 	sentReq := rm.sendReq(reqID, req, val)
 	select {
@@ -124,8 +124,8 @@ func (rm *retrieveManager) retrieve(ctx context.Context, reqID uint64, req *dist
 	return sentReq.getError()
 }
 
-// sendReq starts a process that keeps trying to retrieve a valid answer for a
-// request from any suitable peers until stopped or succeeded.
+                                                                              
+                                                              
 func (rm *retrieveManager) sendReq(reqID uint64, req *distReq, val validatorFunc) *sentReq {
 	r := &sentReq{
 		rm:       rm,
@@ -139,7 +139,7 @@ func (rm *retrieveManager) sendReq(reqID uint64, req *distReq, val validatorFunc
 
 	canSend := req.canSend
 	req.canSend = func(p distPeer) bool {
-		// add an extra check to canSend: the request has not been sent to the same peer before
+		                                                                                       
 		r.lock.RLock()
 		_, sent := r.sentTo[p]
 		r.lock.RUnlock()
@@ -148,7 +148,7 @@ func (rm *retrieveManager) sendReq(reqID uint64, req *distReq, val validatorFunc
 
 	request := req.request
 	req.request = func(p distPeer) func() {
-		// before actually sending the request, put an entry into the sentTo map
+		                                                                        
 		r.lock.Lock()
 		r.sentTo[p] = sentReqToPeer{false, make(chan bool, 1)}
 		r.lock.Unlock()
@@ -162,7 +162,7 @@ func (rm *retrieveManager) sendReq(reqID uint64, req *distReq, val validatorFunc
 	return r
 }
 
-// deliver is called by the LES protocol manager to deliver reply messages to waiting requests
+                                                                                              
 func (rm *retrieveManager) deliver(peer distPeer, msg *Msg) error {
 	rm.lock.RLock()
 	req, ok := rm.sentReqs[msg.ReqID]
@@ -174,10 +174,10 @@ func (rm *retrieveManager) deliver(peer distPeer, msg *Msg) error {
 	return errResp(ErrUnexpectedResponse, "reqID = %v", msg.ReqID)
 }
 
-// reqStateFn represents a state of the retrieve loop state machine
+                                                                   
 type reqStateFn func() reqStateFn
 
-// retrieveLoop is the retrieval state machine event loop
+                                                         
 func (r *sentReq) retrieveLoop() {
 	go r.tryRequest()
 	r.reqQueued = true
@@ -192,8 +192,8 @@ func (r *sentReq) retrieveLoop() {
 	r.rm.lock.Unlock()
 }
 
-// stateRequesting: a request has been queued or sent recently; when it reaches soft timeout,
-// a new request is sent to a new peer
+                                                                                             
+                                      
 func (r *sentReq) stateRequesting() reqStateFn {
 	select {
 	case ev := <-r.eventsCh:
@@ -201,18 +201,18 @@ func (r *sentReq) stateRequesting() reqStateFn {
 		switch ev.event {
 		case rpSent:
 			if ev.peer == nil {
-				// request send failed, no more suitable peers
+				                                              
 				if r.waiting() {
-					// we are already waiting for sent requests which may succeed so keep waiting
+					                                                                             
 					return r.stateNoMorePeers
 				}
-				// nothing to wait for, no more peers to ask, return with error
+				                                                               
 				r.stop(ErrNoPeers)
-				// no need to go to stopped state because waiting() already returned false
+				                                                                          
 				return nil
 			}
 		case rpSoftTimeout:
-			// last request timed out, try asking a new peer
+			                                                
 			go r.tryRequest()
 			r.reqQueued = true
 			return r.stateRequesting
@@ -226,9 +226,9 @@ func (r *sentReq) stateRequesting() reqStateFn {
 	}
 }
 
-// stateNoMorePeers: could not send more requests because no suitable peers are available.
-// Peers may become suitable for a certain request later or new peers may appear so we
-// keep trying.
+                                                                                          
+                                                                                      
+               
 func (r *sentReq) stateNoMorePeers() reqStateFn {
 	select {
 	case <-time.After(retryQueue):
@@ -247,8 +247,8 @@ func (r *sentReq) stateNoMorePeers() reqStateFn {
 	}
 }
 
-// stateStopped: request succeeded or cancelled, just waiting for some peers
-// to either answer or time out hard
+                                                                            
+                                    
 func (r *sentReq) stateStopped() reqStateFn {
 	for r.waiting() {
 		r.update(<-r.eventsCh)
@@ -256,7 +256,7 @@ func (r *sentReq) stateStopped() reqStateFn {
 	return nil
 }
 
-// update updates the queued/sent flags and timed out peers counter according to the event
+                                                                                          
 func (r *sentReq) update(ev reqPeerEvent) {
 	switch ev.event {
 	case rpSent:
@@ -272,15 +272,15 @@ func (r *sentReq) update(ev reqPeerEvent) {
 	}
 }
 
-// waiting returns true if the retrieval mechanism is waiting for an answer from
-// any peer
+                                                                                
+           
 func (r *sentReq) waiting() bool {
 	return r.reqQueued || r.reqSent || r.reqSrtoCount > 0
 }
 
-// tryRequest tries to send the request to a new peer and waits for it to either
-// succeed or time out if it has been sent. It also sends the appropriate reqPeerEvent
-// messages to the request's event channel.
+                                                                                
+                                                                                      
+                                           
 func (r *sentReq) tryRequest() {
 	sent := r.rm.dist.queue(r.req)
 	var p distPeer
@@ -310,7 +310,7 @@ func (r *sentReq) tryRequest() {
 	}
 
 	defer func() {
-		// send feedback to server pool and remove peer if hard timeout happened
+		                                                                        
 		pp, ok := p.(*peer)
 		if ok && r.rm.serverPool != nil {
 			respTime := time.Duration(mclock.Now() - reqSent)
@@ -354,7 +354,7 @@ func (r *sentReq) tryRequest() {
 	}
 }
 
-// deliver a reply belonging to this request
+                                            
 func (r *sentReq) deliver(peer distPeer, msg *Msg) error {
 	r.lock.Lock()
 	defer r.lock.Unlock()
@@ -372,8 +372,8 @@ func (r *sentReq) deliver(peer distPeer, msg *Msg) error {
 	return nil
 }
 
-// stop stops the retrieval process and sets an error code that will be returned
-// by getError
+                                                                                
+              
 func (r *sentReq) stop(err error) {
 	r.lock.Lock()
 	if !r.stopped {
@@ -384,13 +384,13 @@ func (r *sentReq) stop(err error) {
 	r.lock.Unlock()
 }
 
-// getError returns any retrieval error (either internally generated or set by the
-// stop function) after stopCh has been closed
+                                                                                  
+                                              
 func (r *sentReq) getError() error {
 	return r.err
 }
 
-// genReqID generates a new random request ID
+                                             
 func genReqID() uint64 {
 	var rnd [8]byte
 	rand.Read(rnd[:])

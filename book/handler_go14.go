@@ -4,8 +4,8 @@ package log
 
 import "sync/atomic"
 
-// swapHandler wraps another handler that may be swapped out
-// dynamically at runtime in a thread-safe fashion.
+                                                            
+                                                   
 type swapHandler struct {
 	handler atomic.Value
 }

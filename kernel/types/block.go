@@ -1,20 +1,20 @@
-// Copyright 2014 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                                
+  
+                                                                                  
+                                                                              
+                                                                    
+                                      
+  
+                                                                             
+                                                                 
+                                                               
+                                                      
+  
+                                                                           
+                                                                                  
 
-// Package types contains data types related to EPVchain consensus.
+                                                                   
 package types
 
 import (
@@ -38,36 +38,36 @@ var (
 	EmptyUncleHash = CalcUncleHash(nil)
 )
 
-// A BlockNonce is a 64-bit hash which proves (combined with the
-// mix-hash) that a sufficient amount of computation has been carried
-// out on a block.
+                                                                
+                                                                     
+                  
 type BlockNonce [8]byte
 
-// EncodeNonce converts the given integer to a block nonce.
+                                                           
 func EncodeNonce(i uint64) BlockNonce {
 	var n BlockNonce
 	binary.BigEndian.PutUint64(n[:], i)
 	return n
 }
 
-// Uint64 returns the integer value of a block nonce.
+                                                     
 func (n BlockNonce) Uint64() uint64 {
 	return binary.BigEndian.Uint64(n[:])
 }
 
-// MarshalText encodes n as a hex string with 0x prefix.
+                                                        
 func (n BlockNonce) MarshalText() ([]byte, error) {
 	return hexutil.Bytes(n[:]).MarshalText()
 }
 
-// UnmarshalText implements encoding.TextUnmarshaler.
+                                                     
 func (n *BlockNonce) UnmarshalText(input []byte) error {
 	return hexutil.UnmarshalFixedText("BlockNonce", input, n[:])
 }
 
-//go:generate gencodec -type Header -field-override headerMarshaling -out gen_header_json.go
+                                                                                            
 
-// Header represents a block header in the EPVchain blockchain.
+                                                               
 type Header struct {
 	ParentHash  common.Hash    `json:"parentHash"       gencodec:"required"`
 	UncleHash   common.Hash    `json:"sha3Uncles"       gencodec:"required"`
@@ -86,7 +86,7 @@ type Header struct {
 	Nonce       BlockNonce     `json:"nonce"            gencodec:"required"`
 }
 
-// field type overrides for gencodec
+                                    
 type headerMarshaling struct {
 	Difficulty *hexutil.Big
 	Number     *hexutil.Big
@@ -94,16 +94,16 @@ type headerMarshaling struct {
 	GasUsed    hexutil.Uint64
 	Time       *hexutil.Big
 	Extra      hexutil.Bytes
-	Hash       common.Hash `json:"hash"` // adds call to Hash() in MarshalJSON
+	Hash       common.Hash `json:"hash"`                                      
 }
 
-// Hash returns the block hash of the header, which is simply the keccak256 hash of its
-// RLP encoding.
+                                                                                       
+                
 func (h *Header) Hash() common.Hash {
 	return rlpHash(h)
 }
 
-// HashNoNonce returns the hash which is used as input for the proof-of-work search.
+                                                                                    
 func (h *Header) HashNoNonce() common.Hash {
 	return rlpHash([]interface{}{
 		h.ParentHash,
@@ -122,8 +122,8 @@ func (h *Header) HashNoNonce() common.Hash {
 	})
 }
 
-// Size returns the approximate memory used by all internal contents. It is used
-// to approximate and limit the memory consumption of various caches.
+                                                                                
+                                                                     
 func (h *Header) Size() common.StorageSize {
 	return common.StorageSize(unsafe.Sizeof(*h)) + common.StorageSize(len(h.Extra)+(h.Difficulty.BitLen()+h.Number.BitLen()+h.Time.BitLen())/8)
 }
@@ -135,55 +135,55 @@ func rlpHash(x interface{}) (h common.Hash) {
 	return h
 }
 
-// Body is a simple (mutable, non-safe) data container for storing and moving
-// a block's data contents (transactions and uncles) together.
+                                                                             
+                                                              
 type Body struct {
 	Transactions []*Transaction
 	Uncles       []*Header
 }
 
-// Block represents an entire block in the EPVchain blockchain.
+                                                               
 type Block struct {
 	header       *Header
 	uncles       []*Header
 	transactions Transactions
 
-	// caches
+	         
 	hash atomic.Value
 	size atomic.Value
 
-	// Td is used by package core to store the total difficulty
-	// of the chain up to and including the block.
+	                                                           
+	                                              
 	td *big.Int
 
-	// These fields are used by package epv to track
-	// inter-peer block relay.
+	                                                
+	                          
 	ReceivedAt   time.Time
 	ReceivedFrom interface{}
 }
 
-// DeprecatedTd is an old relic for extracting the TD of a block. It is in the
-// code solely to facilitate upgrading the database from the old format to the
-// new, after which it should be deleted. Do not use!
+                                                                              
+                                                                              
+                                                     
 func (b *Block) DeprecatedTd() *big.Int {
 	return b.td
 }
 
-// [deprecated by epv/63]
-// StorageBlock defines the RLP encoding of a Block stored in the
-// state database. The StorageBlock encoding contains fields that
-// would otherwise need to be recomputed.
+                         
+                                                                 
+                                                                 
+                                         
 type StorageBlock Block
 
-// "external" block encoding. used for epv protocol, etc.
+                                                         
 type extblock struct {
 	Header *Header
 	Txs    []*Transaction
 	Uncles []*Header
 }
 
-// [deprecated by epv/63]
-// "storage" block encoding. used for database.
+                         
+                                               
 type storageblock struct {
 	Header *Header
 	Txs    []*Transaction
@@ -191,17 +191,17 @@ type storageblock struct {
 	TD     *big.Int
 }
 
-// NewBlock creates a new block. The input data is copied,
-// changes to header and to the field values will not affect the
-// block.
-//
-// The values of TxHash, UncleHash, ReceiptHash and Bloom in header
-// are ignored and set to values derived from the given txs, uncles
-// and receipts.
+                                                          
+                                                                
+         
+  
+                                                                   
+                                                                   
+                
 func NewBlock(header *Header, txs []*Transaction, uncles []*Header, receipts []*Receipt) *Block {
 	b := &Block{header: CopyHeader(header), td: new(big.Int)}
 
-	// TODO: panic if len(txs) != len(receipts)
+	                                           
 	if len(txs) == 0 {
 		b.header.TxHash = EmptyRootHash
 	} else {
@@ -230,15 +230,15 @@ func NewBlock(header *Header, txs []*Transaction, uncles []*Header, receipts []*
 	return b
 }
 
-// NewBlockWithHeader creates a block with the given header data. The
-// header data is copied, changes to header and to the field values
-// will not affect the block.
+                                                                     
+                                                                   
+                             
 func NewBlockWithHeader(header *Header) *Block {
 	return &Block{header: CopyHeader(header)}
 }
 
-// CopyHeader creates a deep copy of a block header to prevent side effects from
-// modifying a header variable.
+                                                                                
+                               
 func CopyHeader(h *Header) *Header {
 	cpy := *h
 	if cpy.Time = new(big.Int); h.Time != nil {
@@ -257,7 +257,7 @@ func CopyHeader(h *Header) *Header {
 	return &cpy
 }
 
-// DecodeRLP decodes the EPVchain
+                                 
 func (b *Block) DecodeRLP(s *rlp.Stream) error {
 	var eb extblock
 	_, size, _ := s.Kind()
@@ -269,7 +269,7 @@ func (b *Block) DecodeRLP(s *rlp.Stream) error {
 	return nil
 }
 
-// EncodeRLP serializes b into the EPVchain RLP block format.
+                                                             
 func (b *Block) EncodeRLP(w io.Writer) error {
 	return rlp.Encode(w, extblock{
 		Header: b.header,
@@ -278,7 +278,7 @@ func (b *Block) EncodeRLP(w io.Writer) error {
 	})
 }
 
-// [deprecated by epv/63]
+                         
 func (b *StorageBlock) DecodeRLP(s *rlp.Stream) error {
 	var sb storageblock
 	if err := s.Decode(&sb); err != nil {
@@ -288,7 +288,7 @@ func (b *StorageBlock) DecodeRLP(s *rlp.Stream) error {
 	return nil
 }
 
-// TODO: copies
+               
 
 func (b *Block) Uncles() []*Header          { return b.uncles }
 func (b *Block) Transactions() Transactions { return b.transactions }
@@ -322,15 +322,15 @@ func (b *Block) Extra() []byte            { return common.CopyBytes(b.header.Ext
 
 func (b *Block) Header() *Header { return CopyHeader(b.header) }
 
-// Body returns the non-header content of the block.
+                                                    
 func (b *Block) Body() *Body { return &Body{b.transactions, b.uncles} }
 
 func (b *Block) HashNoNonce() common.Hash {
 	return b.header.HashNoNonce()
 }
 
-// Size returns the true RLP encoded storage size of the block, either by encoding
-// and returning it, or returning a previsouly cached value.
+                                                                                  
+                                                            
 func (b *Block) Size() common.StorageSize {
 	if size := b.size.Load(); size != nil {
 		return size.(common.StorageSize)
@@ -352,8 +352,8 @@ func CalcUncleHash(uncles []*Header) common.Hash {
 	return rlpHash(uncles)
 }
 
-// WithSeal returns a new block with the data from b but the header replaced with
-// the sealed one.
+                                                                                 
+                  
 func (b *Block) WithSeal(header *Header) *Block {
 	cpy := *header
 
@@ -364,7 +364,7 @@ func (b *Block) WithSeal(header *Header) *Block {
 	}
 }
 
-// WithBody returns a new block with the given transaction and uncle contents.
+                                                                              
 func (b *Block) WithBody(transactions []*Transaction, uncles []*Header) *Block {
 	block := &Block{
 		header:       CopyHeader(b.header),
@@ -378,8 +378,8 @@ func (b *Block) WithBody(transactions []*Transaction, uncles []*Header) *Block {
 	return block
 }
 
-// Hash returns the keccak256 hash of b's header.
-// The hash is computed on the first call and cached thereafter.
+                                                 
+                                                                
 func (b *Block) Hash() common.Hash {
 	if hash := b.hash.Load(); hash != nil {
 		return hash.(common.Hash)

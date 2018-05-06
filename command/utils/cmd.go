@@ -1,20 +1,20 @@
-// Copyright 2014 The go-epvchain Authors
-// This file is part of go-epvchain.
-//
-// go-epvchain is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// go-epvchain is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with go-epvchain. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                    
+  
+                                                                      
+                                                                       
+                                                                    
+                                      
+  
+                                                                 
+                                                                 
+                                                               
+                                               
+  
+                                                                    
+                                                                      
 
-// Package utils contains internal helper functions for go-epvchain commands.
+                                                                             
 package utils
 
 import (
@@ -38,14 +38,14 @@ const (
 	importBatchSize = 2500
 )
 
-// Fatalf formats a message to standard error and exits the program.
-// The message is also printed to standard output if standard error
-// is redirected to a different file.
+                                                                    
+                                                                   
+                                     
 func Fatalf(format string, args ...interface{}) {
 	w := io.MultiWriter(os.Stdout, os.Stderr)
 	if runtime.GOOS == "windows" {
-		// The SameFile check below doesn't work on Windows.
-		// stdout is unlikely to get redirected though, so just print there.
+		                                                    
+		                                                                    
 		w = os.Stdout
 	} else {
 		outf, _ := os.Stdout.Stat()
@@ -75,14 +75,14 @@ func StartNode(stack *node.Node) {
 				log.Warn("Already shutting down, interrupt more to panic.", "times", i-1)
 			}
 		}
-		debug.Exit() // ensure trace and CPU profile data is flushed.
+		debug.Exit()                                                 
 		debug.LoudPanic("boom")
 	}()
 }
 
 func ImportChain(chain *core.BlockChain, fn string) error {
-	// Watch for Ctrl-C while the import is running.
-	// If a signal is received, the import will stop at the next batch.
+	                                                
+	                                                                   
 	interrupt := make(chan os.Signal, 1)
 	stop := make(chan struct{})
 	signal.Notify(interrupt, os.Interrupt)
@@ -118,11 +118,11 @@ func ImportChain(chain *core.BlockChain, fn string) error {
 	}
 	stream := rlp.NewStream(reader, 0)
 
-	// Run actual the import.
+	                         
 	blocks := make(types.Blocks, importBatchSize)
 	n := 0
 	for batch := 0; ; batch++ {
-		// Load a batch of RLP blocks.
+		                              
 		if checkInterrupt() {
 			return fmt.Errorf("interrupted")
 		}
@@ -134,7 +134,7 @@ func ImportChain(chain *core.BlockChain, fn string) error {
 			} else if err != nil {
 				return fmt.Errorf("at block %d: %v", n, err)
 			}
-			// don't import first block
+			                           
 			if b.NumberU64() == 0 {
 				i--
 				continue
@@ -145,7 +145,7 @@ func ImportChain(chain *core.BlockChain, fn string) error {
 		if i == 0 {
 			break
 		}
-		// Import the batch.
+		                    
 		if checkInterrupt() {
 			return fmt.Errorf("interrupted")
 		}
@@ -164,14 +164,14 @@ func ImportChain(chain *core.BlockChain, fn string) error {
 func missingBlocks(chain *core.BlockChain, blocks []*types.Block) []*types.Block {
 	head := chain.CurrentBlock()
 	for i, block := range blocks {
-		// If we're behind the chain head, only check block, state is available at head
+		                                                                               
 		if head.NumberU64() > block.NumberU64() {
 			if !chain.HasBlock(block.Hash(), block.NumberU64()) {
 				return blocks[i:]
 			}
 			continue
 		}
-		// If we're above the chain head, state availability is a must
+		                                                              
 		if !chain.HasBlockAndState(block.Hash(), block.NumberU64()) {
 			return blocks[i:]
 		}
@@ -203,7 +203,7 @@ func ExportChain(blockchain *core.BlockChain, fn string) error {
 
 func ExportAppendChain(blockchain *core.BlockChain, fn string, first uint64, last uint64) error {
 	log.Info("Exporting blockchain", "file", fn)
-	// TODO verify mode perms
+	                         
 	fh, err := os.OpenFile(fn, os.O_CREATE|os.O_APPEND|os.O_WRONLY, os.ModePerm)
 	if err != nil {
 		return err

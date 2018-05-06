@@ -1,18 +1,18 @@
-// Copyright 2016 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                                
+  
+                                                                                  
+                                                                              
+                                                                    
+                                      
+  
+                                                                             
+                                                                 
+                                                               
+                                                      
+  
+                                                                           
+                                                                                  
 
 package debug
 
@@ -83,7 +83,7 @@ var (
 	}
 )
 
-// Flags holds all command-line flags required for debugging.
+                                                             
 var Flags = []cli.Flag{
 	verbosityFlag, vmoduleFlag, backtraceAtFlag, debugFlag,
 	pprofFlag, pprofAddrFlag, pprofPortFlag,
@@ -101,17 +101,17 @@ func init() {
 	glogger = log.NewGlogHandler(log.StreamHandler(output, log.TerminalFormat(usecolor)))
 }
 
-// Setup initializes profiling and logging based on the CLI flags.
-// It should be called as early as possible in the program.
+                                                                  
+                                                           
 func Setup(ctx *cli.Context) error {
-	// logging
+	          
 	log.PrintOrigins(ctx.GlobalBool(debugFlag.Name))
 	glogger.Verbosity(log.Lvl(ctx.GlobalInt(verbosityFlag.Name)))
 	glogger.Vmodule(ctx.GlobalString(vmoduleFlag.Name))
 	glogger.BacktraceAt(ctx.GlobalString(backtraceAtFlag.Name))
 	log.Root().SetHandler(glogger)
 
-	// profiling, tracing
+	                     
 	runtime.MemProfileRate = ctx.GlobalInt(memprofilerateFlag.Name)
 	Handler.SetBlockProfileRate(ctx.GlobalInt(blockprofilerateFlag.Name))
 	if traceFile := ctx.GlobalString(traceFlag.Name); traceFile != "" {
@@ -125,7 +125,7 @@ func Setup(ctx *cli.Context) error {
 		}
 	}
 
-	// pprof server
+	               
 	if ctx.GlobalBool(pprofFlag.Name) {
 		address := fmt.Sprintf("%s:%d", ctx.GlobalString(pprofAddrFlag.Name), ctx.GlobalInt(pprofPortFlag.Name))
 		go func() {
@@ -138,8 +138,8 @@ func Setup(ctx *cli.Context) error {
 	return nil
 }
 
-// Exit stops all running profiles, flushing their output to the
-// respective file.
+                                                                
+                   
 func Exit() {
 	Handler.StopCPUProfile()
 	Handler.StopGoTrace()

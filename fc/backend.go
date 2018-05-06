@@ -1,20 +1,20 @@
-// Copyright 2016 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                                
+  
+                                                                                  
+                                                                              
+                                                                    
+                                      
+  
+                                                                             
+                                                                 
+                                                               
+                                                      
+  
+                                                                           
+                                                                                  
 
-// Package les implements the Light EPVchain Subprotocol.
+                                                         
 package les
 
 import (
@@ -51,9 +51,9 @@ type LightEPVchain struct {
 	odr         *LesOdr
 	relay       *LesTxRelay
 	chainConfig *params.ChainConfig
-	// Channel for shutting down the service
+	                                        
 	shutdownChan chan bool
-	// Handlers
+	           
 	peers           *peerSet
 	txPool          *light.TxPool
 	blockchain      *light.LightChain
@@ -61,10 +61,10 @@ type LightEPVchain struct {
 	serverPool      *serverPool
 	reqDist         *requestDistributor
 	retriever       *retrieveManager
-	// DB interfaces
-	chainDb epvdb.Database // Block chain database
+	                
+	chainDb epvdb.Database                        
 
-	bloomRequests                              chan chan *bloombits.Retrieval // Channel receiving bloom data retrieval requests
+	bloomRequests                              chan chan *bloombits.Retrieval                                                   
 	bloomIndexer, chtIndexer, bloomTrieIndexer *core.ChainIndexer
 
 	ApiBackend *LesApiBackend
@@ -118,7 +118,7 @@ func New(ctx *node.ServiceContext, config *epv.Config) (*LightEPVchain, error) {
 		return nil, err
 	}
 	lepv.bloomIndexer.Start(lepv.blockchain)
-	// Rewind the chain in case of an incompatible config upgrade.
+	                                                              
 	if compat, ok := genesisErr.(*params.ConfigCompatError); ok {
 		log.Warn("Rewinding chain to upgrade configuration", "err", compat)
 		lepv.blockchain.SetHead(compat.RewindTo)
@@ -153,28 +153,28 @@ func lesTopic(genesisHash common.Hash, protocolVersion uint) discv5.Topic {
 
 type LightDummyAPI struct{}
 
-// EPVCbase is the address that mining rewards will be send to
+                                                              
 func (s *LightDummyAPI) EPVCbase() (common.Address, error) {
 	return common.Address{}, fmt.Errorf("not supported")
 }
 
-// Coinbase is the address that mining rewards will be send to (alias for EPVCbase)
+                                                                                   
 func (s *LightDummyAPI) Coinbase() (common.Address, error) {
 	return common.Address{}, fmt.Errorf("not supported")
 }
 
-// Hashrate returns the POW hashrate
+                                    
 func (s *LightDummyAPI) Hashrate() hexutil.Uint {
 	return 0
 }
 
-// Mining returns an indication if this node is currently mining.
+                                                                 
 func (s *LightDummyAPI) Mining() bool {
 	return false
 }
 
-// APIs returns the collection of RPC services the epvchain package offers.
-// NOTE, some of these services probably need to be moved to somewhere else.
+                                                                           
+                                                                            
 func (s *LightEPVchain) APIs() []rpc.API {
 	return append(epvapi.GetAPIs(s.ApiBackend), []rpc.API{
 		{
@@ -212,27 +212,27 @@ func (s *LightEPVchain) LesVersion() int                    { return int(s.proto
 func (s *LightEPVchain) Downloader() *downloader.Downloader { return s.protocolManager.downloader }
 func (s *LightEPVchain) EventMux() *event.TypeMux           { return s.eventMux }
 
-// Protocols implements node.Service, returning all the currently configured
-// network protocols to start.
+                                                                            
+                              
 func (s *LightEPVchain) Protocols() []p2p.Protocol {
 	return s.protocolManager.SubProtocols
 }
 
-// Start implements node.Service, starting all internal goroutines needed by the
-// EPVchain protocol implementation.
+                                                                                
+                                    
 func (s *LightEPVchain) Start(srvr *p2p.Server) error {
 	s.startBloomHandlers()
 	log.Warn("Light client mode is an experimental feature")
 	s.netRPCService = epvapi.NewPublicNetAPI(srvr, s.networkId)
-	// clients are searching for the first advertised protocol in the list
+	                                                                      
 	protocolVersion := AdvertiseProtocolVersions[0]
 	s.serverPool.start(srvr, lesTopic(s.blockchain.Genesis().Hash(), protocolVersion))
 	s.protocolManager.Start(s.config.LightPeers)
 	return nil
 }
 
-// Stop implements node.Service, terminating all internal goroutines used by the
-// EPVchain protocol.
+                                                                                
+                     
 func (s *LightEPVchain) Stop() error {
 	s.odr.Stop()
 	if s.bloomIndexer != nil {

@@ -1,20 +1,20 @@
-// Copyright 2016 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                                
+  
+                                                                                  
+                                                                              
+                                                                    
+                                      
+  
+                                                                             
+                                                                 
+                                                               
+                                                      
+  
+                                                                           
+                                                                                  
 
-// Package les implements the Light EPVchain Subprotocol.
+                                                         
 package les
 
 import (
@@ -32,33 +32,33 @@ import (
 )
 
 const (
-	blockDelayTimeout = time.Second * 10 // timeout for a peer to announce a head that has already been confirmed by others
-	maxNodeCount      = 20               // maximum number of fetcherTreeNode entries remembered for each peer
+	blockDelayTimeout = time.Second * 10                                                                                   
+	maxNodeCount      = 20                                                                                    
 )
 
-// lightFetcher implements retrieval of newly announced headers. It also provides a peerHasBlock function for the
-// ODR system to ensure that we only request data related to a certain block from peers who have already processed
-// and announced that block.
+                                                                                                                 
+                                                                                                                  
+                            
 type lightFetcher struct {
 	pm    *ProtocolManager
 	odr   *LesOdr
 	chain *light.LightChain
 
-	lock            sync.Mutex // lock protects access to the fetcher's internal state variables except sent requests
+	lock            sync.Mutex                                                                                       
 	maxConfirmedTd  *big.Int
 	peers           map[*peer]*fetcherPeerInfo
 	lastUpdateStats *updateStatsEntry
 	syncing         bool
 	syncDone        chan *peer
 
-	reqMu      sync.RWMutex // reqMu protects access to sent header fetch requests
+	reqMu      sync.RWMutex                                                       
 	requested  map[uint64]fetchRequest
 	deliverChn chan fetchResponse
 	timeoutChn chan uint64
-	requestChn chan bool // true if initiated from outside
+	requestChn chan bool                                  
 }
 
-// fetcherPeerInfo holds fetcher-specific information about each active peer
+                                                                            
 type fetcherPeerInfo struct {
 	root, lastAnnounced *fetcherTreeNode
 	nodeCnt             int
@@ -68,17 +68,17 @@ type fetcherPeerInfo struct {
 	firstUpdateStats    *updateStatsEntry
 }
 
-// fetcherTreeNode is a node of a tree that holds information about blocks recently
-// announced and confirmed by a certain peer. Each new announce message from a peer
-// adds nodes to the tree, based on the previous announced head and the reorg depth.
-// There are three possible states for a tree node:
-// - announced: not downloaded (known) yet, but we know its head, number and td
-// - intermediate: not known, hash and td are empty, they are filled out when it becomes known
-// - known: both announced by this peer and downloaded (from any peer).
-// This structure makes it possible to always know which peer has a certain block,
-// which is necessary for selecting a suitable peer for ODR requests and also for
-// canonizing new heads. It also helps to always download the minimum necessary
-// amount of headers with a single request.
+                                                                                   
+                                                                                   
+                                                                                    
+                                                   
+                                                                               
+                                                                                              
+                                                                       
+                                                                                  
+                                                                                 
+                                                                               
+                                           
 type fetcherTreeNode struct {
 	hash             common.Hash
 	number           uint64
@@ -88,7 +88,7 @@ type fetcherTreeNode struct {
 	children         []*fetcherTreeNode
 }
 
-// fetchRequest represents a header download request
+                                                    
 type fetchRequest struct {
 	hash    common.Hash
 	amount  uint64
@@ -97,14 +97,14 @@ type fetchRequest struct {
 	timeout bool
 }
 
-// fetchResponse represents a header download response
+                                                      
 type fetchResponse struct {
 	reqID   uint64
 	headers []*types.Header
 	peer    *peer
 }
 
-// newLightFetcher creates a new light fetcher
+                                              
 func newLightFetcher(pm *ProtocolManager) *lightFetcher {
 	f := &lightFetcher{
 		pm:             pm,
@@ -125,7 +125,7 @@ func newLightFetcher(pm *ProtocolManager) *lightFetcher {
 	return f
 }
 
-// syncLoop is the main event loop of the light fetcher
+                                                       
 func (f *lightFetcher) syncLoop() {
 	requesting := false
 	defer f.pm.wg.Done()
@@ -133,8 +133,8 @@ func (f *lightFetcher) syncLoop() {
 		select {
 		case <-f.pm.quitSync:
 			return
-		// when a new announce is received, request loop keeps running until
-		// no further requests are necessary or possible
+		                                                                    
+		                                                
 		case newAnnounce := <-f.requestChn:
 			f.lock.Lock()
 			s := requesting
@@ -166,7 +166,7 @@ func (f *lightFetcher) syncLoop() {
 							f.requested[reqID] = req
 						}
 						f.reqMu.Unlock()
-						// keep starting new requests while possible
+						                                            
 						f.requestChn <- false
 					}()
 				}
@@ -212,7 +212,7 @@ func (f *lightFetcher) syncLoop() {
 	}
 }
 
-// registerPeer adds a new peer to the fetcher's peer set
+                                                         
 func (f *lightFetcher) registerPeer(p *peer) {
 	p.lock.Lock()
 	p.hasBlock = func(hash common.Hash, number uint64) bool {
@@ -226,7 +226,7 @@ func (f *lightFetcher) registerPeer(p *peer) {
 	f.peers[p] = &fetcherPeerInfo{nodeByHash: make(map[common.Hash]*fetcherTreeNode)}
 }
 
-// unregisterPeer removes a new peer from the fetcher's peer set
+                                                                
 func (f *lightFetcher) unregisterPeer(p *peer) {
 	p.lock.Lock()
 	p.hasBlock = nil
@@ -235,13 +235,13 @@ func (f *lightFetcher) unregisterPeer(p *peer) {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 
-	// check for potential timed out block delay statistics
+	                                                       
 	f.checkUpdateStats(p, nil)
 	delete(f.peers, p)
 }
 
-// announce processes a new announcement message received from a peer, adding new
-// nodes to the peer's block tree and removing old nodes if necessary
+                                                                                 
+                                                                     
 func (f *lightFetcher) announce(p *peer, head *announceData) {
 	f.lock.Lock()
 	defer f.lock.Unlock()
@@ -254,7 +254,7 @@ func (f *lightFetcher) announce(p *peer, head *announceData) {
 	}
 
 	if fp.lastAnnounced != nil && head.Td.Cmp(fp.lastAnnounced.td) <= 0 {
-		// announced tds should be strictly monotonic
+		                                             
 		p.Log().Debug("Received non-monotonic td", "current", head.Td, "previous", fp.lastAnnounced.td)
 		go f.pm.removePeer(p.id)
 		return
@@ -268,8 +268,8 @@ func (f *lightFetcher) announce(p *peer, head *announceData) {
 		n = n.parent
 	}
 	if n != nil {
-		// n is now the reorg common ancestor, add a new branch of nodes
-		// check if the node count is too high to add new nodes
+		                                                                
+		                                                       
 		locked := false
 		for uint64(fp.nodeCnt)+head.Number-n.number > maxNodeCount && fp.root != nil {
 			if !locked {
@@ -277,7 +277,7 @@ func (f *lightFetcher) announce(p *peer, head *announceData) {
 				defer f.chain.UnlockChain()
 				locked = true
 			}
-			// if one of root's children is canonical, keep it, delete other branches and root itself
+			                                                                                         
 			var newRoot *fetcherTreeNode
 			for i, nn := range fp.root.children {
 				if core.GetCanonicalHash(f.pm.chainDb, nn.number) == nn.hash {
@@ -314,7 +314,7 @@ func (f *lightFetcher) announce(p *peer, head *announceData) {
 		}
 	}
 	if n == nil {
-		// could not find reorg common ancestor or had to delete entire tree, a new root and a resync is needed
+		                                                                                                       
 		if fp.root != nil {
 			fp.deleteNode(fp.root)
 		}
@@ -335,15 +335,15 @@ func (f *lightFetcher) announce(p *peer, head *announceData) {
 	f.requestChn <- true
 }
 
-// peerHasBlock returns true if we can assume the peer knows the given block
-// based on its announcements
+                                                                            
+                             
 func (f *lightFetcher) peerHasBlock(p *peer, hash common.Hash, number uint64) bool {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 
 	if f.syncing {
-		// always return true when syncing
-		// false positives are acceptable, a more sophisticated condition can be implemented later
+		                                  
+		                                                                                          
 		return true
 	}
 
@@ -353,21 +353,21 @@ func (f *lightFetcher) peerHasBlock(p *peer, hash common.Hash, number uint64) bo
 	}
 
 	if number >= fp.root.number {
-		// it is recent enough that if it is known, is should be in the peer's block tree
+		                                                                                 
 		return fp.nodeByHash[hash] != nil
 	}
 	f.chain.LockChain()
 	defer f.chain.UnlockChain()
-	// if it's older than the peer's block tree root but it's in the same canonical chain
-	// as the root, we can still be sure the peer knows it
-	//
-	// when syncing, just check if it is part of the known chain, there is nothing better we
-	// can do since we do not know the most recent block hash yet
+	                                                                                     
+	                                                      
+	  
+	                                                                                        
+	                                                             
 	return core.GetCanonicalHash(f.pm.chainDb, fp.root.number) == fp.root.hash && core.GetCanonicalHash(f.pm.chainDb, number) == hash
 }
 
-// requestAmount calculates the amount of headers to be downloaded starting
-// from a certain head backwards
+                                                                           
+                                
 func (f *lightFetcher) requestAmount(p *peer, n *fetcherTreeNode) uint64 {
 	amount := uint64(0)
 	nn := n
@@ -381,7 +381,7 @@ func (f *lightFetcher) requestAmount(p *peer, n *fetcherTreeNode) uint64 {
 	return amount
 }
 
-// requestedID tells if a certain reqID has been requested by the fetcher
+                                                                         
 func (f *lightFetcher) requestedID(reqID uint64) bool {
 	f.reqMu.RLock()
 	_, ok := f.requested[reqID]
@@ -389,8 +389,8 @@ func (f *lightFetcher) requestedID(reqID uint64) bool {
 	return ok
 }
 
-// nextRequest selects the peer and announced head to be requested next, amount
-// to be downloaded starting from the head backwards is also returned
+                                                                               
+                                                                     
 func (f *lightFetcher) nextRequest() (*distReq, uint64) {
 	var (
 		bestHash   common.Hash
@@ -489,12 +489,12 @@ func (f *lightFetcher) nextRequest() (*distReq, uint64) {
 	return rq, reqID
 }
 
-// deliverHeaders delivers header download request responses for processing
+                                                                           
 func (f *lightFetcher) deliverHeaders(peer *peer, reqID uint64, headers []*types.Header) {
 	f.deliverChn <- fetchResponse{reqID: reqID, headers: headers, peer: peer}
 }
 
-// processResponse processes header download request responses, returns true if successful
+                                                                                          
 func (f *lightFetcher) processResponse(req fetchRequest, resp fetchResponse) bool {
 	if uint64(len(resp.headers)) != req.amount || resp.headers[0].Hash() != req.hash {
 		req.peer.Log().Debug("Response content mismatch", "requested", len(resp.headers), "reqfrom", resp.headers[0], "delivered", req.amount, "delfrom", req.hash)
@@ -524,8 +524,8 @@ func (f *lightFetcher) processResponse(req fetchRequest, resp fetchResponse) boo
 	return true
 }
 
-// newHeaders updates the block trees of all active peers according to a newly
-// downloaded and validated batch or headers
+                                                                              
+                                            
 func (f *lightFetcher) newHeaders(headers []*types.Header, tds []*big.Int) {
 	var maxTd *big.Int
 	for p, fp := range f.peers {
@@ -542,12 +542,12 @@ func (f *lightFetcher) newHeaders(headers []*types.Header, tds []*big.Int) {
 	}
 }
 
-// checkAnnouncedHeaders updates peer's block tree if necessary after validating
-// a batch of headers. It searches for the latest header in the batch that has a
-// matching tree node (if any), and if it has not been marked as known already,
-// sets it and its parents to known (even those which are older than the currently
-// validated ones). Return value shows if all hashes, numbers and Tds matched
-// correctly to the announced values (otherwise the peer should be dropped).
+                                                                                
+                                                                                
+                                                                               
+                                                                                  
+                                                                             
+                                                                            
 func (f *lightFetcher) checkAnnouncedHeaders(fp *fetcherPeerInfo, headers []*types.Header, tds []*big.Int) bool {
 	var (
 		n      *fetcherTreeNode
@@ -558,10 +558,10 @@ func (f *lightFetcher) checkAnnouncedHeaders(fp *fetcherPeerInfo, headers []*typ
 	for i := len(headers) - 1; ; i-- {
 		if i < 0 {
 			if n == nil {
-				// no more headers and nothing to match
+				                                       
 				return true
 			}
-			// we ran out of recently delivered headers but have not reached a node known by this peer yet, continue matching
+			                                                                                                                 
 			hash, number := header.ParentHash, header.Number.Uint64()-1
 			td = f.chain.GetTd(hash, number)
 			header = f.chain.GetHeader(hash, number)
@@ -580,9 +580,9 @@ func (f *lightFetcher) checkAnnouncedHeaders(fp *fetcherPeerInfo, headers []*typ
 		}
 		if n != nil {
 			if n.td == nil {
-				// node was unannounced
+				                       
 				if nn := fp.nodeByHash[hash]; nn != nil {
-					// if there was already a node with the same hash, continue there and drop this one
+					                                                                                   
 					nn.children = append(nn.children, n.children...)
 					n.children = nil
 					fp.deleteNode(n)
@@ -593,13 +593,13 @@ func (f *lightFetcher) checkAnnouncedHeaders(fp *fetcherPeerInfo, headers []*typ
 					fp.nodeByHash[hash] = n
 				}
 			}
-			// check if it matches the header
+			                                 
 			if n.hash != hash || n.number != number || n.td.Cmp(td) != 0 {
-				// peer has previously made an invalid announcement
+				                                                   
 				return false
 			}
 			if n.known {
-				// we reached a known node that matched our expectations, return with success
+				                                                                             
 				return true
 			}
 			n.known = true
@@ -615,9 +615,9 @@ func (f *lightFetcher) checkAnnouncedHeaders(fp *fetcherPeerInfo, headers []*typ
 	}
 }
 
-// checkSyncedHeaders updates peer's block tree after synchronisation by marking
-// downloaded headers as known. If none of the announced headers are found after
-// syncing, the peer is dropped.
+                                                                                
+                                                                                
+                                
 func (f *lightFetcher) checkSyncedHeaders(p *peer) {
 	fp := f.peers[p]
 	if fp == nil {
@@ -632,7 +632,7 @@ func (f *lightFetcher) checkSyncedHeaders(p *peer) {
 		}
 		n = n.parent
 	}
-	// now n is the latest downloaded header after syncing
+	                                                      
 	if n == nil {
 		p.Log().Debug("Synchronisation failed")
 		go f.pm.removePeer(p.id)
@@ -642,8 +642,8 @@ func (f *lightFetcher) checkSyncedHeaders(p *peer) {
 	}
 }
 
-// checkKnownNode checks if a block tree node is known (downloaded and validated)
-// If it was not known previously but found in the database, sets its known flag
+                                                                                 
+                                                                                
 func (f *lightFetcher) checkKnownNode(p *peer, n *fetcherTreeNode) bool {
 	if n.known {
 		return true
@@ -653,8 +653,8 @@ func (f *lightFetcher) checkKnownNode(p *peer, n *fetcherTreeNode) bool {
 		return false
 	}
 	header := f.chain.GetHeader(n.hash, n.number)
-	// check the availability of both header and td because reads are not protected by chain db mutex
-	// Note: returning false is always safe here
+	                                                                                                 
+	                                            
 	if header == nil {
 		return false
 	}
@@ -674,7 +674,7 @@ func (f *lightFetcher) checkKnownNode(p *peer, n *fetcherTreeNode) bool {
 	return n.known
 }
 
-// deleteNode deletes a node and its child subtrees from a peer's block tree
+                                                                            
 func (fp *fetcherPeerInfo) deleteNode(n *fetcherTreeNode) {
 	if n.parent != nil {
 		for i, nn := range n.parent.children {
@@ -702,25 +702,25 @@ func (fp *fetcherPeerInfo) deleteNode(n *fetcherTreeNode) {
 	}
 }
 
-// updateStatsEntry items form a linked list that is expanded with a new item every time a new head with a higher Td
-// than the previous one has been downloaded and validated. The list contains a series of maximum confirmed Td values
-// and the time these values have been confirmed, both increasing monotonically. A maximum confirmed Td is calculated
-// both globally for all peers and also for each individual peer (meaning that the given peer has announced the head
-// and it has also been downloaded from any peer, either before or after the given announcement).
-// The linked list has a global tail where new confirmed Td entries are added and a separate head for each peer,
-// pointing to the next Td entry that is higher than the peer's max confirmed Td (nil if it has already confirmed
-// the current global head).
+                                                                                                                    
+                                                                                                                     
+                                                                                                                     
+                                                                                                                    
+                                                                                                 
+                                                                                                                
+                                                                                                                 
+                            
 type updateStatsEntry struct {
 	time mclock.AbsTime
 	td   *big.Int
 	next *updateStatsEntry
 }
 
-// updateMaxConfirmedTd updates the block delay statistics of active peers. Whenever a new highest Td is confirmed,
-// adds it to the end of a linked list together with the time it has been confirmed. Then checks which peers have
-// already confirmed a head with the same or higher Td (which counts as zero block delay) and updates their statistics.
-// Those who have not confirmed such a head by now will be updated by a subsequent checkUpdateStats call with a
-// positive block delay value.
+                                                                                                                   
+                                                                                                                 
+                                                                                                                       
+                                                                                                               
+                              
 func (f *lightFetcher) updateMaxConfirmedTd(td *big.Int) {
 	if f.maxConfirmedTd == nil || td.Cmp(f.maxConfirmedTd) > 0 {
 		f.maxConfirmedTd = td
@@ -738,14 +738,14 @@ func (f *lightFetcher) updateMaxConfirmedTd(td *big.Int) {
 	}
 }
 
-// checkUpdateStats checks those peers who have not confirmed a certain highest Td (or a larger one) by the time it
-// has been confirmed by another peer. If they have confirmed such a head by now, their stats are updated with the
-// block delay which is (this peer's confirmation time)-(first confirmation time). After blockDelayTimeout has passed,
-// the stats are updated with blockDelayTimeout value. In either case, the confirmed or timed out updateStatsEntry
-// items are removed from the head of the linked list.
-// If a new entry has been added to the global tail, it is passed as a parameter here even though this function
-// assumes that it has already been added, so that if the peer's list is empty (all heads confirmed, head is nil),
-// it can set the new head to newEntry.
+                                                                                                                   
+                                                                                                                  
+                                                                                                                      
+                                                                                                                  
+                                                      
+                                                                                                               
+                                                                                                                  
+                                       
 func (f *lightFetcher) checkUpdateStats(p *peer, newEntry *updateStatsEntry) {
 	now := mclock.Now()
 	fp := f.peers[p]

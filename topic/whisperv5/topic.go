@@ -1,20 +1,20 @@
-// Copyright 2016 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                                
+  
+                                                                                  
+                                                                              
+                                                                    
+                                      
+  
+                                                                             
+                                                                 
+                                                               
+                                                      
+  
+                                                                           
+                                                                                  
 
-// Contains the Whisper protocol Topic element.
+                                               
 
 package whisperv5
 
@@ -23,9 +23,9 @@ import (
 	"github.com/epvchain/go-epvchain/public/hexutil"
 )
 
-// Topic represents a cryptographically secure, probabilistic partial
-// classifications of a message, determined as the first (left) 4 bytes of the
-// SHA3 hash of some arbitrary data given by the original author of the message.
+                                                                     
+                                                                              
+                                                                                
 type TopicType [TopicLength]byte
 
 func BytesToTopic(b []byte) (t TopicType) {
@@ -39,17 +39,17 @@ func BytesToTopic(b []byte) (t TopicType) {
 	return t
 }
 
-// String converts a topic byte array to a string representation.
+                                                                 
 func (t *TopicType) String() string {
 	return common.ToHex(t[:])
 }
 
-// MarshalText returns the hex representation of t.
+                                                   
 func (t TopicType) MarshalText() ([]byte, error) {
 	return hexutil.Bytes(t[:]).MarshalText()
 }
 
-// UnmarshalText parses a hex representation to a topic.
+                                                        
 func (t *TopicType) UnmarshalText(input []byte) error {
 	return hexutil.UnmarshalFixedText("Topic", input, t[:])
 }

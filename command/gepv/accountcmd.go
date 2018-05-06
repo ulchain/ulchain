@@ -1,18 +1,18 @@
-// Copyright 2016 The go-epvchain Authors
-// This file is part of go-epvchain.
-//
-// go-epvchain is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// go-epvchain is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with go-epvchain. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                    
+  
+                                                                      
+                                                                       
+                                                                    
+                                      
+  
+                                                                 
+                                                                 
+                                                               
+                                               
+  
+                                                                    
+                                                                      
 
 package main
 
@@ -204,7 +204,7 @@ func accountList(ctx *cli.Context) error {
 	return nil
 }
 
-// tries unlocking the specified account a few times.
+                                                     
 func unlockAccount(ctx *cli.Context, ks *keystore.KeyStore, address string, i int, passwords []string) (accounts.Account, string) {
 	account, err := utils.MakeAddress(ks, address)
 	if err != nil {
@@ -223,27 +223,27 @@ func unlockAccount(ctx *cli.Context, ks *keystore.KeyStore, address string, i in
 			return ambiguousAddrRecovery(ks, err, password), password
 		}
 		if err != keystore.ErrDecrypt {
-			// No need to prompt again if the error is not decryption-related.
+			                                                                  
 			break
 		}
 	}
-	// All trials expended to unlock account, bail out
+	                                                  
 	utils.Fatalf("Failed to unlock account %s (%v)", address, err)
 
 	return accounts.Account{}, ""
 }
 
-// getPassPhrase retrieves the password associated with an account, either fetched
-// from a list of preloaded passphrases, or requested interactively from the user.
+                                                                                  
+                                                                                  
 func getPassPhrase(prompt string, confirmation bool, i int, passwords []string) string {
-	// If a list of passwords was supplied, retrieve from them
+	                                                          
 	if len(passwords) > 0 {
 		if i < len(passwords) {
 			return passwords[i]
 		}
 		return passwords[len(passwords)-1]
 	}
-	// Otherwise prompt the user for the password
+	                                             
 	if prompt != "" {
 		fmt.Println(prompt)
 	}
@@ -289,10 +289,10 @@ func ambiguousAddrRecovery(ks *keystore.KeyStore, err *keystore.AmbiguousAddrErr
 	return *match
 }
 
-// accountCreate creates a new account into the keystore defined by the CLI flags.
+                                                                                  
 func accountCreate(ctx *cli.Context) error {
 	cfg := gepvConfig{Node: defaultNodeConfig()}
-	// Load config file.
+	                    
 	if file := ctx.GlobalString(configFileFlag.Name); file != "" {
 		if err := loadConfig(file, &cfg); err != nil {
 			utils.Fatalf("%v", err)
@@ -316,8 +316,8 @@ func accountCreate(ctx *cli.Context) error {
 	return nil
 }
 
-// accountUpdate transitions an account from a previous format to the current
-// one, also providing the possibility to change the pass-phrase.
+                                                                             
+                                                                 
 func accountUpdate(ctx *cli.Context) error {
 	if len(ctx.Args()) == 0 {
 		utils.Fatalf("No accounts specified to update")

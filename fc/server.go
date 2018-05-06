@@ -1,20 +1,20 @@
-// Copyright 2016 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                                
+  
+                                                                                  
+                                                                              
+                                                                    
+                                      
+  
+                                                                             
+                                                                 
+                                                               
+                                                      
+  
+                                                                           
+                                                                                  
 
-// Package les implements the Light EPVchain Subprotocol.
+                                                         
 package les
 
 import (
@@ -39,7 +39,7 @@ import (
 type LesServer struct {
 	config          *epv.Config
 	protocolManager *ProtocolManager
-	fcManager       *flowcontrol.ClientManager // nil if our node is client only
+	fcManager       *flowcontrol.ClientManager                                  
 	fcCostStats     *requestCostStats
 	defParams       *flowcontrol.ServerParams
 	lesTopics       []discv5.Topic
@@ -71,12 +71,12 @@ func NewLesServer(epv *epv.EPVchain, config *epv.Config) (*LesServer, error) {
 	}
 	logger := log.New()
 
-	chtV1SectionCount, _, _ := srv.chtIndexer.Sections() // indexer still uses LES/1 4k section size for backwards server compatibility
+	chtV1SectionCount, _, _ := srv.chtIndexer.Sections()                                                                               
 	chtV2SectionCount := chtV1SectionCount / (light.CHTFrequencyClient / light.CHTFrequencyServer)
 	if chtV2SectionCount != 0 {
-		// convert to LES/2 section
+		                           
 		chtLastSection := chtV2SectionCount - 1
-		// convert last LES/2 section index back to LES/1 index for chtIndexer.SectionHead
+		                                                                                  
 		chtLastSectionV1 := (chtLastSection+1)*(light.CHTFrequencyClient/light.CHTFrequencyServer) - 1
 		chtSectionHead := srv.chtIndexer.SectionHead(chtLastSectionV1)
 		chtRoot := light.GetChtV2Root(pm.chainDb, chtLastSection, chtSectionHead)
@@ -106,7 +106,7 @@ func (s *LesServer) Protocols() []p2p.Protocol {
 	return s.protocolManager.SubProtocols
 }
 
-// Start starts the LES server
+                              
 func (s *LesServer) Start(srvr *p2p.Server) {
 	s.protocolManager.Start(s.config.LightPeers)
 	if srvr.DiscV5 != nil {
@@ -129,10 +129,10 @@ func (s *LesServer) SetBloomBitsIndexer(bloomIndexer *core.ChainIndexer) {
 	bloomIndexer.AddChildIndexer(s.bloomTrieIndexer)
 }
 
-// Stop stops the LES service
+                             
 func (s *LesServer) Stop() {
 	s.chtIndexer.Close()
-	// bloom trie indexer is closed by parent bloombits indexer
+	                                                           
 	s.fcCostStats.store()
 	s.fcManager.Stop()
 	go func() {
@@ -284,10 +284,10 @@ func (s *requestCostStats) getCurrentList() RequestCostList {
 	defer s.lock.Unlock()
 
 	list := make(RequestCostList, len(reqList))
-	//fmt.Println("RequestCostList")
+	                                
 	for idx, code := range reqList {
 		b, m := s.stats[code].calc()
-		//fmt.Println(code, s.stats[code].cnt, b/1000000, m/1000000)
+		                                                            
 		if m < 0 {
 			b += m
 			m = 0

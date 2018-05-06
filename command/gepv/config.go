@@ -1,18 +1,18 @@
-// Copyright 2017 The go-epvchain Authors
-// This file is part of go-epvchain.
-//
-// go-epvchain is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// go-epvchain is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with go-epvchain. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                    
+  
+                                                                      
+                                                                       
+                                                                    
+                                      
+  
+                                                                 
+                                                                 
+                                                               
+                                               
+  
+                                                                    
+                                                                      
 
 package main
 
@@ -53,7 +53,7 @@ var (
 	}
 )
 
-// These settings ensure that TOML keys use the same names as Go struct fields.
+                                                                               
 var tomlSettings = toml.Config{
 	NormFieldName: func(rt reflect.Type, key string) string {
 		return key
@@ -90,7 +90,7 @@ func loadConfig(file string, cfg *gepvConfig) error {
 	defer f.Close()
 
 	err = tomlSettings.NewDecoder(bufio.NewReader(f)).Decode(cfg)
-	// Add file name to errors that have a line number.
+	                                                   
 	if _, ok := err.(*toml.LineError); ok {
 		err = errors.New(file + ", " + err.Error())
 	}
@@ -108,7 +108,7 @@ func defaultNodeConfig() node.Config {
 }
 
 func makeConfigNode(ctx *cli.Context) (*node.Node, gepvConfig) {
-	// Load defaults.
+	                 
 	cfg := gepvConfig{
 		EPV:       epv.DefaultConfig,
 		Shh:       whisper.DefaultConfig,
@@ -116,14 +116,14 @@ func makeConfigNode(ctx *cli.Context) (*node.Node, gepvConfig) {
 		Dashboard: dashboard.DefaultConfig,
 	}
 
-	// Load config file.
+	                    
 	if file := ctx.GlobalString(configFileFlag.Name); file != "" {
 		if err := loadConfig(file, &cfg); err != nil {
 			utils.Fatalf("%v", err)
 		}
 	}
 
-	// Apply flags.
+	               
 	utils.SetNodeConfig(ctx, &cfg.Node)
 	stack, err := node.New(&cfg.Node)
 	if err != nil {
@@ -140,7 +140,7 @@ func makeConfigNode(ctx *cli.Context) (*node.Node, gepvConfig) {
 	return stack, cfg
 }
 
-// enableWhisper returns true in case one of the whisper flags is set.
+                                                                      
 func enableWhisper(ctx *cli.Context) bool {
 	for _, flag := range whisperFlags {
 		if ctx.GlobalIsSet(flag.GetName()) {
@@ -158,7 +158,7 @@ func makeFullNode(ctx *cli.Context) *node.Node {
 	if ctx.GlobalBool(utils.DashboardEnabledFlag.Name) {
 		utils.RegisterDashboardService(stack, &cfg.Dashboard, gitCommit)
 	}
-	// Whisper must be explicitly enabled by specifying at least 1 whisper flag or in dev mode
+	                                                                                          
 	shhEnabled := enableWhisper(ctx)
 	shhAutoEnabled := !ctx.GlobalIsSet(utils.WhisperEnabledFlag.Name) && ctx.GlobalIsSet(utils.DeveloperFlag.Name)
 	if shhEnabled || shhAutoEnabled {
@@ -171,14 +171,14 @@ func makeFullNode(ctx *cli.Context) *node.Node {
 		utils.RegisterShhService(stack, &cfg.Shh)
 	}
 
-	// Add the EPVchain Stats daemon if requested.
+	                                              
 	if cfg.EPVstats.URL != "" {
 		utils.RegisterEPVStatsService(stack, cfg.EPVstats.URL)
 	}
 	return stack
 }
 
-// dumpConfig is the dumpconfig command.
+                                        
 func dumpConfig(ctx *cli.Context) error {
 	_, cfg := makeConfigNode(ctx)
 	comment := ""

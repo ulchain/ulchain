@@ -1,21 +1,21 @@
-// Copyright 2012 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+                                                      
+                                                     
+                                                 
 
 package bn256
 
-// For details of the algorithms used, see "Multiplication and Squaring on
-// Pairing-Friendly Fields, Devegili et al.
-// http://eprint.iacr.org/2006/471.pdf.
+                                                                          
+                                           
+                                       
 
 import (
 	"math/big"
 )
 
-// gfP12 implements the field of size p¹² as a quadratic extension of gfP6
-// where ω²=τ.
+                                                                            
+                 
 type gfP12 struct {
-	x, y *gfP6 // value is xω + y
+	x, y *gfP6                    
 }
 
 func newGFp12(pool *bnPool) *gfP12 {
@@ -76,7 +76,7 @@ func (e *gfP12) Negative(a *gfP12) *gfP12 {
 	return e
 }
 
-// Frobenius computes (xω+y)^p = x^p ω·ξ^((p-1)/6) + y^p
+                                                            
 func (e *gfP12) Frobenius(a *gfP12, pool *bnPool) *gfP12 {
 	e.x.Frobenius(a.x, pool)
 	e.y.Frobenius(a.y, pool)
@@ -84,7 +84,7 @@ func (e *gfP12) Frobenius(a *gfP12, pool *bnPool) *gfP12 {
 	return e
 }
 
-// FrobeniusP2 computes (xω+y)^p² = x^p² ω·ξ^((p²-1)/6) + y^p²
+                                                                      
 func (e *gfP12) FrobeniusP2(a *gfP12, pool *bnPool) *gfP12 {
 	e.x.FrobeniusP2(a.x)
 	e.x.MulGFP(e.x, xiToPSquaredMinus1Over6)
@@ -153,7 +153,7 @@ func (c *gfP12) Exp(a *gfP12, power *big.Int, pool *bnPool) *gfP12 {
 }
 
 func (e *gfP12) Square(a *gfP12, pool *bnPool) *gfP12 {
-	// Complex squaring algorithm
+	                             
 	v0 := newGFp6(pool)
 	v0.Mul(a.x, a.y, pool)
 
@@ -178,8 +178,8 @@ func (e *gfP12) Square(a *gfP12, pool *bnPool) *gfP12 {
 }
 
 func (e *gfP12) Invert(a *gfP12, pool *bnPool) *gfP12 {
-	// See "Implementing cryptographic pairings", M. Scott, section 3.2.
-	// ftp://136.206.11.249/pub/crypto/pairings.pdf
+	                                                                    
+	                                               
 	t1 := newGFp6(pool)
 	t2 := newGFp6(pool)
 

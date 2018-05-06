@@ -1,27 +1,27 @@
-// Copyright 2017 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                                
+  
+                                                                                  
+                                                                              
+                                                                    
+                                      
+  
+                                                                             
+                                                                 
+                                                               
+                                                      
+  
+                                                                           
+                                                                                  
 
 package dashboard
 
-//go:generate npm --prefix ./assets install
-//go:generate ./assets/node_modules/.bin/webpack --config ./assets/webpack.config.js --context ./assets
-//go:generate go-bindata -nometadata -o assets.go -prefix assets -nocompress -pkg dashboard assets/dashboard.html assets/bundle.js
-//go:generate sh -c "sed 's#var _bundleJs#//nolint:misspell\\\n&#' assets.go > assets.go.tmp && mv assets.go.tmp assets.go"
-//go:generate sh -c "sed 's#var _dashboardHtml#//nolint:misspell\\\n&#' assets.go > assets.go.tmp && mv assets.go.tmp assets.go"
-//go:generate gofmt -w -s assets.go
+                                           
+                                                                                                       
+                                                                                                                                  
+                                                                                                                           
+                                                                                                                                
+                                   
 
 import (
 	"fmt"
@@ -44,40 +44,40 @@ import (
 )
 
 const (
-	activeMemorySampleLimit   = 200 // Maximum number of active memory data samples
-	virtualMemorySampleLimit  = 200 // Maximum number of virtual memory data samples
-	networkIngressSampleLimit = 200 // Maximum number of network ingress data samples
-	networkEgressSampleLimit  = 200 // Maximum number of network egress data samples
-	processCPUSampleLimit     = 200 // Maximum number of process cpu data samples
-	systemCPUSampleLimit      = 200 // Maximum number of system cpu data samples
-	diskReadSampleLimit       = 200 // Maximum number of disk read data samples
-	diskWriteSampleLimit      = 200 // Maximum number of disk write data samples
+	activeMemorySampleLimit   = 200                                                
+	virtualMemorySampleLimit  = 200                                                 
+	networkIngressSampleLimit = 200                                                  
+	networkEgressSampleLimit  = 200                                                 
+	processCPUSampleLimit     = 200                                              
+	systemCPUSampleLimit      = 200                                             
+	diskReadSampleLimit       = 200                                            
+	diskWriteSampleLimit      = 200                                             
 )
 
-var nextID uint32 // Next connection id
+var nextID uint32                      
 
-// Dashboard contains the dashboard internals.
+                                              
 type Dashboard struct {
 	config *Config
 
 	listener net.Listener
-	conns    map[uint32]*client // Currently live websocket connections
+	conns    map[uint32]*client                                        
 	charts   *HomeMessage
 	commit   string
-	lock     sync.RWMutex // Lock protecting the dashboard's internals
+	lock     sync.RWMutex                                             
 
-	quit chan chan error // Channel used for graceful exit
+	quit chan chan error                                  
 	wg   sync.WaitGroup
 }
 
-// client represents active websocket connection with a remote browser.
+                                                                       
 type client struct {
-	conn   *websocket.Conn // Particular live websocket connection
-	msg    chan Message    // Message queue for the update messages
-	logger log.Logger      // Logger for the particular live websocket connection
+	conn   *websocket.Conn                                        
+	msg    chan Message                                            
+	logger log.Logger                                                            
 }
 
-// New creates a new dashboard instance with the given configuration.
+                                                                     
 func New(config *Config, commit string) (*Dashboard, error) {
 	now := time.Now()
 	db := &Dashboard{
@@ -99,7 +99,7 @@ func New(config *Config, commit string) (*Dashboard, error) {
 	return db, nil
 }
 
-// emptyChartEntries returns a ChartEntry array containing limit number of empty samples.
+                                                                                         
 func emptyChartEntries(t time.Time, limit int, refresh time.Duration) ChartEntries {
 	ce := make(ChartEntries, limit)
 	for i := 0; i < limit; i++ {
@@ -110,19 +110,19 @@ func emptyChartEntries(t time.Time, limit int, refresh time.Duration) ChartEntri
 	return ce
 }
 
-// Protocols is a meaningless implementation of node.Service.
+                                                             
 func (db *Dashboard) Protocols() []p2p.Protocol { return nil }
 
-// APIs is a meaningless implementation of node.Service.
+                                                        
 func (db *Dashboard) APIs() []rpc.API { return nil }
 
-// Start implements node.Service, starting the data collection thread and the listening server of the dashboard.
+                                                                                                                
 func (db *Dashboard) Start(server *p2p.Server) error {
 	log.Info("Starting dashboard")
 
 	db.wg.Add(2)
 	go db.collectData()
-	go db.collectLogs() // In case of removing this line change 2 back to 1 in wg.Add.
+	go db.collectLogs()                                                               
 
 	http.HandleFunc("/", db.webHandler)
 	http.Handle("/api", websocket.Handler(db.apiHandler))
@@ -138,14 +138,14 @@ func (db *Dashboard) Start(server *p2p.Server) error {
 	return nil
 }
 
-// Stop implements node.Service, stopping the data collection thread and the connection listener of the dashboard.
+                                                                                                                  
 func (db *Dashboard) Stop() error {
-	// Close the connection listener.
+	                                 
 	var errs []error
 	if err := db.listener.Close(); err != nil {
 		errs = append(errs, err)
 	}
-	// Close the collectors.
+	                        
 	errc := make(chan error, 1)
 	for i := 0; i < 2; i++ {
 		db.quit <- errc
@@ -153,7 +153,7 @@ func (db *Dashboard) Stop() error {
 			errs = append(errs, err)
 		}
 	}
-	// Close the connections.
+	                         
 	db.lock.Lock()
 	for _, c := range db.conns {
 		if err := c.conn.Close(); err != nil {
@@ -162,7 +162,7 @@ func (db *Dashboard) Stop() error {
 	}
 	db.lock.Unlock()
 
-	// Wait until every goroutine terminates.
+	                                         
 	db.wg.Wait()
 	log.Info("Dashboard stopped")
 
@@ -174,7 +174,7 @@ func (db *Dashboard) Stop() error {
 	return err
 }
 
-// webHandler handles all non-api requests, simply flattening and returning the dashboard website.
+                                                                                                  
 func (db *Dashboard) webHandler(w http.ResponseWriter, r *http.Request) {
 	log.Debug("Request", "URL", r.URL)
 
@@ -182,7 +182,7 @@ func (db *Dashboard) webHandler(w http.ResponseWriter, r *http.Request) {
 	if path == "/" {
 		path = "/dashboard.html"
 	}
-	// If the path of the assets is manually set
+	                                            
 	if db.config.Assets != "" {
 		blob, err := ioutil.ReadFile(filepath.Join(db.config.Assets, path))
 		if err != nil {
@@ -202,7 +202,7 @@ func (db *Dashboard) webHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(blob)
 }
 
-// apiHandler handles requests for the dashboard.
+                                                 
 func (db *Dashboard) apiHandler(conn *websocket.Conn) {
 	id := atomic.AddUint32(&nextID, 1)
 	client := &client{
@@ -212,7 +212,7 @@ func (db *Dashboard) apiHandler(conn *websocket.Conn) {
 	}
 	done := make(chan struct{})
 
-	// Start listening for messages to send.
+	                                        
 	db.wg.Add(1)
 	go func() {
 		defer db.wg.Done()
@@ -235,7 +235,7 @@ func (db *Dashboard) apiHandler(conn *websocket.Conn) {
 	if len(params.VersionMeta) > 0 {
 		versionMeta = fmt.Sprintf(" (%s)", params.VersionMeta)
 	}
-	// Send the past data.
+	                      
 	client.msg <- Message{
 		General: &GeneralMessage{
 			Version: fmt.Sprintf("v%d.%d.%d%s", params.VersionMajor, params.VersionMinor, params.VersionPatch, versionMeta),
@@ -252,7 +252,7 @@ func (db *Dashboard) apiHandler(conn *websocket.Conn) {
 			DiskWrite:      db.charts.DiskWrite,
 		},
 	}
-	// Start tracking the connection and drop at connection loss.
+	                                                             
 	db.lock.Lock()
 	db.conns[id] = client
 	db.lock.Unlock()
@@ -267,11 +267,11 @@ func (db *Dashboard) apiHandler(conn *websocket.Conn) {
 			close(done)
 			return
 		}
-		// Ignore all messages
+		                      
 	}
 }
 
-// collectData collects the required data to plot on the dashboard.
+                                                                   
 func (db *Dashboard) collectData() {
 	defer db.wg.Done()
 	systemCPUUsage := gosigar.Cpu{}
@@ -378,12 +378,12 @@ func (db *Dashboard) collectData() {
 	}
 }
 
-// collectLogs collects and sends the logs to the active dashboards.
+                                                                    
 func (db *Dashboard) collectLogs() {
 	defer db.wg.Done()
 
 	id := 1
-	// TODO (kurkomisi): log collection comes here.
+	                                               
 	for {
 		select {
 		case errc := <-db.quit:
@@ -400,7 +400,7 @@ func (db *Dashboard) collectLogs() {
 	}
 }
 
-// sendToAll sends the given message to the active dashboards.
+                                                              
 func (db *Dashboard) sendToAll(msg *Message) {
 	db.lock.Lock()
 	for _, c := range db.conns {

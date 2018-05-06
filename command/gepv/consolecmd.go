@@ -1,18 +1,18 @@
-// Copyright 2016 The go-epvchain Authors
-// This file is part of go-epvchain.
-//
-// go-epvchain is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// go-epvchain is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with go-epvchain. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                    
+  
+                                                                      
+                                                                       
+                                                                    
+                                      
+  
+                                                                 
+                                                                 
+                                                               
+                                               
+  
+                                                                    
+                                                                      
 
 package main
 
@@ -72,15 +72,15 @@ JavaScript API. See https://github.com/epvchain/go-epvchain/wiki/Javascipt-Conso
 	}
 )
 
-// localConsole starts a new gepv node, attaching a JavaScript console to it at the
-// same time.
+                                                                                   
+             
 func localConsole(ctx *cli.Context) error {
-	// Create and start the node based on the CLI flags
+	                                                   
 	node := makeFullNode(ctx)
 	startNode(ctx, node)
 	defer node.Stop()
 
-	// Attach to the newly started node and start the JavaScript console
+	                                                                    
 	client, err := node.Attach()
 	if err != nil {
 		utils.Fatalf("Failed to attach to the inproc gepv: %v", err)
@@ -98,22 +98,22 @@ func localConsole(ctx *cli.Context) error {
 	}
 	defer console.Stop(false)
 
-	// If only a short execution was requested, evaluate and return
+	                                                               
 	if script := ctx.GlobalString(utils.ExecFlag.Name); script != "" {
 		console.Evaluate(script)
 		return nil
 	}
-	// Otherwise print the welcome screen and enter interactive mode
+	                                                                
 	console.Welcome()
 	console.Interactive()
 
 	return nil
 }
 
-// remoteConsole will connect to a remote gepv instance, attaching a JavaScript
-// console to it.
+                                                                               
+                 
 func remoteConsole(ctx *cli.Context) error {
-	// Attach to a remotely running gepv instance and start the JavaScript console
+	                                                                              
 	endpoint := ctx.Args().First()
 	if endpoint == "" {
 		path := node.DefaultDataDir()
@@ -151,37 +151,37 @@ func remoteConsole(ctx *cli.Context) error {
 		return nil
 	}
 
-	// Otherwise print the welcome screen and enter interactive mode
+	                                                                
 	console.Welcome()
 	console.Interactive()
 
 	return nil
 }
 
-// dialRPC returns a RPC client which connects to the given endpoint.
-// The check for empty endpoint implements the defaulting logic
-// for "gepv attach" and "gepv monitor" with no argument.
+                                                                     
+                                                               
+                                                         
 func dialRPC(endpoint string) (*rpc.Client, error) {
 	if endpoint == "" {
 		endpoint = node.DefaultIPCEndpoint(clientIdentifier)
 	} else if strings.HasPrefix(endpoint, "rpc:") || strings.HasPrefix(endpoint, "ipc:") {
-		// Backwards compatibility with gepv < 1.5 which required
-		// these prefixes.
+		                                                         
+		                  
 		endpoint = endpoint[4:]
 	}
 	return rpc.Dial(endpoint)
 }
 
-// ephemeralConsole starts a new gepv node, attaches an ephemeral JavaScript
-// console to it, executes each of the files specified as arguments and tears
-// everything down.
+                                                                            
+                                                                             
+                   
 func ephemeralConsole(ctx *cli.Context) error {
-	// Create and start the node based on the CLI flags
+	                                                   
 	node := makeFullNode(ctx)
 	startNode(ctx, node)
 	defer node.Stop()
 
-	// Attach to the newly started node and start the JavaScript console
+	                                                                    
 	client, err := node.Attach()
 	if err != nil {
 		utils.Fatalf("Failed to attach to the inproc gepv: %v", err)
@@ -199,13 +199,13 @@ func ephemeralConsole(ctx *cli.Context) error {
 	}
 	defer console.Stop(false)
 
-	// Evaluate each of the specified JavaScript files
+	                                                  
 	for _, file := range ctx.Args() {
 		if err = console.Execute(file); err != nil {
 			utils.Fatalf("Failed to execute %s: %v", file, err)
 		}
 	}
-	// Wait for pending callbacks, but stop for Ctrl-C.
+	                                                   
 	abort := make(chan os.Signal, 1)
 	signal.Notify(abort, os.Interrupt)
 

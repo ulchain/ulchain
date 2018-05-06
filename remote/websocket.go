@@ -1,18 +1,18 @@
-// Copyright 2015 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                                
+  
+                                                                                  
+                                                                              
+                                                                    
+                                      
+  
+                                                                             
+                                                                 
+                                                               
+                                                      
+  
+                                                                           
+                                                                                  
 
 package rpc
 
@@ -32,10 +32,10 @@ import (
 	"gopkg.in/fatih/set.v0"
 )
 
-// WebsocketHandler returns a handler that serves JSON-RPC to WebSocket connections.
-//
-// allowedOrigins should be a comma-separated list of allowed origin URLs.
-// To allow connections with any origin, pass "*".
+                                                                                    
+  
+                                                                          
+                                                  
 func (srv *Server) WebsocketHandler(allowedOrigins []string) http.Handler {
 	return websocket.Server{
 		Handshake: wsHandshakeValidator(allowedOrigins),
@@ -45,16 +45,16 @@ func (srv *Server) WebsocketHandler(allowedOrigins []string) http.Handler {
 	}
 }
 
-// NewWSServer creates a new websocket RPC server around an API provider.
-//
-// Deprecated: use Server.WebsocketHandler
+                                                                         
+  
+                                          
 func NewWSServer(allowedOrigins []string, srv *Server) *http.Server {
 	return &http.Server{Handler: srv.WebsocketHandler(allowedOrigins)}
 }
 
-// wsHandshakeValidator returns a handler that verifies the origin during the
-// websocket upgrade process. When a '*' is specified as an allowed origins all
-// connections are accepted.
+                                                                             
+                                                                               
+                            
 func wsHandshakeValidator(allowedOrigins []string) func(*websocket.Config, *http.Request) error {
 	origins := set.New()
 	allowAllOrigins := false
@@ -68,7 +68,7 @@ func wsHandshakeValidator(allowedOrigins []string) func(*websocket.Config, *http
 		}
 	}
 
-	// allow localhost if no allowedOrigins are specified.
+	                                                      
 	if len(origins.List()) == 0 {
 		origins.Add("http://localhost")
 		if hostname, err := os.Hostname(); err == nil {
@@ -90,11 +90,11 @@ func wsHandshakeValidator(allowedOrigins []string) func(*websocket.Config, *http
 	return f
 }
 
-// DialWebsocket creates a new RPC client that communicates with a JSON-RPC server
-// that is listening on the given endpoint.
-//
-// The context is used for the initial connection establishment. It does not
-// affect subsequent interactions with the client.
+                                                                                  
+                                           
+  
+                                                                            
+                                                  
 func DialWebsocket(ctx context.Context, endpoint, origin string) (*Client, error) {
 	if origin == "" {
 		var err error

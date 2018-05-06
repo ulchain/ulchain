@@ -1,20 +1,20 @@
-// Copyright 2016 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                                
+  
+                                                                                  
+                                                                              
+                                                                    
+                                      
+  
+                                                                             
+                                                                 
+                                                               
+                                                      
+  
+                                                                           
+                                                                                  
 
-// Contains the Whisper protocol Envelope element.
+                                                  
 
 package whisperv5
 
@@ -33,8 +33,8 @@ import (
 	"github.com/epvchain/go-epvchain/process"
 )
 
-// Envelope represents a clear-text data packet to transmit through the Whisper
-// network. Its contents may or may not be encrypted and signed.
+                                                                               
+                                                                
 type Envelope struct {
 	Version  []byte
 	Expiry   uint32
@@ -44,24 +44,24 @@ type Envelope struct {
 	Data     []byte
 	EnvNonce uint64
 
-	pow  float64     // Message-specific PoW as described in the Whisper specification.
-	hash common.Hash // Cached hash of the envelope to avoid rehashing every time.
-	// Don't access hash directly, use Hash() function instead.
+	pow  float64                                                                       
+	hash common.Hash                                                              
+	                                                           
 }
 
-// size returns the size of envelope as it is sent (i.e. public fields only)
+                                                                            
 func (e *Envelope) size() int {
 	return 20 + len(e.Version) + len(e.AESNonce) + len(e.Data)
 }
 
-// rlpWithoutNonce returns the RLP encoded envelope contents, except the nonce.
+                                                                               
 func (e *Envelope) rlpWithoutNonce() []byte {
 	res, _ := rlp.EncodeToBytes([]interface{}{e.Version, e.Expiry, e.TTL, e.Topic, e.AESNonce, e.Data})
 	return res
 }
 
-// NewEnvelope wraps a Whisper message with expiration and destination data
-// included into an envelope for network forwarding.
+                                                                           
+                                                    
 func NewEnvelope(ttl uint32, topic TopicType, aesNonce []byte, msg *sentMessage) *Envelope {
 	env := Envelope{
 		Version:  make([]byte, 1),
@@ -94,12 +94,12 @@ func (e *Envelope) Ver() uint64 {
 	return bytesToUintLittleEndian(e.Version)
 }
 
-// Seal closes the envelope by spending the requested amount of time as a proof
-// of work on hashing the data.
+                                                                               
+                               
 func (e *Envelope) Seal(options *MessageParams) error {
 	var target, bestBit int
 	if options.PoW == 0 {
-		// adjust for the duration of Seal() execution only if execution time is predefined unconditionally
+		                                                                                                   
 		e.Expiry += options.WorkTime
 	} else {
 		target = e.powToFirstBit(options.PoW)
@@ -164,7 +164,7 @@ func (e *Envelope) powToFirstBit(pow float64) int {
 	return int(bits)
 }
 
-// Hash returns the SHA3 hash of the envelope, calculating it if not yet done.
+                                                                              
 func (e *Envelope) Hash() common.Hash {
 	if (e.hash == common.Hash{}) {
 		encoded, _ := rlp.EncodeToBytes(e)
@@ -173,17 +173,17 @@ func (e *Envelope) Hash() common.Hash {
 	return e.hash
 }
 
-// DecodeRLP decodes an Envelope from an RLP data stream.
+                                                         
 func (e *Envelope) DecodeRLP(s *rlp.Stream) error {
 	raw, err := s.Raw()
 	if err != nil {
 		return err
 	}
-	// The decoding of Envelope uses the struct fields but also needs
-	// to compute the hash of the whole RLP-encoded envelope. This
-	// type has the same structure as Envelope but is not an
-	// rlp.Decoder (does not implement DecodeRLP function).
-	// Only public members will be encoded.
+	                                                                 
+	                                                              
+	                                                        
+	                                                       
+	                                       
 	type rlpenv Envelope
 	if err := rlp.DecodeBytes(raw, (*rlpenv)(e)); err != nil {
 		return err
@@ -192,21 +192,21 @@ func (e *Envelope) DecodeRLP(s *rlp.Stream) error {
 	return nil
 }
 
-// OpenAsymmetric tries to decrypt an envelope, potentially encrypted with a particular key.
+                                                                                            
 func (e *Envelope) OpenAsymmetric(key *ecdsa.PrivateKey) (*ReceivedMessage, error) {
 	message := &ReceivedMessage{Raw: e.Data}
 	err := message.decryptAsymmetric(key)
 	switch err {
 	case nil:
 		return message, nil
-	case ecies.ErrInvalidPublicKey: // addressed to somebody else
+	case ecies.ErrInvalidPublicKey:                              
 		return nil, err
 	default:
 		return nil, fmt.Errorf("unable to open envelope, decrypt failed: %v", err)
 	}
 }
 
-// OpenSymmetric tries to decrypt an envelope, potentially encrypted with a particular key.
+                                                                                           
 func (e *Envelope) OpenSymmetric(key []byte) (msg *ReceivedMessage, err error) {
 	msg = &ReceivedMessage{Raw: e.Data}
 	err = msg.decryptSymmetric(key, e.AESNonce)
@@ -216,7 +216,7 @@ func (e *Envelope) OpenSymmetric(key []byte) (msg *ReceivedMessage, err error) {
 	return msg, err
 }
 
-// Open tries to decrypt an envelope, and populates the message fields in case of success.
+                                                                                          
 func (e *Envelope) Open(watcher *Filter) (msg *ReceivedMessage) {
 	if e.isAsymmetric() {
 		msg, _ = e.OpenAsymmetric(watcher.KeyAsym)

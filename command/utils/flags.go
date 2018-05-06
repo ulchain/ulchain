@@ -1,20 +1,20 @@
-// Copyright 2015 The go-epvchain Authors
-// This file is part of go-epvchain.
-//
-// go-epvchain is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// go-epvchain is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with go-epvchain. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                    
+  
+                                                                      
+                                                                       
+                                                                    
+                                      
+  
+                                                                 
+                                                                 
+                                                               
+                                               
+  
+                                                                    
+                                                                      
 
-// Package utils contains internal helper functions for go-epvchain commands.
+                                                                             
 package utils
 
 import (
@@ -89,12 +89,12 @@ GLOBAL OPTIONS:
 	cli.CommandHelpTemplate = CommandHelpTemplate
 }
 
-// NewApp creates an app with sane defaults.
+                                            
 func NewApp(gitCommit, usage string) *cli.App {
 	app := cli.NewApp()
 	app.Name = filepath.Base(os.Args[0])
 	app.Author = ""
-	//app.Authors = nil
+	                   
 	app.Email = ""
 	app.Version = params.Version
 	if len(gitCommit) >= 8 {
@@ -104,15 +104,15 @@ func NewApp(gitCommit, usage string) *cli.App {
 	return app
 }
 
-// These are all the command line flags we support.
-// If you add to this list, please remember to include the
-// flag in the appropriate command definition.
-//
-// The flags are defined here so their names and help texts
-// are the same for all commands.
+                                                   
+                                                          
+                                              
+  
+                                                           
+                                 
 
 var (
-	// General settings
+	                   
 	DataDirFlag = DirectoryFlag{
 		Name:  "datadir",
 		Usage: "Data directory for the databases and keystore",
@@ -189,7 +189,7 @@ var (
 		Name:  "lightkdf",
 		Usage: "Reduce key-derivation RAM & CPU usage at some expense of KDF strength",
 	}
-	// Dashboard settings
+	                     
 	DashboardEnabledFlag = cli.BoolFlag{
 		Name:  "dashboard",
 		Usage: "Enable the dashboard",
@@ -214,7 +214,7 @@ var (
 		Usage: "Developer flag to serve the dashboard from the local file system",
 		Value: dashboard.DefaultConfig.Assets,
 	}
-	// EPVhash settings
+	                   
 	EPVhashCacheDirFlag = DirectoryFlag{
 		Name:  "epvhash.cachedir",
 		Usage: "Directory to store the epvhash verification caches (default = inside the datadir)",
@@ -244,7 +244,7 @@ var (
 		Usage: "Number of recent epvhash mining DAGs to keep on disk (1+GB each)",
 		Value: epv.DefaultConfig.EPVhash.DatasetsOnDisk,
 	}
-	// Transaction pool settings
+	                            
 	TxPoolNoLocalsFlag = cli.BoolFlag{
 		Name:  "txpool.nolocals",
 		Usage: "Disables price exemptions for locally submitted transactions",
@@ -294,7 +294,7 @@ var (
 		Usage: "Maximum amount of time non-executable transaction are queued",
 		Value: epv.DefaultConfig.TxPool.Lifetime,
 	}
-	// Performance tuning settings
+	                              
 	CacheFlag = cli.IntFlag{
 		Name:  "cache",
 		Usage: "Megabytes of memory allocated to internal caching",
@@ -315,7 +315,7 @@ var (
 		Usage: "Number of trie node generations to keep in memory",
 		Value: int(state.MaxTrieCacheGen),
 	}
-	// Miner settings
+	                 
 	MiningEnabledFlag = cli.BoolFlag{
 		Name:  "mine",
 		Usage: "Enable mining",
@@ -344,7 +344,7 @@ var (
 		Name:  "extradata",
 		Usage: "Block extra data set by the miner (default = client version)",
 	}
-	// Account settings
+	                   
 	UnlockedAccountFlag = cli.StringFlag{
 		Name:  "unlock",
 		Usage: "Comma separated list of accounts to unlock",
@@ -360,7 +360,7 @@ var (
 		Name:  "vmdebug",
 		Usage: "Record information useful for VM and contract debugging",
 	}
-	// Logging and debug settings
+	                             
 	EPVStatsURLFlag = cli.StringFlag{
 		Name:  "epvstats",
 		Usage: "Reporting URL of a epvstats service (nodename:secret@host:port)",
@@ -377,7 +377,7 @@ var (
 		Name:  "nocompaction",
 		Usage: "Disables db compaction after import",
 	}
-	// RPC settings
+	               
 	RPCEnabledFlag = cli.BoolFlag{
 		Name:  "rpc",
 		Usage: "Enable the HTTP-RPC server",
@@ -448,7 +448,7 @@ var (
 		Usage: "Comma separated list of JavaScript files to preload into the console",
 	}
 
-	// Network Settings
+	                   
 	MaxPeersFlag = cli.IntFlag{
 		Name:  "maxpeers",
 		Usage: "Maximum number of network peers (network disabled if set to 0)",
@@ -505,14 +505,14 @@ var (
 		Usage: "Restricts network communication to the given IP networks (CIDR masks)",
 	}
 
-	// ATM the url is left to the user and deployment to
+	                                                    
 	JSpathFlag = cli.StringFlag{
 		Name:  "jspath",
 		Usage: "JavaScript root path for `loadScript`",
 		Value: ".",
 	}
 
-	// Gas price oracle settings
+	                            
 	GpoBlocksFlag = cli.IntFlag{
 		Name:  "gpoblocks",
 		Usage: "Number of recent blocks to check for gas prices",
@@ -539,9 +539,9 @@ var (
 	}
 )
 
-// MakeDataDir retrieves the currently requested data directory, terminating
-// if none (or the empty string) is specified. If the node is starting a testnet,
-// the a subdirectory of the specified datadir will be used.
+                                                                            
+                                                                                 
+                                                            
 func MakeDataDir(ctx *cli.Context) string {
 	if path := ctx.GlobalString(DataDirFlag.Name); path != "" {
 		if ctx.GlobalBool(TestnetFlag.Name) {
@@ -556,9 +556,9 @@ func MakeDataDir(ctx *cli.Context) string {
 	return ""
 }
 
-// setNodeKey creates a node key from set command line flags, either loading it
-// from a file or as a specified hex value. If neither flags were provided, this
-// method returns nil and an emphemeral key is to be generated.
+                                                                               
+                                                                                
+                                                               
 func setNodeKey(ctx *cli.Context, cfg *p2p.Config) {
 	var (
 		hex  = ctx.GlobalString(NodeKeyHexFlag.Name)
@@ -582,15 +582,15 @@ func setNodeKey(ctx *cli.Context, cfg *p2p.Config) {
 	}
 }
 
-// setNodeUserIdent creates the user identifier from CLI flags.
+                                                               
 func setNodeUserIdent(ctx *cli.Context, cfg *node.Config) {
 	if identity := ctx.GlobalString(IdentityFlag.Name); len(identity) > 0 {
 		cfg.UserIdent = identity
 	}
 }
 
-// setBootstrapNodes creates a list of bootstrap nodes from the command line
-// flags, reverting to pre-configured ones if none have been specified.
+                                                                            
+                                                                       
 func setBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
 	urls := params.MainnetBootnodes
 	switch {
@@ -605,7 +605,7 @@ func setBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
 	case ctx.GlobalBool(RinkebyFlag.Name):
 		urls = params.RinkebyBootnodes
 	case cfg.BootstrapNodes != nil:
-		return // already set, don't apply defaults.
+		return                                      
 	}
 
 	cfg.BootstrapNodes = make([]*discover.Node, 0, len(urls))
@@ -619,8 +619,8 @@ func setBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
 	}
 }
 
-// setBootstrapNodesV5 creates a list of bootstrap nodes from the command line
-// flags, reverting to pre-configured ones if none have been specified.
+                                                                              
+                                                                       
 func setBootstrapNodesV5(ctx *cli.Context, cfg *p2p.Config) {
 	urls := params.DiscoveryV5Bootnodes
 	switch {
@@ -633,7 +633,7 @@ func setBootstrapNodesV5(ctx *cli.Context, cfg *p2p.Config) {
 	case ctx.GlobalBool(RinkebyFlag.Name):
 		urls = params.RinkebyBootnodes
 	case cfg.BootstrapNodesV5 != nil:
-		return // already set, don't apply defaults.
+		return                                      
 	}
 
 	cfg.BootstrapNodesV5 = make([]*discv5.Node, 0, len(urls))
@@ -647,15 +647,15 @@ func setBootstrapNodesV5(ctx *cli.Context, cfg *p2p.Config) {
 	}
 }
 
-// setListenAddress creates a TCP listening address string from set command
-// line flags.
+                                                                           
+              
 func setListenAddress(ctx *cli.Context, cfg *p2p.Config) {
 	if ctx.GlobalIsSet(ListenPortFlag.Name) {
 		cfg.ListenAddr = fmt.Sprintf(":%d", ctx.GlobalInt(ListenPortFlag.Name))
 	}
 }
 
-// setNAT creates a port mapper from command line flags.
+                                                        
 func setNAT(ctx *cli.Context, cfg *p2p.Config) {
 	if ctx.GlobalIsSet(NATFlag.Name) {
 		natif, err := nat.Parse(ctx.GlobalString(NATFlag.Name))
@@ -666,8 +666,8 @@ func setNAT(ctx *cli.Context, cfg *p2p.Config) {
 	}
 }
 
-// splitAndTrim splits input separated by a comma
-// and trims excessive white space from the substrings.
+                                                 
+                                                       
 func splitAndTrim(input string) []string {
 	result := strings.Split(input, ",")
 	for i, r := range result {
@@ -676,8 +676,8 @@ func splitAndTrim(input string) []string {
 	return result
 }
 
-// setHTTP creates the HTTP RPC listener interface string from the set
-// command line flags, returning empty if the HTTP endpoint is disabled.
+                                                                      
+                                                                        
 func setHTTP(ctx *cli.Context, cfg *node.Config) {
 	if ctx.GlobalBool(RPCEnabledFlag.Name) && cfg.HTTPHost == "" {
 		cfg.HTTPHost = "127.0.0.1"
@@ -699,8 +699,8 @@ func setHTTP(ctx *cli.Context, cfg *node.Config) {
 	cfg.HTTPVirtualHosts = splitAndTrim(ctx.GlobalString(RPCVirtualHostsFlag.Name))
 }
 
-// setWS creates the WebSocket RPC listener interface string from the set
-// command line flags, returning empty if the HTTP endpoint is disabled.
+                                                                         
+                                                                        
 func setWS(ctx *cli.Context, cfg *node.Config) {
 	if ctx.GlobalBool(WSEnabledFlag.Name) && cfg.WSHost == "" {
 		cfg.WSHost = "127.0.0.1"
@@ -720,8 +720,8 @@ func setWS(ctx *cli.Context, cfg *node.Config) {
 	}
 }
 
-// setIPC creates an IPC path configuration from the set command line flags,
-// returning an empty string if IPC was explicitly disabled, or the set path.
+                                                                            
+                                                                             
 func setIPC(ctx *cli.Context, cfg *node.Config) {
 	checkExclusive(ctx, IPCDisabledFlag, IPCPathFlag)
 	switch {
@@ -732,8 +732,8 @@ func setIPC(ctx *cli.Context, cfg *node.Config) {
 	}
 }
 
-// makeDatabaseHandles raises out the number of allowed file handles per process
-// for Gepv and returns half of the allowance to assign to the database.
+                                                                                
+                                                                        
 func makeDatabaseHandles() int {
 	limit, err := fdlimit.Current()
 	if err != nil {
@@ -744,20 +744,20 @@ func makeDatabaseHandles() int {
 			Fatalf("Failed to raise file descriptor allowance: %v", err)
 		}
 	}
-	if limit > 2048 { // cap database file descriptors even if more is available
+	if limit > 2048 {                                                           
 		limit = 2048
 	}
-	return limit / 2 // Leave half for networking and other stuff
+	return limit / 2                                             
 }
 
-// MakeAddress converts an account specified directly as a hex encoded string or
-// a key index in the key store to an internal account representation.
+                                                                                
+                                                                      
 func MakeAddress(ks *keystore.KeyStore, account string) (accounts.Account, error) {
-	// If the specified account is a valid address, return it
+	                                                         
 	if common.IsHexAddress(account) {
 		return accounts.Account{Address: common.HexToAddress(account)}, nil
 	}
-	// Otherwise try to interpret the account as a keystore index
+	                                                             
 	index, err := strconv.Atoi(account)
 	if err != nil || index < 0 {
 		return accounts.Account{}, fmt.Errorf("invalid account address or index %q", account)
@@ -775,8 +775,8 @@ func MakeAddress(ks *keystore.KeyStore, account string) (accounts.Account, error
 	return accs[index], nil
 }
 
-// setEPVCbase retrieves the epvcbase either from the directly specified
-// command line flags or from the keystore if CLI indexed.
+                                                                        
+                                                          
 func setEPVCbase(ctx *cli.Context, ks *keystore.KeyStore, cfg *epv.Config) {
 	if ctx.GlobalIsSet(EPVCbaseFlag.Name) {
 		account, err := MakeAddress(ks, ctx.GlobalString(EPVCbaseFlag.Name))
@@ -787,7 +787,7 @@ func setEPVCbase(ctx *cli.Context, ks *keystore.KeyStore, cfg *epv.Config) {
 	}
 }
 
-// MakePasswordList reads password lines from the file specified by the global --password flag.
+                                                                                               
 func MakePasswordList(ctx *cli.Context) []string {
 	path := ctx.GlobalString(PasswordFileFlag.Name)
 	if path == "" {
@@ -798,7 +798,7 @@ func MakePasswordList(ctx *cli.Context) []string {
 		Fatalf("Failed to read password file: %v", err)
 	}
 	lines := strings.Split(string(text), "\n")
-	// Sanitise DOS line endings.
+	                             
 	for i := range lines {
 		lines[i] = strings.TrimRight(lines[i], "\r")
 	}
@@ -842,9 +842,9 @@ func SetP2PConfig(ctx *cli.Context, cfg *p2p.Config) {
 		cfg.NoDiscovery = true
 	}
 
-	// if we're running a light client or server, force enable the v5 peer discovery
-	// unless it is explicitly disabled with --nodiscover note that explicitly specifying
-	// --v5disc overrides --nodiscover, in which case the later only disables v4 discovery
+	                                                                                
+	                                                                                     
+	                                                                                      
 	forceV5Discovery := (lightClient || lightServer) && !ctx.GlobalBool(NoDiscoverFlag.Name)
 	if ctx.GlobalIsSet(DiscoveryV5Flag.Name) {
 		cfg.DiscoveryV5 = ctx.GlobalBool(DiscoveryV5Flag.Name)
@@ -861,7 +861,7 @@ func SetP2PConfig(ctx *cli.Context, cfg *p2p.Config) {
 	}
 
 	if ctx.GlobalBool(DeveloperFlag.Name) {
-		// --dev mode can't use p2p networking.
+		                                       
 		cfg.MaxPeers = 0
 		cfg.ListenAddr = ":0"
 		cfg.NoDiscovery = true
@@ -869,7 +869,7 @@ func SetP2PConfig(ctx *cli.Context, cfg *p2p.Config) {
 	}
 }
 
-// SetNodeConfig applies node-related command line flags to the config.
+                                                                       
 func SetNodeConfig(ctx *cli.Context, cfg *node.Config) {
 	SetP2PConfig(ctx, &cfg.P2P)
 	setIPC(ctx, cfg)
@@ -881,7 +881,7 @@ func SetNodeConfig(ctx *cli.Context, cfg *node.Config) {
 	case ctx.GlobalIsSet(DataDirFlag.Name):
 		cfg.DataDir = ctx.GlobalString(DataDirFlag.Name)
 	case ctx.GlobalBool(DeveloperFlag.Name):
-		cfg.DataDir = "" // unless explicitly requested, use memory databases
+		cfg.DataDir = ""                                                     
 	case ctx.GlobalBool(TestnetFlag.Name):
 		cfg.DataDir = filepath.Join(node.DefaultDataDir(), "testnet")
 	case ctx.GlobalBool(RinkebyFlag.Name):
@@ -962,24 +962,24 @@ func setEPVhash(ctx *cli.Context, cfg *epv.Config) {
 	}
 }
 
-// checkExclusive verifies that only a single isntance of the provided flags was
-// set by the user. Each flag might optionally be followed by a string type to
-// specialize it further.
+                                                                                
+                                                                              
+                         
 func checkExclusive(ctx *cli.Context, args ...interface{}) {
 	set := make([]string, 0, 1)
 	for i := 0; i < len(args); i++ {
-		// Make sure the next argument is a flag and skip if not set
+		                                                            
 		flag, ok := args[i].(cli.Flag)
 		if !ok {
 			panic(fmt.Sprintf("invalid argument, not cli.Flag type: %T", args[i]))
 		}
-		// Check if next arg extends current and expand its name if so
+		                                                              
 		name := flag.GetName()
 
 		if i+1 < len(args) {
 			switch option := args[i+1].(type) {
 			case string:
-				// Extended flag, expand the name and shift the arguments
+				                                                         
 				if ctx.GlobalString(flag.GetName()) == option {
 					name += "=" + option
 				}
@@ -990,7 +990,7 @@ func checkExclusive(ctx *cli.Context, args ...interface{}) {
 				panic(fmt.Sprintf("invalid argument, not cli.Flag or string extension: %T", args[i+1]))
 			}
 		}
-		// Mark the flag if it's set
+		                            
 		if ctx.GlobalIsSet(flag.GetName()) {
 			set = append(set, "--"+name)
 		}
@@ -1000,7 +1000,7 @@ func checkExclusive(ctx *cli.Context, args ...interface{}) {
 	}
 }
 
-// SetShhConfig applies shh-related command line flags to the config.
+                                                                     
 func SetShhConfig(ctx *cli.Context, stack *node.Node, cfg *whisper.Config) {
 	if ctx.GlobalIsSet(WhisperMaxMessageSizeFlag.Name) {
 		cfg.MaxMessageSize = uint32(ctx.GlobalUint(WhisperMaxMessageSizeFlag.Name))
@@ -1010,9 +1010,9 @@ func SetShhConfig(ctx *cli.Context, stack *node.Node, cfg *whisper.Config) {
 	}
 }
 
-// SetEPVConfig applies epv-related command line flags to the config.
+                                                                     
 func SetEPVConfig(ctx *cli.Context, stack *node.Node, cfg *epv.Config) {
-	// Avoid conflicting network flags
+	                                  
 	checkExclusive(ctx, DeveloperFlag, TestnetFlag, RinkebyFlag)
 	checkExclusive(ctx, FastSyncFlag, LightModeFlag, SyncModeFlag)
 	checkExclusive(ctx, LightServFlag, LightModeFlag)
@@ -1068,11 +1068,11 @@ func SetEPVConfig(ctx *cli.Context, stack *node.Node, cfg *epv.Config) {
 		cfg.GasPrice = GlobalBig(ctx, GasPriceFlag.Name)
 	}
 	if ctx.GlobalIsSet(VMEnableDebugFlag.Name) {
-		// TODO(fjl): force-enable this in --dev mode
+		                                             
 		cfg.EnablePreimageRecording = ctx.GlobalBool(VMEnableDebugFlag.Name)
 	}
 
-	// Override any default configs for hard coded networks.
+	                                                        
 	switch {
 	case ctx.GlobalBool(TestnetFlag.Name):
 		if !ctx.GlobalIsSet(NetworkIdFlag.Name) {
@@ -1085,7 +1085,7 @@ func SetEPVConfig(ctx *cli.Context, stack *node.Node, cfg *epv.Config) {
 		}
 		cfg.Genesis = core.DefaultRinkebyGenesisBlock()
 	case ctx.GlobalBool(DeveloperFlag.Name):
-		// Create new developer account or reuse existing one
+		                                                     
 		var (
 			developer accounts.Account
 			err       error
@@ -1108,13 +1108,13 @@ func SetEPVConfig(ctx *cli.Context, stack *node.Node, cfg *epv.Config) {
 			cfg.GasPrice = big.NewInt(1)
 		}
 	}
-	// TODO(fjl): move trie cache generations into config
+	                                                     
 	if gen := ctx.GlobalInt(TrieCacheGenFlag.Name); gen > 0 {
 		state.MaxTrieCacheGen = uint16(gen)
 	}
 }
 
-// SetDashboardConfig applies dashboard related command line flags to the config.
+                                                                                 
 func SetDashboardConfig(ctx *cli.Context, cfg *dashboard.Config) {
 	cfg.Host = ctx.GlobalString(DashboardAddrFlag.Name)
 	cfg.Port = ctx.GlobalInt(DashboardPortFlag.Name)
@@ -1122,7 +1122,7 @@ func SetDashboardConfig(ctx *cli.Context, cfg *dashboard.Config) {
 	cfg.Assets = ctx.GlobalString(DashboardAssetsFlag.Name)
 }
 
-// RegisterEPVService adds an EPVchain client to the stack.
+                                                           
 func RegisterEPVService(stack *node.Node, cfg *epv.Config) {
 	var err error
 	if cfg.SyncMode == downloader.LightSync {
@@ -1144,14 +1144,14 @@ func RegisterEPVService(stack *node.Node, cfg *epv.Config) {
 	}
 }
 
-// RegisterDashboardService adds a dashboard to the stack.
+                                                          
 func RegisterDashboardService(stack *node.Node, cfg *dashboard.Config, commit string) {
 	stack.Register(func(ctx *node.ServiceContext) (node.Service, error) {
 		return dashboard.New(cfg, commit)
 	})
 }
 
-// RegisterShhService configures Whisper and adds it to the given node.
+                                                                       
 func RegisterShhService(stack *node.Node, cfg *whisper.Config) {
 	if err := stack.Register(func(n *node.ServiceContext) (node.Service, error) {
 		return whisper.New(cfg), nil
@@ -1160,11 +1160,11 @@ func RegisterShhService(stack *node.Node, cfg *whisper.Config) {
 	}
 }
 
-// RegisterEPVStatsService configures the EPVchain Stats daemon and adds it to
-// th egiven node.
+                                                                              
+                  
 func RegisterEPVStatsService(stack *node.Node, url string) {
 	if err := stack.Register(func(ctx *node.ServiceContext) (node.Service, error) {
-		// Retrieve both epv and les services
+		                                     
 		var epvServ *epv.EPVchain
 		ctx.Service(&epvServ)
 
@@ -1177,13 +1177,13 @@ func RegisterEPVStatsService(stack *node.Node, url string) {
 	}
 }
 
-// SetupNetwork configures the system for either the main net or some test network.
+                                                                                   
 func SetupNetwork(ctx *cli.Context) {
-	// TODO(fjl): move target gas limit into config
+	                                               
 	params.TargetGasLimit = ctx.GlobalUint64(TargetGasLimitFlag.Name)
 }
 
-// MakeChainDatabase open an LevelDB using the flags passed to the client and will hard crash if it fails.
+                                                                                                          
 func MakeChainDatabase(ctx *cli.Context, stack *node.Node) epvdb.Database {
 	var (
 		cache   = ctx.GlobalInt(CacheFlag.Name) * ctx.GlobalInt(CacheDatabaseFlag.Name) / 100
@@ -1213,7 +1213,7 @@ func MakeGenesis(ctx *cli.Context) *core.Genesis {
 	return genesis
 }
 
-// MakeChain creates a chain manager from set command line flags.
+                                                                 
 func MakeChain(ctx *cli.Context, stack *node.Node) (chain *core.BlockChain, chainDb epvdb.Database) {
 	var err error
 	chainDb = MakeChainDatabase(ctx, stack)
@@ -1257,14 +1257,14 @@ func MakeChain(ctx *cli.Context, stack *node.Node) (chain *core.BlockChain, chai
 	return chain, chainDb
 }
 
-// MakeConsolePreloads retrieves the absolute paths for the console JavaScript
-// scripts to preload before starting.
+                                                                              
+                                      
 func MakeConsolePreloads(ctx *cli.Context) []string {
-	// Skip preloading if there's nothing to preload
+	                                                
 	if ctx.GlobalString(PreloadJSFlag.Name) == "" {
 		return nil
 	}
-	// Otherwise resolve absolute paths and return them
+	                                                   
 	preloads := []string{}
 
 	assets := ctx.GlobalString(JSpathFlag.Name)
@@ -1274,19 +1274,19 @@ func MakeConsolePreloads(ctx *cli.Context) []string {
 	return preloads
 }
 
-// MigrateFlags sets the global flag from a local flag when it's set.
-// This is a temporary function used for migrating old command/flags to the
-// new format.
-//
-// e.g. gepv account new --keystore /tmp/mykeystore --lightkdf
-//
-// is equivalent after calling this method with:
-//
-// gepv --keystore /tmp/mykeystore --lightkdf account new
-//
-// This allows the use of the existing configuration functionality.
-// When all flags are migrated this function can be removed and the existing
-// configuration functionality must be changed that is uses local flags
+                                                                     
+                                                                           
+              
+  
+                                                              
+  
+                                                
+  
+                                                         
+  
+                                                                   
+                                                                            
+                                                                       
 func MigrateFlags(action func(ctx *cli.Context) error) func(*cli.Context) error {
 	return func(ctx *cli.Context) error {
 		for _, name := range ctx.FlagNames() {

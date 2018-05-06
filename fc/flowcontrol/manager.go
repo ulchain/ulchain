@@ -1,20 +1,20 @@
-// Copyright 2016 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                                
+  
+                                                                                  
+                                                                              
+                                                                    
+                                      
+  
+                                                                             
+                                                                 
+                                                               
+                                                      
+  
+                                                                           
+                                                                                  
 
-// Package flowcontrol implements a client side flow control mechanism
+                                                                      
 package flowcontrol
 
 import (
@@ -93,7 +93,7 @@ func (self *ClientManager) Stop() {
 	self.lock.Lock()
 	defer self.lock.Unlock()
 
-	// signal any waiting accept routines to return false
+	                                                     
 	self.nodes = make(map[*cmNode]struct{})
 	close(self.resumeQueue)
 }
@@ -124,7 +124,7 @@ func (self *ClientManager) removeNode(node *cmNode) {
 	self.update(time)
 }
 
-// recalc sumWeight
+                   
 func (self *ClientManager) updateNodes(time mclock.AbsTime) (rce bool) {
 	var sumWeight, rcSum uint64
 	for node := range self.nodes {
@@ -196,7 +196,7 @@ func (self *ClientManager) accept(node *cmNode, time mclock.AbsTime) bool {
 		<-resume
 		self.lock.Lock()
 		if _, ok := self.nodes[node]; !ok {
-			return false // reject if node has been removed or manager has been stopped
+			return false                                                               
 		}
 	}
 	self.simReqCnt++

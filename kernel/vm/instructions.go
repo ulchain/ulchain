@@ -1,18 +1,18 @@
-// Copyright 2015 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                                
+  
+                                                                                  
+                                                                              
+                                                                    
+                                      
+  
+                                                                             
+                                                                 
+                                                               
+                                                      
+  
+                                                                           
+                                                                                  
 
 package vm
 
@@ -491,7 +491,7 @@ func opMload(pc *uint64, evm *EVM, contract *Contract, memory *Memory, stack *St
 }
 
 func opMstore(pc *uint64, evm *EVM, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
-	// pop value of the stack
+	                         
 	mStart, val := stack.pop(), stack.pop()
 	memory.Set(mStart.Uint64(), 32, math.PaddedBigBytes(val, 32))
 
@@ -582,10 +582,10 @@ func opCreate(pc *uint64, evm *EVM, contract *Contract, memory *Memory, stack *S
 
 	contract.UseGas(gas)
 	res, addr, returnGas, suberr := evm.Create(contract, input, gas, value)
-	// Push item on the stack based on the returned error. If the ruleset is
-	// homestead we must check for CodeStoreOutOfGasError (homestead only
-	// rule) and treat as an error, if the ruleset is frontier we must
-	// ignore this error and pretend the operation was successful.
+	                                                                        
+	                                                                     
+	                                                                  
+	                                                              
 	if evm.ChainConfig().IsHomestead(evm.BlockNumber) && suberr == ErrCodeStoreOutOfGas {
 		stack.push(new(big.Int))
 	} else if suberr != nil && suberr != ErrCodeStoreOutOfGas {
@@ -603,14 +603,14 @@ func opCreate(pc *uint64, evm *EVM, contract *Contract, memory *Memory, stack *S
 }
 
 func opCall(pc *uint64, evm *EVM, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
-	// Pop gas. The actual gas in in evm.callGasTemp.
+	                                                 
 	evm.interpreter.intPool.put(stack.pop())
 	gas := evm.callGasTemp
-	// Pop other call parameters.
+	                             
 	addr, value, inOffset, inSize, retOffset, retSize := stack.pop(), stack.pop(), stack.pop(), stack.pop(), stack.pop(), stack.pop()
 	toAddr := common.BigToAddress(addr)
 	value = math.U256(value)
-	// Get the arguments from the memory.
+	                                     
 	args := memory.Get(inOffset.Int64(), inSize.Int64())
 
 	if value.Sign() != 0 {
@@ -632,14 +632,14 @@ func opCall(pc *uint64, evm *EVM, contract *Contract, memory *Memory, stack *Sta
 }
 
 func opCallCode(pc *uint64, evm *EVM, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
-	// Pop gas. The actual gas is in evm.callGasTemp.
+	                                                 
 	evm.interpreter.intPool.put(stack.pop())
 	gas := evm.callGasTemp
-	// Pop other call parameters.
+	                             
 	addr, value, inOffset, inSize, retOffset, retSize := stack.pop(), stack.pop(), stack.pop(), stack.pop(), stack.pop(), stack.pop()
 	toAddr := common.BigToAddress(addr)
 	value = math.U256(value)
-	// Get arguments from the memory.
+	                                 
 	args := memory.Get(inOffset.Int64(), inSize.Int64())
 
 	if value.Sign() != 0 {
@@ -661,13 +661,13 @@ func opCallCode(pc *uint64, evm *EVM, contract *Contract, memory *Memory, stack 
 }
 
 func opDelegateCall(pc *uint64, evm *EVM, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
-	// Pop gas. The actual gas is in evm.callGasTemp.
+	                                                 
 	evm.interpreter.intPool.put(stack.pop())
 	gas := evm.callGasTemp
-	// Pop other call parameters.
+	                             
 	addr, inOffset, inSize, retOffset, retSize := stack.pop(), stack.pop(), stack.pop(), stack.pop(), stack.pop()
 	toAddr := common.BigToAddress(addr)
-	// Get arguments from the memory.
+	                                 
 	args := memory.Get(inOffset.Int64(), inSize.Int64())
 
 	ret, returnGas, err := evm.DelegateCall(contract, toAddr, args, gas)
@@ -686,13 +686,13 @@ func opDelegateCall(pc *uint64, evm *EVM, contract *Contract, memory *Memory, st
 }
 
 func opStaticCall(pc *uint64, evm *EVM, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
-	// Pop gas. The actual gas is in evm.callGasTemp.
+	                                                 
 	evm.interpreter.intPool.put(stack.pop())
 	gas := evm.callGasTemp
-	// Pop other call parameters.
+	                             
 	addr, inOffset, inSize, retOffset, retSize := stack.pop(), stack.pop(), stack.pop(), stack.pop(), stack.pop()
 	toAddr := common.BigToAddress(addr)
-	// Get arguments from the memory.
+	                                 
 	args := memory.Get(inOffset.Int64(), inSize.Int64())
 
 	ret, returnGas, err := evm.StaticCall(contract, toAddr, args, gas)
@@ -738,9 +738,9 @@ func opSuicide(pc *uint64, evm *EVM, contract *Contract, memory *Memory, stack *
 	return nil, nil
 }
 
-// following functions are used by the instruction jump  table
+                                                              
 
-// make log instruction function
+                                
 func makeLog(size int) executionFunc {
 	return func(pc *uint64, evm *EVM, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
 		topics := make([]common.Hash, size)
@@ -754,8 +754,8 @@ func makeLog(size int) executionFunc {
 			Address: contract.Address(),
 			Topics:  topics,
 			Data:    d,
-			// This is a non-consensus field, but assigned here because
-			// core/state doesn't know the current block number.
+			                                                           
+			                                                    
 			BlockNumber: evm.BlockNumber.Uint64(),
 		})
 
@@ -764,7 +764,7 @@ func makeLog(size int) executionFunc {
 	}
 }
 
-// make push instruction function
+                                 
 func makePush(size uint64, pushByteSize int) executionFunc {
 	return func(pc *uint64, evm *EVM, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
 		codeLen := len(contract.Code)
@@ -787,7 +787,7 @@ func makePush(size uint64, pushByteSize int) executionFunc {
 	}
 }
 
-// make push instruction function
+                                 
 func makeDup(size int64) executionFunc {
 	return func(pc *uint64, evm *EVM, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
 		stack.dup(evm.interpreter.intPool, int(size))
@@ -795,9 +795,9 @@ func makeDup(size int64) executionFunc {
 	}
 }
 
-// make swap instruction function
+                                 
 func makeSwap(size int64) executionFunc {
-	// switch n + 1 otherwise n would be swapped with n
+	                                                   
 	size += 1
 	return func(pc *uint64, evm *EVM, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
 		stack.swap(int(size))

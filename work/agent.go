@@ -1,19 +1,3 @@
-// Copyright 2015 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
-
 package miner
 
 import (
@@ -36,7 +20,7 @@ type CpuAgent struct {
 	chain  consensus.ChainReader
 	engine consensus.Engine
 
-	isMining int32 // isMining indicates whether the agent is currently mining
+	isMining int32
 }
 
 func NewCpuAgent(chain consensus.ChainReader, engine consensus.Engine) *CpuAgent {
@@ -54,11 +38,10 @@ func (self *CpuAgent) SetReturnCh(ch chan<- *Result) { self.returnCh = ch }
 
 func (self *CpuAgent) Stop() {
 	if !atomic.CompareAndSwapInt32(&self.isMining, 1, 0) {
-		return // agent already stopped
+		return
 	}
 	self.stop <- struct{}{}
 done:
-	// Empty work channel
 	for {
 		select {
 		case <-self.workCh:
@@ -70,7 +53,7 @@ done:
 
 func (self *CpuAgent) Start() {
 	if !atomic.CompareAndSwapInt32(&self.isMining, 0, 1) {
-		return // agent already started
+		return
 	}
 	go self.update()
 }

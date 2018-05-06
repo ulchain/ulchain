@@ -1,21 +1,21 @@
-// Copyright 2017 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                                
+  
+                                                                                  
+                                                                              
+                                                                    
+                                      
+  
+                                                                             
+                                                                 
+                                                               
+                                                      
+  
+                                                                           
+                                                                                  
 
-// Package light implements on-demand retrieval capable state and chain objects
-// for the EPVchain Light Client.
+                                                                               
+                                 
 package les
 
 import (
@@ -25,12 +25,12 @@ import (
 	"time"
 )
 
-// ErrNoPeers is returned if no peers capable of serving a queued request are available
+                                                                                       
 var ErrNoPeers = errors.New("no suitable peers available")
 
-// requestDistributor implements a mechanism that distributes requests to
-// suitable peers, obeying flow control rules and prioritizing them in creation
-// order (even when a resend is necessary).
+                                                                         
+                                                                               
+                                           
 type requestDistributor struct {
 	reqQueue         *list.List
 	lastReqOrder     uint64
@@ -41,25 +41,25 @@ type requestDistributor struct {
 	lock             sync.Mutex
 }
 
-// distPeer is an LES server peer interface for the request distributor.
-// waitBefore returns either the necessary waiting time before sending a request
-// with the given upper estimated cost or the estimated remaining relative buffer
-// value after sending such a request (in which case the request can be sent
-// immediately). At least one of these values is always zero.
+                                                                        
+                                                                                
+                                                                                 
+                                                                            
+                                                             
 type distPeer interface {
 	waitBefore(uint64) (time.Duration, float64)
 	canQueue() bool
 	queueSend(f func())
 }
 
-// distReq is the request abstraction used by the distributor. It is based on
-// three callback functions:
-// - getCost returns the upper estimate of the cost of sending the request to a given peer
-// - canSend tells if the server peer is suitable to serve the request
-// - request prepares sending the request to the given peer and returns a function that
-// does the actual sending. Request order should be preserved but the callback itself should not
-// block until it is sent because other peers might still be able to receive requests while
-// one of them is blocking. Instead, the returned function is put in the peer's send queue.
+                                                                             
+                            
+                                                                                          
+                                                                      
+                                                                                       
+                                                                                                
+                                                                                           
+                                                                                           
 type distReq struct {
 	getCost func(distPeer) uint64
 	canSend func(distPeer) bool
@@ -70,7 +70,7 @@ type distReq struct {
 	element  *list.Element
 }
 
-// newRequestDistributor creates a new request distributor
+                                                          
 func newRequestDistributor(peers *peerSet, stopChn chan struct{}) *requestDistributor {
 	d := &requestDistributor{
 		reqQueue: list.New(),
@@ -85,32 +85,32 @@ func newRequestDistributor(peers *peerSet, stopChn chan struct{}) *requestDistri
 	return d
 }
 
-// registerPeer implements peerSetNotify
+                                        
 func (d *requestDistributor) registerPeer(p *peer) {
 	d.peerLock.Lock()
 	d.peers[p] = struct{}{}
 	d.peerLock.Unlock()
 }
 
-// unregisterPeer implements peerSetNotify
+                                          
 func (d *requestDistributor) unregisterPeer(p *peer) {
 	d.peerLock.Lock()
 	delete(d.peers, p)
 	d.peerLock.Unlock()
 }
 
-// registerTestPeer adds a new test peer
+                                        
 func (d *requestDistributor) registerTestPeer(p distPeer) {
 	d.peerLock.Lock()
 	d.peers[p] = struct{}{}
 	d.peerLock.Unlock()
 }
 
-// distMaxWait is the maximum waiting time after which further necessary waiting
-// times are recalculated based on new feedback from the servers
+                                                                                
+                                                                
 const distMaxWait = time.Millisecond * 10
 
-// main event loop
+                  
 func (d *requestDistributor) loop() {
 	for {
 		select {
@@ -130,7 +130,7 @@ func (d *requestDistributor) loop() {
 			for {
 				peer, req, wait := d.nextRequest()
 				if req != nil && wait == 0 {
-					chn := req.sentChn // save sentChn because remove sets it to nil
+					chn := req.sentChn                                              
 					d.remove(req)
 					send := req.request(peer)
 					if send != nil {
@@ -140,13 +140,13 @@ func (d *requestDistributor) loop() {
 					close(chn)
 				} else {
 					if wait == 0 {
-						// no request to send and nothing to wait for; the next
-						// queued request will wake up the loop
+						                                                       
+						                                       
 						break loop
 					}
-					d.loopNextSent = true // a "next" signal has been sent, do not send another one until this one has been received
+					d.loopNextSent = true                                                                                           
 					if wait > distMaxWait {
-						// waiting times may be reduced by incoming request replies, if it is too long, recalculate it periodically
+						                                                                                                           
 						wait = distMaxWait
 					}
 					go func() {
@@ -161,20 +161,20 @@ func (d *requestDistributor) loop() {
 	}
 }
 
-// selectPeerItem represents a peer to be selected for a request by weightedRandomSelect
+                                                                                        
 type selectPeerItem struct {
 	peer   distPeer
 	req    *distReq
 	weight int64
 }
 
-// Weight implements wrsItem interface
+                                      
 func (sp selectPeerItem) Weight() int64 {
 	return sp.weight
 }
 
-// nextRequest returns the next possible request from any peer, along with the
-// associated peer and necessary waiting time
+                                                                              
+                                             
 func (d *requestDistributor) nextRequest() (distPeer, *distReq, time.Duration) {
 	checkedPeers := make(map[distPeer]struct{})
 	elem := d.reqQueue.Front()
@@ -226,10 +226,10 @@ func (d *requestDistributor) nextRequest() (distPeer, *distReq, time.Duration) {
 	return bestPeer, bestReq, bestWait
 }
 
-// queue adds a request to the distribution queue, returns a channel where the
-// receiving peer is sent once the request has been sent (request callback returned).
-// If the request is cancelled or timed out without suitable peers, the channel is
-// closed without sending any peer references to it.
+                                                                              
+                                                                                     
+                                                                                  
+                                                    
 func (d *requestDistributor) queue(r *distReq) chan distPeer {
 	d.lock.Lock()
 	defer d.lock.Unlock()
@@ -259,9 +259,9 @@ func (d *requestDistributor) queue(r *distReq) chan distPeer {
 	return r.sentChn
 }
 
-// cancel removes a request from the queue if it has not been sent yet (returns
-// false if it has been sent already). It is guaranteed that the callback functions
-// will not be called after cancel returns.
+                                                                               
+                                                                                   
+                                           
 func (d *requestDistributor) cancel(r *distReq) bool {
 	d.lock.Lock()
 	defer d.lock.Unlock()
@@ -275,7 +275,7 @@ func (d *requestDistributor) cancel(r *distReq) bool {
 	return true
 }
 
-// remove removes a request from the queue
+                                          
 func (d *requestDistributor) remove(r *distReq) {
 	r.sentChn = nil
 	if r.element != nil {

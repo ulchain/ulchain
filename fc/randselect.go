@@ -1,56 +1,56 @@
-// Copyright 2016 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                                
+  
+                                                                                  
+                                                                              
+                                                                    
+                                      
+  
+                                                                             
+                                                                 
+                                                               
+                                                      
+  
+                                                                           
+                                                                                  
 
-// Package les implements the Light EPVchain Subprotocol.
+                                                         
 package les
 
 import (
 	"math/rand"
 )
 
-// wrsItem interface should be implemented by any entries that are to be selected from
-// a weightedRandomSelect set. Note that recalculating monotonously decreasing item
-// weights on-demand (without constantly calling update) is allowed
+                                                                                      
+                                                                                   
+                                                                   
 type wrsItem interface {
 	Weight() int64
 }
 
-// weightedRandomSelect is capable of weighted random selection from a set of items
+                                                                                   
 type weightedRandomSelect struct {
 	root *wrsNode
 	idx  map[wrsItem]int
 }
 
-// newWeightedRandomSelect returns a new weightedRandomSelect structure
+                                                                       
 func newWeightedRandomSelect() *weightedRandomSelect {
 	return &weightedRandomSelect{root: &wrsNode{maxItems: wrsBranches}, idx: make(map[wrsItem]int)}
 }
 
-// update updates an item's weight, adds it if it was non-existent or removes it if
-// the new weight is zero. Note that explicitly updating decreasing weights is not necessary.
+                                                                                   
+                                                                                             
 func (w *weightedRandomSelect) update(item wrsItem) {
 	w.setWeight(item, item.Weight())
 }
 
-// remove removes an item from the set
+                                      
 func (w *weightedRandomSelect) remove(item wrsItem) {
 	w.setWeight(item, 0)
 }
 
-// setWeight sets an item's weight to a specific value (removes it if zero)
+                                                                           
 func (w *weightedRandomSelect) setWeight(item wrsItem, weight int64) {
 	idx, ok := w.idx[item]
 	if ok {
@@ -61,7 +61,7 @@ func (w *weightedRandomSelect) setWeight(item wrsItem, weight int64) {
 	} else {
 		if weight != 0 {
 			if w.root.itemCnt == w.root.maxItems {
-				// add a new level
+				                  
 				newRoot := &wrsNode{sumWeight: w.root.sumWeight, itemCnt: w.root.itemCnt, level: w.root.level + 1, maxItems: w.root.maxItems * wrsBranches}
 				newRoot.items[0] = w.root
 				newRoot.weights[0] = w.root.sumWeight
@@ -72,10 +72,10 @@ func (w *weightedRandomSelect) setWeight(item wrsItem, weight int64) {
 	}
 }
 
-// choose randomly selects an item from the set, with a chance proportional to its
-// current weight. If the weight of the chosen element has been decreased since the
-// last stored value, returns it with a newWeight/oldWeight chance, otherwise just
-// updates its weight and selects another one
+                                                                                  
+                                                                                   
+                                                                                  
+                                             
 func (w *weightedRandomSelect) choose() wrsItem {
 	for {
 		if w.root.sumWeight == 0 {
@@ -93,9 +93,9 @@ func (w *weightedRandomSelect) choose() wrsItem {
 	}
 }
 
-const wrsBranches = 8 // max number of branches in the wrsNode tree
+const wrsBranches = 8                                              
 
-// wrsNode is a node of a tree structure that can store wrsItems or further wrsNodes.
+                                                                                     
 type wrsNode struct {
 	items                    [wrsBranches]interface{}
 	weights                  [wrsBranches]int64
@@ -103,7 +103,7 @@ type wrsNode struct {
 	level, itemCnt, maxItems int
 }
 
-// insert recursively inserts a new item to the tree and returns the item index
+                                                                               
 func (n *wrsNode) insert(item wrsItem, weight int64) int {
 	branch := 0
 	for n.items[branch] != nil && (n.level == 0 || n.items[branch].(*wrsNode).itemCnt == n.items[branch].(*wrsNode).maxItems) {
@@ -131,8 +131,8 @@ func (n *wrsNode) insert(item wrsItem, weight int64) int {
 	}
 }
 
-// setWeight updates the weight of a certain item (which should exist) and returns
-// the change of the last weight value stored in the tree
+                                                                                  
+                                                         
 func (n *wrsNode) setWeight(idx int, weight int64) int64 {
 	if n.level == 0 {
 		oldWeight := n.weights[idx]
@@ -156,7 +156,7 @@ func (n *wrsNode) setWeight(idx int, weight int64) int64 {
 	return diff
 }
 
-// choose recursively selects an item from the tree and returns it along with its weight
+                                                                                        
 func (n *wrsNode) choose(val int64) (wrsItem, int64) {
 	for i, w := range n.weights {
 		if val < w {

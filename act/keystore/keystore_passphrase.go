@@ -1,27 +1,20 @@
-// Copyright 2014 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                                
+  
+                                                                                  
+                                                                              
+                                                                    
+                                      
+  
+                                                                             
+                                                                 
+                                                               
+                                                      
+  
+                                                                           
+                                                                                  
 
-/*
-
-This key store behaves as KeyStorePlain with the difference that
-the private key is encrypted and on disk uses another JSON encoding.
-
-The crypto is documented at https://github.com/epvchain/wiki/wiki/Web3-Secret-Storage-Definition
-
-*/
+                                                                                                                                                                                                                                               
 
 package keystore
 
@@ -48,20 +41,20 @@ import (
 const (
 	keyHeaderKDF = "scrypt"
 
-	// StandardScryptN is the N parameter of Scrypt encryption algorithm, using 256MB
-	// memory and taking approximately 1s CPU time on a modern processor.
+	                                                                                 
+	                                                                     
 	StandardScryptN = 1 << 18
 
-	// StandardScryptP is the P parameter of Scrypt encryption algorithm, using 256MB
-	// memory and taking approximately 1s CPU time on a modern processor.
+	                                                                                 
+	                                                                     
 	StandardScryptP = 1
 
-	// LightScryptN is the N parameter of Scrypt encryption algorithm, using 4MB
-	// memory and taking approximately 100ms CPU time on a modern processor.
+	                                                                            
+	                                                                        
 	LightScryptN = 1 << 12
 
-	// LightScryptP is the P parameter of Scrypt encryption algorithm, using 4MB
-	// memory and taking approximately 100ms CPU time on a modern processor.
+	                                                                            
+	                                                                        
 	LightScryptP = 6
 
 	scryptR     = 8
@@ -75,7 +68,7 @@ type keyStorePassphrase struct {
 }
 
 func (ks keyStorePassphrase) GetKey(addr common.Address, filename, auth string) (*Key, error) {
-	// Load the key from the keystore and decrypt its contents
+	                                                          
 	keyjson, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
@@ -84,14 +77,14 @@ func (ks keyStorePassphrase) GetKey(addr common.Address, filename, auth string) 
 	if err != nil {
 		return nil, err
 	}
-	// Make sure we're really operating on the requested key (no swap attacks)
+	                                                                          
 	if key.Address != addr {
 		return nil, fmt.Errorf("key content mismatch: have account %x, want %x", key.Address, addr)
 	}
 	return key, nil
 }
 
-// StoreKey generates a key, encrypts with 'auth' and stores in the given directory
+                                                                                   
 func StoreKey(dir, auth string, scryptN, scryptP int) (common.Address, error) {
 	_, a, err := storeNewKey(&keyStorePassphrase{dir, scryptN, scryptP}, crand.Reader, auth)
 	return a.Address, err
@@ -113,8 +106,8 @@ func (ks keyStorePassphrase) JoinPath(filename string) string {
 	}
 }
 
-// EncryptKey encrypts a key using the specified scrypt parameters into a json
-// blob that can be decrypted later on.
+                                                                              
+                                       
 func EncryptKey(key *Key, auth string, scryptN, scryptP int) ([]byte, error) {
 	authArray := []byte(auth)
 	salt := randentropy.GetEntropyCSPRNG(32)
@@ -125,7 +118,7 @@ func EncryptKey(key *Key, auth string, scryptN, scryptP int) ([]byte, error) {
 	encryptKey := derivedKey[:16]
 	keyBytes := math.PaddedBigBytes(key.PrivateKey.D, 32)
 
-	iv := randentropy.GetEntropyCSPRNG(aes.BlockSize) // 16
+	iv := randentropy.GetEntropyCSPRNG(aes.BlockSize)      
 	cipherText, err := aesCTRXOR(encryptKey, keyBytes, iv)
 	if err != nil {
 		return nil, err
@@ -160,14 +153,14 @@ func EncryptKey(key *Key, auth string, scryptN, scryptP int) ([]byte, error) {
 	return json.Marshal(encryptedKeyJSONV3)
 }
 
-// DecryptKey decrypts a key from a json blob, returning the private key itself.
+                                                                                
 func DecryptKey(keyjson []byte, auth string) (*Key, error) {
-	// Parse the json into a simple map to fetch the key version
+	                                                            
 	m := make(map[string]interface{})
 	if err := json.Unmarshal(keyjson, &m); err != nil {
 		return nil, err
 	}
-	// Depending on the version try to parse one way or another
+	                                                           
 	var (
 		keyBytes, keyId []byte
 		err             error
@@ -185,7 +178,7 @@ func DecryptKey(keyjson []byte, auth string) (*Key, error) {
 		}
 		keyBytes, keyId, err = decryptKeyV3(k, auth)
 	}
-	// Handle any decryption errors and return the key
+	                                                  
 	if err != nil {
 		return nil, err
 	}
@@ -301,9 +294,9 @@ func getKDFKey(cryptoJSON cryptoJSON, auth string) ([]byte, error) {
 	return nil, fmt.Errorf("Unsupported KDF: %s", cryptoJSON.KDF)
 }
 
-// TODO: can we do without this when unmarshalling dynamic JSON?
-// why do integers in KDF params end up as float64 and not int after
-// unmarshal?
+                                                                
+                                                                    
+             
 func ensureInt(x interface{}) int {
 	res, ok := x.(int)
 	if !ok {

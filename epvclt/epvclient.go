@@ -1,20 +1,20 @@
-// Copyright 2016 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                                
+  
+                                                                                  
+                                                                              
+                                                                    
+                                      
+  
+                                                                             
+                                                                 
+                                                               
+                                                      
+  
+                                                                           
+                                                                                  
 
-// Package epvclient provides a client for the EPVchain RPC API.
+                                                                
 package epvclient
 
 import (
@@ -32,12 +32,12 @@ import (
 	"github.com/epvchain/go-epvchain/remote"
 )
 
-// Client defines typed wrappers for the EPVchain RPC API.
+                                                          
 type Client struct {
 	c *rpc.Client
 }
 
-// Dial connects a client to the given URL.
+                                           
 func Dial(rawurl string) (*Client, error) {
 	c, err := rpc.Dial(rawurl)
 	if err != nil {
@@ -46,26 +46,26 @@ func Dial(rawurl string) (*Client, error) {
 	return NewClient(c), nil
 }
 
-// NewClient creates a client that uses the given RPC client.
+                                                             
 func NewClient(c *rpc.Client) *Client {
 	return &Client{c}
 }
 
-// Blockchain Access
+                    
 
-// BlockByHash returns the given full block.
-//
-// Note that loading full blocks requires two requests. Use HeaderByHash
-// if you don't need all transactions or uncle headers.
+                                            
+  
+                                                                        
+                                                       
 func (ec *Client) BlockByHash(ctx context.Context, hash common.Hash) (*types.Block, error) {
 	return ec.getBlock(ctx, "epv_getBlockByHash", hash, true)
 }
 
-// BlockByNumber returns a block from the current canonical chain. If number is nil, the
-// latest known block is returned.
-//
-// Note that loading full blocks requires two requests. Use HeaderByNumber
-// if you don't need all transactions or uncle headers.
+                                                                                        
+                                  
+  
+                                                                          
+                                                       
 func (ec *Client) BlockByNumber(ctx context.Context, number *big.Int) (*types.Block, error) {
 	return ec.getBlock(ctx, "epv_getBlockByNumber", toBlockNumArg(number), true)
 }
@@ -84,7 +84,7 @@ func (ec *Client) getBlock(ctx context.Context, method string, args ...interface
 	} else if len(raw) == 0 {
 		return nil, epvchain.NotFound
 	}
-	// Decode header and transactions.
+	                                  
 	var head *types.Header
 	var body rpcBlock
 	if err := json.Unmarshal(raw, &head); err != nil {
@@ -93,7 +93,7 @@ func (ec *Client) getBlock(ctx context.Context, method string, args ...interface
 	if err := json.Unmarshal(raw, &body); err != nil {
 		return nil, err
 	}
-	// Quick-verify transaction and uncle lists. This mostly helps with debugging the server.
+	                                                                                         
 	if head.UncleHash == types.EmptyUncleHash && len(body.UncleHashes) > 0 {
 		return nil, fmt.Errorf("server returned non-empty uncle list but block header indicates no uncles")
 	}
@@ -106,7 +106,7 @@ func (ec *Client) getBlock(ctx context.Context, method string, args ...interface
 	if head.TxHash != types.EmptyRootHash && len(body.Transactions) == 0 {
 		return nil, fmt.Errorf("server returned empty transaction list but block header indicates transactions")
 	}
-	// Load uncles because they are not included in the block response.
+	                                                                   
 	var uncles []*types.Header
 	if len(body.UncleHashes) > 0 {
 		uncles = make([]*types.Header, len(body.UncleHashes))
@@ -130,7 +130,7 @@ func (ec *Client) getBlock(ctx context.Context, method string, args ...interface
 			}
 		}
 	}
-	// Fill the sender cache of transactions in the block.
+	                                                      
 	txs := make([]*types.Transaction, len(body.Transactions))
 	for i, tx := range body.Transactions {
 		setSenderFromServer(tx.tx, tx.From, body.Hash)
@@ -139,7 +139,7 @@ func (ec *Client) getBlock(ctx context.Context, method string, args ...interface
 	return types.NewBlockWithHeader(head).WithBody(txs, uncles), nil
 }
 
-// HeaderByHash returns the block header with the given hash.
+                                                             
 func (ec *Client) HeaderByHash(ctx context.Context, hash common.Hash) (*types.Header, error) {
 	var head *types.Header
 	err := ec.c.CallContext(ctx, &head, "epv_getBlockByHash", hash, false)
@@ -149,8 +149,8 @@ func (ec *Client) HeaderByHash(ctx context.Context, hash common.Hash) (*types.He
 	return head, err
 }
 
-// HeaderByNumber returns a block header from the current canonical chain. If number is
-// nil, the latest known header is returned.
+                                                                                       
+                                            
 func (ec *Client) HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error) {
 	var head *types.Header
 	err := ec.c.CallContext(ctx, &head, "epv_getBlockByNumber", toBlockNumArg(number), false)
@@ -178,7 +178,7 @@ func (tx *rpcTransaction) UnmarshalJSON(msg []byte) error {
 	return json.Unmarshal(msg, &tx.txExtraInfo)
 }
 
-// TransactionByHash returns the transaction with the given hash.
+                                                                 
 func (ec *Client) TransactionByHash(ctx context.Context, hash common.Hash) (tx *types.Transaction, isPending bool, err error) {
 	var json *rpcTransaction
 	err = ec.c.CallContext(ctx, &json, "epv_getTransactionByHash", hash)
@@ -193,14 +193,14 @@ func (ec *Client) TransactionByHash(ctx context.Context, hash common.Hash) (tx *
 	return json.tx, json.BlockNumber == nil, nil
 }
 
-// TransactionSender returns the sender address of the given transaction. The transaction
-// must be known to the remote node and included in the blockchain at the given block and
-// index. The sender is the one derived by the protocol at the time of inclusion.
-//
-// There is a fast-path for transactions retrieved by TransactionByHash and
-// TransactionInBlock. Getting their sender address can be done without an RPC interaction.
+                                                                                         
+                                                                                         
+                                                                                 
+  
+                                                                           
+                                                                                           
 func (ec *Client) TransactionSender(ctx context.Context, tx *types.Transaction, block common.Hash, index uint) (common.Address, error) {
-	// Try to load the address from the cache.
+	                                          
 	sender, err := types.Sender(&senderFromServer{blockhash: block}, tx)
 	if err == nil {
 		return sender, nil
@@ -218,14 +218,14 @@ func (ec *Client) TransactionSender(ctx context.Context, tx *types.Transaction, 
 	return meta.From, nil
 }
 
-// TransactionCount returns the total number of transactions in the given block.
+                                                                                
 func (ec *Client) TransactionCount(ctx context.Context, blockHash common.Hash) (uint, error) {
 	var num hexutil.Uint
 	err := ec.c.CallContext(ctx, &num, "epv_getBlockTransactionCountByHash", blockHash)
 	return uint(num), err
 }
 
-// TransactionInBlock returns a single transaction at index in the given block.
+                                                                               
 func (ec *Client) TransactionInBlock(ctx context.Context, blockHash common.Hash, index uint) (*types.Transaction, error) {
 	var json *rpcTransaction
 	err := ec.c.CallContext(ctx, &json, "epv_getTransactionByBlockHashAndIndex", blockHash, hexutil.Uint64(index))
@@ -240,8 +240,8 @@ func (ec *Client) TransactionInBlock(ctx context.Context, blockHash common.Hash,
 	return json.tx, err
 }
 
-// TransactionReceipt returns the receipt of a transaction by transaction hash.
-// Note that the receipt is not available for pending transactions.
+                                                                               
+                                                                   
 func (ec *Client) TransactionReceipt(ctx context.Context, txHash common.Hash) (*types.Receipt, error) {
 	var r *types.Receipt
 	err := ec.c.CallContext(ctx, &r, "epv_getTransactionReceipt", txHash)
@@ -268,17 +268,17 @@ type rpcProgress struct {
 	KnownStates   hexutil.Uint64
 }
 
-// SyncProgress retrieves the current progress of the sync algorithm. If there's
-// no sync currently running, it returns nil.
+                                                                                
+                                             
 func (ec *Client) SyncProgress(ctx context.Context) (*epvchain.SyncProgress, error) {
 	var raw json.RawMessage
 	if err := ec.c.CallContext(ctx, &raw, "epv_syncing"); err != nil {
 		return nil, err
 	}
-	// Handle the possible response types
+	                                     
 	var syncing bool
 	if err := json.Unmarshal(raw, &syncing); err == nil {
-		return nil, nil // Not syncing (always false)
+		return nil, nil                              
 	}
 	var progress *rpcProgress
 	if err := json.Unmarshal(raw, &progress); err != nil {
@@ -293,15 +293,15 @@ func (ec *Client) SyncProgress(ctx context.Context) (*epvchain.SyncProgress, err
 	}, nil
 }
 
-// SubscribeNewHead subscribes to notifications about the current blockchain head
-// on the given channel.
+                                                                                 
+                        
 func (ec *Client) SubscribeNewHead(ctx context.Context, ch chan<- *types.Header) (epvchain.Subscription, error) {
 	return ec.c.EPVSubscribe(ctx, ch, "newHeads", map[string]struct{}{})
 }
 
-// State Access
+               
 
-// NetworkID returns the network ID (also known as the chain ID) for this chain.
+                                                                                
 func (ec *Client) NetworkID(ctx context.Context) (*big.Int, error) {
 	version := new(big.Int)
 	var ver string
@@ -314,48 +314,48 @@ func (ec *Client) NetworkID(ctx context.Context) (*big.Int, error) {
 	return version, nil
 }
 
-// BalanceAt returns the wei balance of the given account.
-// The block number can be nil, in which case the balance is taken from the latest known block.
+                                                          
+                                                                                               
 func (ec *Client) BalanceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (*big.Int, error) {
 	var result hexutil.Big
 	err := ec.c.CallContext(ctx, &result, "epv_getBalance", account, toBlockNumArg(blockNumber))
 	return (*big.Int)(&result), err
 }
 
-// StorageAt returns the value of key in the contract storage of the given account.
-// The block number can be nil, in which case the value is taken from the latest known block.
+                                                                                   
+                                                                                             
 func (ec *Client) StorageAt(ctx context.Context, account common.Address, key common.Hash, blockNumber *big.Int) ([]byte, error) {
 	var result hexutil.Bytes
 	err := ec.c.CallContext(ctx, &result, "epv_getStorageAt", account, key, toBlockNumArg(blockNumber))
 	return result, err
 }
 
-// CodeAt returns the contract code of the given account.
-// The block number can be nil, in which case the code is taken from the latest known block.
+                                                         
+                                                                                            
 func (ec *Client) CodeAt(ctx context.Context, account common.Address, blockNumber *big.Int) ([]byte, error) {
 	var result hexutil.Bytes
 	err := ec.c.CallContext(ctx, &result, "epv_getCode", account, toBlockNumArg(blockNumber))
 	return result, err
 }
 
-// NonceAt returns the account nonce of the given account.
-// The block number can be nil, in which case the nonce is taken from the latest known block.
+                                                          
+                                                                                             
 func (ec *Client) NonceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (uint64, error) {
 	var result hexutil.Uint64
 	err := ec.c.CallContext(ctx, &result, "epv_getTransactionCount", account, toBlockNumArg(blockNumber))
 	return uint64(result), err
 }
 
-// Filters
+          
 
-// FilterLogs executes a filter query.
+                                      
 func (ec *Client) FilterLogs(ctx context.Context, q epvchain.FilterQuery) ([]types.Log, error) {
 	var result []types.Log
 	err := ec.c.CallContext(ctx, &result, "epv_getLogs", toFilterArg(q))
 	return result, err
 }
 
-// SubscribeFilterLogs subscribes to the results of a streaming filter query.
+                                                                             
 func (ec *Client) SubscribeFilterLogs(ctx context.Context, q epvchain.FilterQuery, ch chan<- types.Log) (epvchain.Subscription, error) {
 	return ec.c.EPVSubscribe(ctx, ch, "logs", toFilterArg(q))
 }
@@ -373,54 +373,54 @@ func toFilterArg(q epvchain.FilterQuery) interface{} {
 	return arg
 }
 
-// Pending State
+                
 
-// PendingBalanceAt returns the wei balance of the given account in the pending state.
+                                                                                      
 func (ec *Client) PendingBalanceAt(ctx context.Context, account common.Address) (*big.Int, error) {
 	var result hexutil.Big
 	err := ec.c.CallContext(ctx, &result, "epv_getBalance", account, "pending")
 	return (*big.Int)(&result), err
 }
 
-// PendingStorageAt returns the value of key in the contract storage of the given account in the pending state.
+                                                                                                               
 func (ec *Client) PendingStorageAt(ctx context.Context, account common.Address, key common.Hash) ([]byte, error) {
 	var result hexutil.Bytes
 	err := ec.c.CallContext(ctx, &result, "epv_getStorageAt", account, key, "pending")
 	return result, err
 }
 
-// PendingCodeAt returns the contract code of the given account in the pending state.
+                                                                                     
 func (ec *Client) PendingCodeAt(ctx context.Context, account common.Address) ([]byte, error) {
 	var result hexutil.Bytes
 	err := ec.c.CallContext(ctx, &result, "epv_getCode", account, "pending")
 	return result, err
 }
 
-// PendingNonceAt returns the account nonce of the given account in the pending state.
-// This is the nonce that should be used for the next transaction.
+                                                                                      
+                                                                  
 func (ec *Client) PendingNonceAt(ctx context.Context, account common.Address) (uint64, error) {
 	var result hexutil.Uint64
 	err := ec.c.CallContext(ctx, &result, "epv_getTransactionCount", account, "pending")
 	return uint64(result), err
 }
 
-// PendingTransactionCount returns the total number of transactions in the pending state.
+                                                                                         
 func (ec *Client) PendingTransactionCount(ctx context.Context) (uint, error) {
 	var num hexutil.Uint
 	err := ec.c.CallContext(ctx, &num, "epv_getBlockTransactionCountByNumber", "pending")
 	return uint(num), err
 }
 
-// TODO: SubscribePendingTransactions (needs server side)
+                                                         
 
-// Contract Calling
+                   
 
-// CallContract executes a message call transaction, which is directly executed in the VM
-// of the node, but never mined into the blockchain.
-//
-// blockNumber selects the block height at which the call runs. It can be nil, in which
-// case the code is taken from the latest known block. Note that state from very old
-// blocks might not be available.
+                                                                                         
+                                                    
+  
+                                                                                       
+                                                                                    
+                                 
 func (ec *Client) CallContract(ctx context.Context, msg epvchain.CallMsg, blockNumber *big.Int) ([]byte, error) {
 	var hex hexutil.Bytes
 	err := ec.c.CallContext(ctx, &hex, "epv_call", toCallArg(msg), toBlockNumArg(blockNumber))
@@ -430,8 +430,8 @@ func (ec *Client) CallContract(ctx context.Context, msg epvchain.CallMsg, blockN
 	return hex, nil
 }
 
-// PendingCallContract executes a message call transaction using the EVM.
-// The state seen by the contract call is the pending state.
+                                                                         
+                                                            
 func (ec *Client) PendingCallContract(ctx context.Context, msg epvchain.CallMsg) ([]byte, error) {
 	var hex hexutil.Bytes
 	err := ec.c.CallContext(ctx, &hex, "epv_call", toCallArg(msg), "pending")
@@ -441,8 +441,8 @@ func (ec *Client) PendingCallContract(ctx context.Context, msg epvchain.CallMsg)
 	return hex, nil
 }
 
-// SuggestGasPrice retrieves the currently suggested gas price to allow a timely
-// execution of a transaction.
+                                                                                
+                              
 func (ec *Client) SuggestGasPrice(ctx context.Context) (*big.Int, error) {
 	var hex hexutil.Big
 	if err := ec.c.CallContext(ctx, &hex, "epv_gasPrice"); err != nil {
@@ -451,10 +451,10 @@ func (ec *Client) SuggestGasPrice(ctx context.Context) (*big.Int, error) {
 	return (*big.Int)(&hex), nil
 }
 
-// EstimateGas tries to estimate the gas needed to execute a specific transaction based on
-// the current pending state of the backend blockchain. There is no guarantee that this is
-// the true gas limit requirement as other transactions may be added or removed by miners,
-// but it should provide a basis for setting a reasonable default.
+                                                                                          
+                                                                                          
+                                                                                          
+                                                                  
 func (ec *Client) EstimateGas(ctx context.Context, msg epvchain.CallMsg) (uint64, error) {
 	var hex hexutil.Uint64
 	err := ec.c.CallContext(ctx, &hex, "epv_estimateGas", toCallArg(msg))
@@ -464,10 +464,10 @@ func (ec *Client) EstimateGas(ctx context.Context, msg epvchain.CallMsg) (uint64
 	return uint64(hex), nil
 }
 
-// SendTransaction injects a signed transaction into the pending pool for execution.
-//
-// If the transaction was a contract creation use the TransactionReceipt method to get the
-// contract address after the transaction has been mined.
+                                                                                    
+  
+                                                                                          
+                                                         
 func (ec *Client) SendTransaction(ctx context.Context, tx *types.Transaction) error {
 	data, err := rlp.EncodeToBytes(tx)
 	if err != nil {

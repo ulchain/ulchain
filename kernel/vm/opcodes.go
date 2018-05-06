@@ -1,18 +1,18 @@
-// Copyright 2014 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                                
+  
+                                                                                  
+                                                                              
+                                                                    
+                                      
+  
+                                                                             
+                                                                 
+                                                               
+                                                      
+  
+                                                                           
+                                                                                  
 
 package vm
 
@@ -20,7 +20,7 @@ import (
 	"fmt"
 )
 
-// OpCode is an EVM opcode
+                          
 type OpCode byte
 
 func (op OpCode) IsPush() bool {
@@ -36,7 +36,7 @@ func (op OpCode) IsStaticJump() bool {
 }
 
 const (
-	// 0x0 range - arithmetic ops
+	                             
 	STOP OpCode = iota
 	ADD
 	MUL
@@ -68,7 +68,7 @@ const (
 )
 
 const (
-	// 0x30 range - closure state
+	                             
 	ADDRESS OpCode = 0x30 + iota
 	BALANCE
 	ORIGIN
@@ -87,7 +87,7 @@ const (
 )
 
 const (
-	// 0x40 range - block operations
+	                                
 	BLOCKHASH OpCode = 0x40 + iota
 	COINBASE
 	TIMESTAMP
@@ -97,7 +97,7 @@ const (
 )
 
 const (
-	// 0x50 range - 'storage' and execution
+	                                       
 	POP OpCode = 0x50 + iota
 	MLOAD
 	MSTORE
@@ -113,7 +113,7 @@ const (
 )
 
 const (
-	// 0x60 range
+	             
 	PUSH1 OpCode = 0x60 + iota
 	PUSH2
 	PUSH3
@@ -188,7 +188,7 @@ const (
 	LOG4
 )
 
-// unofficial opcodes used for parsing
+                                      
 const (
 	PUSH OpCode = 0xb0 + iota
 	DUP
@@ -196,7 +196,7 @@ const (
 )
 
 const (
-	// 0xf0 range - closures
+	                        
 	CREATE OpCode = 0xf0 + iota
 	CALL
 	CALLCODE
@@ -208,9 +208,9 @@ const (
 	SELFDESTRUCT = 0xff
 )
 
-// Since the opcodes aren't all in order we can't use a regular slice
+                                                                     
 var opCodeToString = map[OpCode]string{
-	// 0x0 range - arithmetic ops
+	                             
 	STOP:       "STOP",
 	ADD:        "ADD",
 	MUL:        "MUL",
@@ -229,7 +229,7 @@ var opCodeToString = map[OpCode]string{
 	ISZERO:     "ISZERO",
 	SIGNEXTEND: "SIGNEXTEND",
 
-	// 0x10 range - bit ops
+	                       
 	AND:    "AND",
 	OR:     "OR",
 	XOR:    "XOR",
@@ -237,10 +237,10 @@ var opCodeToString = map[OpCode]string{
 	ADDMOD: "ADDMOD",
 	MULMOD: "MULMOD",
 
-	// 0x20 range - crypto
+	                      
 	SHA3: "SHA3",
 
-	// 0x30 range - closure state
+	                             
 	ADDRESS:        "ADDRESS",
 	BALANCE:        "BALANCE",
 	ORIGIN:         "ORIGIN",
@@ -257,7 +257,7 @@ var opCodeToString = map[OpCode]string{
 	RETURNDATASIZE: "RETURNDATASIZE",
 	RETURNDATACOPY: "RETURNDATACOPY",
 
-	// 0x40 range - block operations
+	                                
 	BLOCKHASH:  "BLOCKHASH",
 	COINBASE:   "COINBASE",
 	TIMESTAMP:  "TIMESTAMP",
@@ -265,10 +265,10 @@ var opCodeToString = map[OpCode]string{
 	DIFFICULTY: "DIFFICULTY",
 	GASLIMIT:   "GASLIMIT",
 
-	// 0x50 range - 'storage' and execution
+	                                       
 	POP: "POP",
-	//DUP:     "DUP",
-	//SWAP:    "SWAP",
+	                 
+	                  
 	MLOAD:    "MLOAD",
 	MSTORE:   "MSTORE",
 	MSTORE8:  "MSTORE8",
@@ -281,7 +281,7 @@ var opCodeToString = map[OpCode]string{
 	GAS:      "GAS",
 	JUMPDEST: "JUMPDEST",
 
-	// 0x60 range - push
+	                    
 	PUSH1:  "PUSH1",
 	PUSH2:  "PUSH2",
 	PUSH3:  "PUSH3",
@@ -354,7 +354,7 @@ var opCodeToString = map[OpCode]string{
 	LOG3:   "LOG3",
 	LOG4:   "LOG4",
 
-	// 0xf0 range
+	             
 	CREATE:       "CREATE",
 	CALL:         "CALL",
 	RETURN:       "RETURN",

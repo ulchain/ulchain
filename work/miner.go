@@ -1,20 +1,3 @@
-// Copyright 2014 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
-
-// Package miner implements EPVchain block creation and mining.
 package miner
 
 import (
@@ -34,7 +17,6 @@ import (
 	"github.com/epvchain/go-epvchain/content"
 )
 
-// Backend wraps all methods required for mining.
 type Backend interface {
 	AccountManager() *accounts.Manager
 	BlockChain() *core.BlockChain
@@ -42,7 +24,6 @@ type Backend interface {
 	ChainDb() epvdb.Database
 }
 
-// Miner creates blocks and searches for proof-of-work values.
 type Miner struct {
 	mux *event.TypeMux
 
@@ -53,8 +34,8 @@ type Miner struct {
 	epv      Backend
 	engine   consensus.Engine
 
-	canStart    int32 // can start indicates whether we can start the mining operation
-	shouldStart int32 // should start indicates whether we should start after sync
+	canStart    int32
+	shouldStart int32
 }
 
 func New(epv Backend, config *params.ChainConfig, mux *event.TypeMux, engine consensus.Engine) *Miner {
@@ -71,10 +52,6 @@ func New(epv Backend, config *params.ChainConfig, mux *event.TypeMux, engine con
 	return miner
 }
 
-// update keeps track of the downloader events. Please be aware that this is a one shot type of update loop.
-// It's entered once and as soon as `Done` or `Failed` has been broadcasted the events are unregistered and
-// the loop is exited. This to prevent a major security vuln where external parties can DOS you with blocks
-// and halt your mining operation for as long as the DOS continues.
 func (self *Miner) update() {
 	events := self.mux.Subscribe(downloader.StartEvent{}, downloader.DoneEvent{}, downloader.FailedEvent{})
 out:
@@ -95,9 +72,7 @@ out:
 			if shouldStart {
 				self.Start(self.coinbase)
 			}
-			// unsubscribe. we're only interested in this event once
 			events.Unsubscribe()
-			// stop immediately and ignore all further pending events
 			break out
 		}
 	}
@@ -144,9 +119,6 @@ func (self *Miner) HashRate() (tot int64) {
 	if pow, ok := self.engine.(consensus.PoW); ok {
 		tot += int64(pow.Hashrate())
 	}
-	// do we care this might race? is it worth we're rewriting some
-	// aspects of the worker/locking up agents so we can get an accurate
-	// hashrate?
 	for agent := range self.worker.agents {
 		if _, ok := agent.(*CpuAgent); !ok {
 			tot += agent.GetHashRate()
@@ -163,16 +135,10 @@ func (self *Miner) SetExtra(extra []byte) error {
 	return nil
 }
 
-// Pending returns the currently pending block and associated state.
 func (self *Miner) Pending() (*types.Block, *state.StateDB) {
 	return self.worker.pending()
 }
 
-// PendingBlock returns the currently pending block.
-//
-// Note, to access both the pending block and the pending state
-// simultaneously, please use Pending(), as the pending state can
-// change between multiple method calls
 func (self *Miner) PendingBlock() *types.Block {
 	return self.worker.pendingBlock()
 }

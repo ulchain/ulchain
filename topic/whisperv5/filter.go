@@ -1,18 +1,18 @@
-// Copyright 2016 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                                
+  
+                                                                                  
+                                                                              
+                                                                    
+                                      
+  
+                                                                             
+                                                                 
+                                                               
+                                                      
+  
+                                                                           
+                                                                                  
 
 package whisperv5
 
@@ -27,13 +27,13 @@ import (
 )
 
 type Filter struct {
-	Src        *ecdsa.PublicKey  // Sender of the message
-	KeyAsym    *ecdsa.PrivateKey // Private Key of recipient
-	KeySym     []byte            // Key associated with the Topic
-	Topics     [][]byte          // Topics to filter messages with
-	PoW        float64           // Proof of work as described in the Whisper spec
-	AllowP2P   bool              // Indicates whether this filter is interested in direct peer-to-peer messages
-	SymKeyHash common.Hash       // The Keccak256Hash of the symmetric key, needed for optimization
+	Src        *ecdsa.PublicKey                          
+	KeyAsym    *ecdsa.PrivateKey                            
+	KeySym     []byte                                            
+	Topics     [][]byte                                           
+	PoW        float64                                                            
+	AllowP2P   bool                                                                                            
+	SymKeyHash common.Hash                                                                         
 
 	Messages map[common.Hash]*ReceivedMessage
 	mutex    sync.RWMutex
@@ -99,7 +99,7 @@ func (fs *Filters) NotifyWatchers(env *Envelope, p2pMessage bool) {
 	fs.mutex.RLock()
 	defer fs.mutex.RUnlock()
 
-	i := -1 // only used for logging info
+	i := -1                              
 	for _, watcher := range fs.watchers {
 		i++
 		if p2pMessage && !watcher.AllowP2P {
@@ -171,7 +171,7 @@ func (f *Filter) Retrieve() (all []*ReceivedMessage) {
 		all = append(all, msg)
 	}
 
-	f.Messages = make(map[common.Hash]*ReceivedMessage) // delete old messages
+	f.Messages = make(map[common.Hash]*ReceivedMessage)                       
 	return all
 }
 
@@ -203,7 +203,7 @@ func (f *Filter) MatchEnvelope(envelope *Envelope) bool {
 
 func (f *Filter) MatchTopic(topic TopicType) bool {
 	if len(f.Topics) == 0 {
-		// any topic matches
+		                    
 		return true
 	}
 
@@ -238,6 +238,6 @@ func IsPubKeyEqual(a, b *ecdsa.PublicKey) bool {
 	} else if !ValidatePublicKey(b) {
 		return false
 	}
-	// the curve is always the same, just compare the points
+	                                                        
 	return a.X.Cmp(b.X) == 0 && a.Y.Cmp(b.Y) == 0
 }

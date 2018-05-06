@@ -1,20 +1,20 @@
-// Copyright 2014 The go-epvchain Authors
-// This file is part of go-epvchain.
-//
-// go-epvchain is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// go-epvchain is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with go-epvchain. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                    
+  
+                                                                      
+                                                                       
+                                                                    
+                                      
+  
+                                                                 
+                                                                 
+                                                               
+                                               
+  
+                                                                    
+                                                                      
 
-// gepv is the official command-line client for EPVchain.
+                                                         
 package main
 
 import (
@@ -40,17 +40,17 @@ import (
 )
 
 const (
-	clientIdentifier = "gepv" // Client identifier to advertise over the network
+	clientIdentifier = "gepv"                                                   
 )
 
 var (
-	// Git SHA1 commit hash of the release (set via linker flags)
+	                                                             
 	gitCommit = ""
-	// EPVchain address of the Gepv release oracle.
+	                                               
 	relOracle = common.HexToAddress("0xfa7b9770ca4cb04296cac84f37736d4041251cdf")
-	// The app that holds all commands and flags.
+	                                             
 	app = utils.NewApp(gitCommit, "the go-epvchain command line interface")
-	// flags that configure the node
+	                                
 	nodeFlags = []cli.Flag{
 		utils.IdentityFlag,
 		utils.UnlockedAccountFlag,
@@ -147,34 +147,34 @@ var (
 )
 
 func init() {
-	// Initialize the CLI app and start Gepv
+	                                        
 	app.Action = gepv
-	app.HideVersion = true // we have a command to print the version
+	app.HideVersion = true                                          
 	app.Copyright = "Copyright 2013-2017 The go-epvchain Authors"
 	app.Commands = []cli.Command{
-		// See chaincmd.go:
+		                   
 		initCommand,
 		importCommand,
 		exportCommand,
 		copydbCommand,
 		removedbCommand,
 		dumpCommand,
-		// See monitorcmd.go:
+		                     
 		monitorCommand,
-		// See accountcmd.go:
+		                     
 		accountCommand,
 		walletCommand,
-		// See consolecmd.go:
+		                     
 		consoleCommand,
 		attachCommand,
 		javascriptCommand,
-		// See misccmd.go:
+		                  
 		makecacheCommand,
 		makedagCommand,
 		versionCommand,
 		bugCommand,
 		licenseCommand,
-		// See config.go
+		                
 		dumpConfigCommand,
 	}
 	sort.Sort(cli.CommandsByName(app.Commands))
@@ -190,7 +190,7 @@ func init() {
 		if err := debug.Setup(ctx); err != nil {
 			return err
 		}
-		// Start system runtime metrics collection
+		                                          
 		go metrics.CollectProcessMetrics(3 * time.Second)
 
 		utils.SetupNetwork(ctx)
@@ -199,7 +199,7 @@ func init() {
 
 	app.After = func(ctx *cli.Context) error {
 		debug.Exit()
-		console.Stdin.Close() // Resets terminal mode.
+		console.Stdin.Close()                         
 		return nil
 	}
 }
@@ -211,9 +211,9 @@ func main() {
 	}
 }
 
-// gepv is the main entry point into the system if no special subcommand is ran.
-// It creates a default node based on the command line arguments and runs it in
-// blocking mode, waiting for it to be shut down.
+                                                                                
+                                                                               
+                                                 
 func gepv(ctx *cli.Context) error {
 	node := makeFullNode(ctx)
 	startNode(ctx, node)
@@ -221,14 +221,14 @@ func gepv(ctx *cli.Context) error {
 	return nil
 }
 
-// startNode boots up the system node and all registered protocols, after which
-// it unlocks any requested accounts, and starts the RPC/IPC interfaces and the
-// miner.
+                                                                               
+                                                                               
+         
 func startNode(ctx *cli.Context, stack *node.Node) {
-	// Start up the node itself
+	                           
 	utils.StartNode(stack)
 
-	// Unlock any account specifically requested
+	                                            
 	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 
 	passwords := utils.MakePasswordList(ctx)
@@ -238,25 +238,25 @@ func startNode(ctx *cli.Context, stack *node.Node) {
 			unlockAccount(ctx, ks, trimmed, i, passwords)
 		}
 	}
-	// Register wallet event handlers to open and auto-derive wallets
+	                                                                 
 	events := make(chan accounts.WalletEvent, 16)
 	stack.AccountManager().Subscribe(events)
 
 	go func() {
-		// Create an chain state reader for self-derivation
+		                                                   
 		rpcClient, err := stack.Attach()
 		if err != nil {
 			utils.Fatalf("Failed to attach to self: %v", err)
 		}
 		stateReader := epvclient.NewClient(rpcClient)
 
-		// Open any wallets already attached
+		                                    
 		for _, wallet := range stack.AccountManager().Wallets() {
 			if err := wallet.Open(""); err != nil {
 				log.Warn("Failed to open wallet", "url", wallet.URL(), "err", err)
 			}
 		}
-		// Listen for wallet event till termination
+		                                           
 		for event := range events {
 			switch event.Kind {
 			case accounts.WalletArrived:
@@ -279,9 +279,9 @@ func startNode(ctx *cli.Context, stack *node.Node) {
 			}
 		}
 	}()
-	// Start auxiliary services if enabled
+	                                      
 	if ctx.GlobalBool(utils.MiningEnabledFlag.Name) || ctx.GlobalBool(utils.DeveloperFlag.Name) {
-		// Mining only makes sense if a full EPVchain node is running
+		                                                             
 		if ctx.GlobalBool(utils.LightModeFlag.Name) || ctx.GlobalString(utils.SyncModeFlag.Name) == "light" {
 			utils.Fatalf("Light clients do not support mining")
 		}
@@ -289,7 +289,7 @@ func startNode(ctx *cli.Context, stack *node.Node) {
 		if err := stack.Service(&epvchain); err != nil {
 			utils.Fatalf("EPVchain service not running: %v", err)
 		}
-		// Use a reduced number of threads if requested
+		                                               
 		if threads := ctx.GlobalInt(utils.MinerThreadsFlag.Name); threads > 0 {
 			type threaded interface {
 				SetThreads(threads int)
@@ -298,7 +298,7 @@ func startNode(ctx *cli.Context, stack *node.Node) {
 				th.SetThreads(threads)
 			}
 		}
-		// Set the gas price to the limits from the CLI and start mining
+		                                                                
 		epvchain.TxPool().SetGasPrice(utils.GlobalBig(ctx, utils.GasPriceFlag.Name))
 		if err := epvchain.StartMining(true); err != nil {
 			utils.Fatalf("Failed to start mining: %v", err)

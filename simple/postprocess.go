@@ -1,18 +1,18 @@
-// Copyright 2017 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                                
+  
+                                                                                  
+                                                                              
+                                                                    
+                                      
+  
+                                                                             
+                                                                 
+                                                               
+                                                      
+  
+                                                                           
+                                                                                  
 
 package light
 
@@ -34,21 +34,21 @@ import (
 )
 
 const (
-	// CHTFrequencyClient is the block frequency for creating CHTs on the client side.
+	                                                                                  
 	CHTFrequencyClient = 32768
 
-	// CHTFrequencyServer is the block frequency for creating CHTs on the server side.
-	// Eventually this can be merged back with the client version, but that requires a
-	// full database upgrade, so that should be left for a suitable moment.
+	                                                                                  
+	                                                                                  
+	                                                                       
 	CHTFrequencyServer = 4096
 
-	HelperTrieConfirmations        = 2048 // number of confirmations before a server is expected to have the given HelperTrie available
-	HelperTrieProcessConfirmations = 256  // number of confirmations before a HelperTrie is generated
+	HelperTrieConfirmations        = 2048                                                                                              
+	HelperTrieProcessConfirmations = 256                                                             
 )
 
-// trustedCheckpoint represents a set of post-processed trie roots (CHT and BloomTrie) associated with
-// the appropriate section index and head hash. It is used to start light syncing from this checkpoint
-// and avoid downloading the entire header chain while still being able to securely access old headers/logs.
+                                                                                                      
+                                                                                                      
+                                                                                                            
 type trustedCheckpoint struct {
 	name                                string
 	sectionIdx                          uint64
@@ -73,7 +73,7 @@ var (
 	}
 )
 
-// trustedCheckpoints associates each known checkpoint with the genesis hash of the chain it belongs to
+                                                                                                       
 var trustedCheckpoints = map[common.Hash]trustedCheckpoint{
 	params.MainnetGenesisHash: mainnetCheckpoint,
 	params.TestnetGenesisHash: ropstenCheckpoint,
@@ -83,18 +83,18 @@ var (
 	ErrNoTrustedCht       = errors.New("No trusted canonical hash trie")
 	ErrNoTrustedBloomTrie = errors.New("No trusted bloom trie")
 	ErrNoHeader           = errors.New("Header not found")
-	chtPrefix             = []byte("chtRoot-") // chtPrefix + chtNum (uint64 big endian) -> trie root hash
+	chtPrefix             = []byte("chtRoot-")                                                            
 	ChtTablePrefix        = "cht-"
 )
 
-// ChtNode structures are stored in the Canonical Hash Trie in an RLP encoded format
+                                                                                    
 type ChtNode struct {
 	Hash common.Hash
 	Td   *big.Int
 }
 
-// GetChtRoot reads the CHT root assoctiated to the given section from the database
-// Note that sectionIdx is specified according to LES/1 CHT section size
+                                                                                   
+                                                                        
 func GetChtRoot(db epvdb.Database, sectionIdx uint64, sectionHead common.Hash) common.Hash {
 	var encNumber [8]byte
 	binary.BigEndian.PutUint64(encNumber[:], sectionIdx)
@@ -102,21 +102,21 @@ func GetChtRoot(db epvdb.Database, sectionIdx uint64, sectionHead common.Hash) c
 	return common.BytesToHash(data)
 }
 
-// GetChtV2Root reads the CHT root assoctiated to the given section from the database
-// Note that sectionIdx is specified according to LES/2 CHT section size
+                                                                                     
+                                                                        
 func GetChtV2Root(db epvdb.Database, sectionIdx uint64, sectionHead common.Hash) common.Hash {
 	return GetChtRoot(db, (sectionIdx+1)*(CHTFrequencyClient/CHTFrequencyServer)-1, sectionHead)
 }
 
-// StoreChtRoot writes the CHT root assoctiated to the given section into the database
-// Note that sectionIdx is specified according to LES/1 CHT section size
+                                                                                      
+                                                                        
 func StoreChtRoot(db epvdb.Database, sectionIdx uint64, sectionHead, root common.Hash) {
 	var encNumber [8]byte
 	binary.BigEndian.PutUint64(encNumber[:], sectionIdx)
 	db.Put(append(append(chtPrefix, encNumber[:]...), sectionHead.Bytes()...), root.Bytes())
 }
 
-// ChtIndexerBackend implements core.ChainIndexerBackend
+                                                        
 type ChtIndexerBackend struct {
 	diskdb               epvdb.Database
 	triedb               *trie.Database
@@ -125,7 +125,7 @@ type ChtIndexerBackend struct {
 	trie                 *trie.Trie
 }
 
-// NewBloomTrieIndexer creates a BloomTrie chain indexer
+                                                        
 func NewChtIndexer(db epvdb.Database, clientMode bool) *core.ChainIndexer {
 	var sectionSize, confirmReq uint64
 	if clientMode {
@@ -144,7 +144,7 @@ func NewChtIndexer(db epvdb.Database, clientMode bool) *core.ChainIndexer {
 	return core.NewChainIndexer(db, idb, backend, sectionSize, confirmReq, time.Millisecond*100, "cht")
 }
 
-// Reset implements core.ChainIndexerBackend
+                                            
 func (c *ChtIndexerBackend) Reset(section uint64, lastSectionHead common.Hash) error {
 	var root common.Hash
 	if section > 0 {
@@ -156,7 +156,7 @@ func (c *ChtIndexerBackend) Reset(section uint64, lastSectionHead common.Hash) e
 	return err
 }
 
-// Process implements core.ChainIndexerBackend
+                                              
 func (c *ChtIndexerBackend) Process(header *types.Header) {
 	hash, num := header.Hash(), header.Number.Uint64()
 	c.lastHash = hash
@@ -171,7 +171,7 @@ func (c *ChtIndexerBackend) Process(header *types.Header) {
 	c.trie.Update(encNumber[:], data)
 }
 
-// Commit implements core.ChainIndexerBackend
+                                             
 func (c *ChtIndexerBackend) Commit() error {
 	root, err := c.trie.Commit(nil)
 	if err != nil {
@@ -193,11 +193,11 @@ const (
 )
 
 var (
-	bloomTriePrefix      = []byte("bltRoot-") // bloomTriePrefix + bloomTrieNum (uint64 big endian) -> trie root hash
+	bloomTriePrefix      = []byte("bltRoot-")                                                                        
 	BloomTrieTablePrefix = "blt-"
 )
 
-// GetBloomTrieRoot reads the BloomTrie root assoctiated to the given section from the database
+                                                                                               
 func GetBloomTrieRoot(db epvdb.Database, sectionIdx uint64, sectionHead common.Hash) common.Hash {
 	var encNumber [8]byte
 	binary.BigEndian.PutUint64(encNumber[:], sectionIdx)
@@ -205,14 +205,14 @@ func GetBloomTrieRoot(db epvdb.Database, sectionIdx uint64, sectionHead common.H
 	return common.BytesToHash(data)
 }
 
-// StoreBloomTrieRoot writes the BloomTrie root assoctiated to the given section into the database
+                                                                                                  
 func StoreBloomTrieRoot(db epvdb.Database, sectionIdx uint64, sectionHead, root common.Hash) {
 	var encNumber [8]byte
 	binary.BigEndian.PutUint64(encNumber[:], sectionIdx)
 	db.Put(append(append(bloomTriePrefix, encNumber[:]...), sectionHead.Bytes()...), root.Bytes())
 }
 
-// BloomTrieIndexerBackend implements core.ChainIndexerBackend
+                                                              
 type BloomTrieIndexerBackend struct {
 	diskdb                                     epvdb.Database
 	triedb                                     *trie.Database
@@ -221,7 +221,7 @@ type BloomTrieIndexerBackend struct {
 	sectionHeads                               []common.Hash
 }
 
-// NewBloomTrieIndexer creates a BloomTrie chain indexer
+                                                        
 func NewBloomTrieIndexer(db epvdb.Database, clientMode bool) *core.ChainIndexer {
 	backend := &BloomTrieIndexerBackend{
 		diskdb: db,
@@ -242,7 +242,7 @@ func NewBloomTrieIndexer(db epvdb.Database, clientMode bool) *core.ChainIndexer 
 	return core.NewChainIndexer(db, idb, backend, BloomTrieFrequency, confirmReq-epvBloomBitsConfirmations, time.Millisecond*100, "bloomtrie")
 }
 
-// Reset implements core.ChainIndexerBackend
+                                            
 func (b *BloomTrieIndexerBackend) Reset(section uint64, lastSectionHead common.Hash) error {
 	var root common.Hash
 	if section > 0 {
@@ -254,7 +254,7 @@ func (b *BloomTrieIndexerBackend) Reset(section uint64, lastSectionHead common.H
 	return err
 }
 
-// Process implements core.ChainIndexerBackend
+                                              
 func (b *BloomTrieIndexerBackend) Process(header *types.Header) {
 	num := header.Number.Uint64() - b.section*BloomTrieFrequency
 	if (num+1)%b.parentSectionSize == 0 {
@@ -262,7 +262,7 @@ func (b *BloomTrieIndexerBackend) Process(header *types.Header) {
 	}
 }
 
-// Commit implements core.ChainIndexerBackend
+                                             
 func (b *BloomTrieIndexerBackend) Commit() error {
 	var compSize, decompSize uint64
 

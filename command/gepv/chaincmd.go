@@ -1,18 +1,18 @@
-// Copyright 2015 The go-epvchain Authors
-// This file is part of go-epvchain.
-//
-// go-epvchain is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// go-epvchain is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with go-epvchain. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                    
+  
+                                                                      
+                                                                       
+                                                                    
+                                      
+  
+                                                                 
+                                                                 
+                                                               
+                                               
+  
+                                                                    
+                                                                      
 
 package main
 
@@ -143,10 +143,10 @@ Use "epvchain dump 0" to dump the genesis block.`,
 	}
 )
 
-// initGenesis will initialise the given JSON format genesis file and writes it as
-// the zero'd block (i.e. genesis) or will fail hard if it can't succeed.
+                                                                                  
+                                                                         
 func initGenesis(ctx *cli.Context) error {
-	// Make sure we have a valid genesis JSON
+	                                         
 	genesisPath := ctx.Args().First()
 	if len(genesisPath) == 0 {
 		utils.Fatalf("Must supply path to genesis JSON file")
@@ -162,7 +162,7 @@ func initGenesis(ctx *cli.Context) error {
 		utils.Fatalf("invalid genesis file: %v", err)
 	}
 
-	// Open an initialise both full and light databases
+	                                                   
 	stack := makeFullNode(ctx)
 	for _, name := range []string{"chaindata", "lightchaindata"} {
 		chaindb, err := stack.OpenDatabase(name, 0, 0)
@@ -186,7 +186,7 @@ func importChain(ctx *cli.Context) error {
 	chain, chainDb := utils.MakeChain(ctx, stack)
 	defer chainDb.Close()
 
-	// Start periodically gathering memory profiles
+	                                               
 	var peakMemAlloc, peakMemSys uint64
 	go func() {
 		stats := new(runtime.MemStats)
@@ -201,7 +201,7 @@ func importChain(ctx *cli.Context) error {
 			time.Sleep(5 * time.Second)
 		}
 	}()
-	// Import the chain
+	                   
 	start := time.Now()
 
 	if len(ctx.Args()) == 1 {
@@ -218,7 +218,7 @@ func importChain(ctx *cli.Context) error {
 	chain.Stop()
 	fmt.Printf("Import done in %v.\n\n", time.Since(start))
 
-	// Output pre-compaction stats mostly to see the import trashing
+	                                                                
 	db := chainDb.(*epvdb.LDBDatabase)
 
 	stats, err := db.LDB().GetProperty("leveldb.stats")
@@ -229,7 +229,7 @@ func importChain(ctx *cli.Context) error {
 	fmt.Printf("Trie cache misses:  %d\n", trie.CacheMisses())
 	fmt.Printf("Trie cache unloads: %d\n\n", trie.CacheUnloads())
 
-	// Print the memory statistics used by the importing
+	                                                    
 	mem := new(runtime.MemStats)
 	runtime.ReadMemStats(mem)
 
@@ -242,7 +242,7 @@ func importChain(ctx *cli.Context) error {
 		return nil
 	}
 
-	// Compact the entire database to more accurately measure disk io and print the stats
+	                                                                                     
 	start = time.Now()
 	fmt.Println("Compacting entire database...")
 	if err = db.LDB().CompactRange(util.Range{}); err != nil {
@@ -272,7 +272,7 @@ func exportChain(ctx *cli.Context) error {
 	if len(ctx.Args()) < 3 {
 		err = utils.ExportChain(chain, fp)
 	} else {
-		// This can be improved to allow for numbers larger than 9223372036854775807
+		                                                                            
 		first, ferr := strconv.ParseInt(ctx.Args().Get(1), 10, 64)
 		last, lerr := strconv.ParseInt(ctx.Args().Get(2), 10, 64)
 		if ferr != nil || lerr != nil {
@@ -292,18 +292,18 @@ func exportChain(ctx *cli.Context) error {
 }
 
 func copyDb(ctx *cli.Context) error {
-	// Ensure we have a source chain directory to copy
+	                                                  
 	if len(ctx.Args()) != 1 {
 		utils.Fatalf("Source chaindata directory path argument missing")
 	}
-	// Initialize a new chain for the running node to sync into
+	                                                           
 	stack := makeFullNode(ctx)
 	chain, chainDb := utils.MakeChain(ctx, stack)
 
 	syncmode := *utils.GlobalTextMarshaler(ctx, utils.SyncModeFlag.Name).(*downloader.SyncMode)
 	dl := downloader.New(syncmode, chainDb, new(event.TypeMux), chain, nil, nil)
 
-	// Create a source peer to satisfy downloader requests from
+	                                                           
 	db, err := epvdb.NewLDBDatabase(ctx.Args().First(), ctx.GlobalInt(utils.CacheFlag.Name), 256)
 	if err != nil {
 		return err
@@ -316,7 +316,7 @@ func copyDb(ctx *cli.Context) error {
 	if err = dl.RegisterPeer("local", 63, peer); err != nil {
 		return err
 	}
-	// Synchronise with the simulated peer
+	                                      
 	start := time.Now()
 
 	currentHeader := hc.CurrentHeader()
@@ -328,7 +328,7 @@ func copyDb(ctx *cli.Context) error {
 	}
 	fmt.Printf("Database copy done in %v\n", time.Since(start))
 
-	// Compact the entire database to remove any sync overhead
+	                                                          
 	start = time.Now()
 	fmt.Println("Compacting entire database...")
 	if err = chainDb.(*epvdb.LDBDatabase).LDB().CompactRange(util.Range{}); err != nil {
@@ -343,7 +343,7 @@ func removeDB(ctx *cli.Context) error {
 	stack, _ := makeConfigNode(ctx)
 
 	for _, name := range []string{"chaindata", "lightchaindata"} {
-		// Ensure the database exists in the first place
+		                                                
 		logger := log.New("database", name)
 
 		dbdir := stack.ResolvePath(name)
@@ -351,7 +351,7 @@ func removeDB(ctx *cli.Context) error {
 			logger.Info("Database doesn't exist, skipping", "path", dbdir)
 			continue
 		}
-		// Confirm removal and execute
+		                              
 		fmt.Println(dbdir)
 		confirm, err := console.Stdin.PromptConfirm("Remove this database?")
 		switch {
@@ -394,7 +394,7 @@ func dump(ctx *cli.Context) error {
 	return nil
 }
 
-// hashish returns true for strings that look like hashes.
+                                                          
 func hashish(x string) bool {
 	_, err := strconv.Atoi(x)
 	return err != nil

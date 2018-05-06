@@ -1,20 +1,20 @@
-// Copyright 2016 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                                
+  
+                                                                                  
+                                                                              
+                                                                    
+                                      
+  
+                                                                             
+                                                                 
+                                                               
+                                                      
+  
+                                                                           
+                                                                                  
 
-// Package flowcontrol implements a client side flow control mechanism
+                                                                      
 package flowcontrol
 
 import (
@@ -97,8 +97,8 @@ type ServerNode struct {
 	bufEstimate uint64
 	lastTime    mclock.AbsTime
 	params      *ServerParams
-	sumCost     uint64            // sum of req costs sent to this server
-	pending     map[uint64]uint64 // value = sumCost after sending the given req
+	sumCost     uint64                                                   
+	pending     map[uint64]uint64                                               
 	lock        sync.RWMutex
 }
 
@@ -123,7 +123,7 @@ func (peer *ServerNode) recalcBLE(time mclock.AbsTime) {
 	peer.lastTime = time
 }
 
-// safetyMargin is added to the flow control waiting time when estimated buffer value is low
+                                                                                            
 const safetyMargin = time.Millisecond
 
 func (peer *ServerNode) canSend(maxCost uint64) (time.Duration, float64) {
@@ -138,9 +138,9 @@ func (peer *ServerNode) canSend(maxCost uint64) (time.Duration, float64) {
 	return time.Duration((maxCost - peer.bufEstimate) * uint64(fcTimeConst) / peer.params.MinRecharge), 0
 }
 
-// CanSend returns the minimum waiting time required before sending a request
-// with the given maximum estimated cost. Second return value is the relative
-// estimated buffer level after sending the request (divided by BufLimit).
+                                                                             
+                                                                             
+                                                                          
 func (peer *ServerNode) CanSend(maxCost uint64) (time.Duration, float64) {
 	peer.lock.RLock()
 	defer peer.lock.RUnlock()
@@ -148,9 +148,9 @@ func (peer *ServerNode) CanSend(maxCost uint64) (time.Duration, float64) {
 	return peer.canSend(maxCost)
 }
 
-// QueueRequest should be called when the request has been assigned to the given
-// server node, before putting it in the send queue. It is mandatory that requests
-// are sent in the same order as the QueueRequest calls are made.
+                                                                                
+                                                                                  
+                                                                 
 func (peer *ServerNode) QueueRequest(reqID, maxCost uint64) {
 	peer.lock.Lock()
 	defer peer.lock.Unlock()
@@ -160,8 +160,8 @@ func (peer *ServerNode) QueueRequest(reqID, maxCost uint64) {
 	peer.pending[reqID] = peer.sumCost
 }
 
-// GotReply adjusts estimated buffer value according to the value included in
-// the latest request reply.
+                                                                             
+                            
 func (peer *ServerNode) GotReply(reqID, bv uint64) {
 
 	peer.lock.Lock()

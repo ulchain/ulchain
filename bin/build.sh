@@ -1,5 +1,3 @@
-#!/bin/sh
-
 set -e
 
 if [ ! -f "bin/build.sh" ]; then

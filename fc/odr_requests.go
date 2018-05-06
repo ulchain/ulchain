@@ -1,21 +1,21 @@
-// Copyright 2016 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                                
+  
+                                                                                  
+                                                                              
+                                                                    
+                                      
+  
+                                                                             
+                                                                 
+                                                               
+                                                      
+  
+                                                                           
+                                                                                  
 
-// Package light implements on-demand retrieval capable state and chain objects
-// for the EPVchain Light Client.
+                                                                               
+                                 
 package les
 
 import (
@@ -73,33 +73,33 @@ func LesRequest(req light.OdrRequest) LesOdrRequest {
 	}
 }
 
-// BlockRequest is the ODR request type for block bodies
+                                                        
 type BlockRequest light.BlockRequest
 
-// GetCost returns the cost of the given ODR request according to the serving
-// peer's cost table (implementation of LesOdrRequest)
+                                                                             
+                                                      
 func (r *BlockRequest) GetCost(peer *peer) uint64 {
 	return peer.GetRequestCost(GetBlockBodiesMsg, 1)
 }
 
-// CanSend tells if a certain peer is suitable for serving the given request
+                                                                            
 func (r *BlockRequest) CanSend(peer *peer) bool {
 	return peer.HasBlock(r.Hash, r.Number)
 }
 
-// Request sends an ODR request to the LES network (implementation of LesOdrRequest)
+                                                                                    
 func (r *BlockRequest) Request(reqID uint64, peer *peer) error {
 	peer.Log().Debug("Requesting block body", "hash", r.Hash)
 	return peer.RequestBodies(reqID, r.GetCost(peer), []common.Hash{r.Hash})
 }
 
-// Valid processes an ODR request reply message from the LES network
-// returns true and stores results in memory if the message was a valid reply
-// to the request (implementation of LesOdrRequest)
+                                                                    
+                                                                             
+                                                   
 func (r *BlockRequest) Validate(db epvdb.Database, msg *Msg) error {
 	log.Debug("Validating block body", "hash", r.Hash)
 
-	// Ensure we have a correct message with a single block body
+	                                                            
 	if msg.MsgType != MsgBlockBodies {
 		return errInvalidMessageType
 	}
@@ -109,7 +109,7 @@ func (r *BlockRequest) Validate(db epvdb.Database, msg *Msg) error {
 	}
 	body := bodies[0]
 
-	// Retrieve our stored header and validate block content against it
+	                                                                   
 	header := core.GetHeader(db, r.Hash, r.Number)
 	if header == nil {
 		return errHeaderUnavailable
@@ -120,7 +120,7 @@ func (r *BlockRequest) Validate(db epvdb.Database, msg *Msg) error {
 	if header.UncleHash != types.CalcUncleHash(body.Uncles) {
 		return errUncleHashMismatch
 	}
-	// Validations passed, encode and store RLP
+	                                           
 	data, err := rlp.EncodeToBytes(body)
 	if err != nil {
 		return err
@@ -129,33 +129,33 @@ func (r *BlockRequest) Validate(db epvdb.Database, msg *Msg) error {
 	return nil
 }
 
-// ReceiptsRequest is the ODR request type for block receipts by block hash
+                                                                           
 type ReceiptsRequest light.ReceiptsRequest
 
-// GetCost returns the cost of the given ODR request according to the serving
-// peer's cost table (implementation of LesOdrRequest)
+                                                                             
+                                                      
 func (r *ReceiptsRequest) GetCost(peer *peer) uint64 {
 	return peer.GetRequestCost(GetReceiptsMsg, 1)
 }
 
-// CanSend tells if a certain peer is suitable for serving the given request
+                                                                            
 func (r *ReceiptsRequest) CanSend(peer *peer) bool {
 	return peer.HasBlock(r.Hash, r.Number)
 }
 
-// Request sends an ODR request to the LES network (implementation of LesOdrRequest)
+                                                                                    
 func (r *ReceiptsRequest) Request(reqID uint64, peer *peer) error {
 	peer.Log().Debug("Requesting block receipts", "hash", r.Hash)
 	return peer.RequestReceipts(reqID, r.GetCost(peer), []common.Hash{r.Hash})
 }
 
-// Valid processes an ODR request reply message from the LES network
-// returns true and stores results in memory if the message was a valid reply
-// to the request (implementation of LesOdrRequest)
+                                                                    
+                                                                             
+                                                   
 func (r *ReceiptsRequest) Validate(db epvdb.Database, msg *Msg) error {
 	log.Debug("Validating block receipts", "hash", r.Hash)
 
-	// Ensure we have a correct message with a single block receipt
+	                                                               
 	if msg.MsgType != MsgReceipts {
 		return errInvalidMessageType
 	}
@@ -165,7 +165,7 @@ func (r *ReceiptsRequest) Validate(db epvdb.Database, msg *Msg) error {
 	}
 	receipt := receipts[0]
 
-	// Retrieve our stored header and validate receipt content against it
+	                                                                     
 	header := core.GetHeader(db, r.Hash, r.Number)
 	if header == nil {
 		return errHeaderUnavailable
@@ -173,7 +173,7 @@ func (r *ReceiptsRequest) Validate(db epvdb.Database, msg *Msg) error {
 	if header.ReceiptHash != types.DeriveSha(receipt) {
 		return errReceiptHashMismatch
 	}
-	// Validations passed, store and return
+	                                       
 	r.Receipts = receipt
 	return nil
 }
@@ -184,11 +184,11 @@ type ProofReq struct {
 	FromLevel   uint
 }
 
-// ODR request type for state/storage trie entries, see LesOdrRequest interface
+                                                                               
 type TrieRequest light.TrieRequest
 
-// GetCost returns the cost of the given ODR request according to the serving
-// peer's cost table (implementation of LesOdrRequest)
+                                                                             
+                                                      
 func (r *TrieRequest) GetCost(peer *peer) uint64 {
 	switch peer.version {
 	case lpv1:
@@ -200,12 +200,12 @@ func (r *TrieRequest) GetCost(peer *peer) uint64 {
 	}
 }
 
-// CanSend tells if a certain peer is suitable for serving the given request
+                                                                            
 func (r *TrieRequest) CanSend(peer *peer) bool {
 	return peer.HasBlock(r.Id.BlockHash, r.Id.BlockNumber)
 }
 
-// Request sends an ODR request to the LES network (implementation of LesOdrRequest)
+                                                                                    
 func (r *TrieRequest) Request(reqID uint64, peer *peer) error {
 	peer.Log().Debug("Requesting trie proof", "root", r.Id.Root, "key", r.Key)
 	req := ProofReq{
@@ -216,9 +216,9 @@ func (r *TrieRequest) Request(reqID uint64, peer *peer) error {
 	return peer.RequestProofs(reqID, r.GetCost(peer), []ProofReq{req})
 }
 
-// Valid processes an ODR request reply message from the LES network
-// returns true and stores results in memory if the message was a valid reply
-// to the request (implementation of LesOdrRequest)
+                                                                    
+                                                                             
+                                                   
 func (r *TrieRequest) Validate(db epvdb.Database, msg *Msg) error {
 	log.Debug("Validating trie proof", "root", r.Id.Root, "key", r.Key)
 
@@ -229,7 +229,7 @@ func (r *TrieRequest) Validate(db epvdb.Database, msg *Msg) error {
 			return errInvalidEntryCount
 		}
 		nodeSet := proofs[0].NodeSet()
-		// Verify the proof and store if checks out
+		                                           
 		if _, err, _ := trie.VerifyProof(r.Id.Root, r.Key, nodeSet); err != nil {
 			return fmt.Errorf("merkle proof verification failed: %v", err)
 		}
@@ -238,13 +238,13 @@ func (r *TrieRequest) Validate(db epvdb.Database, msg *Msg) error {
 
 	case MsgProofsV2:
 		proofs := msg.Obj.(light.NodeList)
-		// Verify the proof and store if checks out
+		                                           
 		nodeSet := proofs.NodeSet()
 		reads := &readTraceDB{db: nodeSet}
 		if _, err, _ := trie.VerifyProof(r.Id.Root, r.Key, reads); err != nil {
 			return fmt.Errorf("merkle proof verification failed: %v", err)
 		}
-		// check if all nodes have been read by VerifyProof
+		                                                   
 		if len(reads.reads) != nodeSet.KeyCount() {
 			return errUselessNodes
 		}
@@ -261,21 +261,21 @@ type CodeReq struct {
 	AccKey []byte
 }
 
-// ODR request type for node data (used for retrieving contract code), see LesOdrRequest interface
+                                                                                                  
 type CodeRequest light.CodeRequest
 
-// GetCost returns the cost of the given ODR request according to the serving
-// peer's cost table (implementation of LesOdrRequest)
+                                                                             
+                                                      
 func (r *CodeRequest) GetCost(peer *peer) uint64 {
 	return peer.GetRequestCost(GetCodeMsg, 1)
 }
 
-// CanSend tells if a certain peer is suitable for serving the given request
+                                                                            
 func (r *CodeRequest) CanSend(peer *peer) bool {
 	return peer.HasBlock(r.Id.BlockHash, r.Id.BlockNumber)
 }
 
-// Request sends an ODR request to the LES network (implementation of LesOdrRequest)
+                                                                                    
 func (r *CodeRequest) Request(reqID uint64, peer *peer) error {
 	peer.Log().Debug("Requesting code data", "hash", r.Hash)
 	req := CodeReq{
@@ -285,13 +285,13 @@ func (r *CodeRequest) Request(reqID uint64, peer *peer) error {
 	return peer.RequestCode(reqID, r.GetCost(peer), []CodeReq{req})
 }
 
-// Valid processes an ODR request reply message from the LES network
-// returns true and stores results in memory if the message was a valid reply
-// to the request (implementation of LesOdrRequest)
+                                                                    
+                                                                             
+                                                   
 func (r *CodeRequest) Validate(db epvdb.Database, msg *Msg) error {
 	log.Debug("Validating code data", "hash", r.Hash)
 
-	// Ensure we have a correct message with a single code element
+	                                                              
 	if msg.MsgType != MsgCode {
 		return errInvalidMessageType
 	}
@@ -301,7 +301,7 @@ func (r *CodeRequest) Validate(db epvdb.Database, msg *Msg) error {
 	}
 	data := reply[0]
 
-	// Verify the data and store if checks out
+	                                          
 	if hash := crypto.Keccak256Hash(data); r.Hash != hash {
 		return errDataHashMismatch
 	}
@@ -310,13 +310,13 @@ func (r *CodeRequest) Validate(db epvdb.Database, msg *Msg) error {
 }
 
 const (
-	// helper trie type constants
-	htCanonical = iota // Canonical hash trie
-	htBloomBits        // BloomBits trie
+	                             
+	htCanonical = iota                       
+	htBloomBits                         
 
-	// applicable for all helper trie requests
+	                                          
 	auxRoot = 1
-	// applicable for htCanonical
+	                             
 	auxHeader = 2
 )
 
@@ -327,28 +327,28 @@ type HelperTrieReq struct {
 	FromLevel, AuxReq uint
 }
 
-type HelperTrieResps struct { // describes all responses, not just a single one
+type HelperTrieResps struct {                                                  
 	Proofs  light.NodeList
 	AuxData [][]byte
 }
 
-// legacy LES/1
+               
 type ChtReq struct {
 	ChtNum, BlockNum uint64
 	FromLevel        uint
 }
 
-// legacy LES/1
+               
 type ChtResp struct {
 	Header *types.Header
 	Proof  []rlp.RawValue
 }
 
-// ODR request type for requesting headers by Canonical Hash Trie, see LesOdrRequest interface
+                                                                                              
 type ChtRequest light.ChtRequest
 
-// GetCost returns the cost of the given ODR request according to the serving
-// peer's cost table (implementation of LesOdrRequest)
+                                                                             
+                                                      
 func (r *ChtRequest) GetCost(peer *peer) uint64 {
 	switch peer.version {
 	case lpv1:
@@ -360,7 +360,7 @@ func (r *ChtRequest) GetCost(peer *peer) uint64 {
 	}
 }
 
-// CanSend tells if a certain peer is suitable for serving the given request
+                                                                            
 func (r *ChtRequest) CanSend(peer *peer) bool {
 	peer.lock.RLock()
 	defer peer.lock.RUnlock()
@@ -368,7 +368,7 @@ func (r *ChtRequest) CanSend(peer *peer) bool {
 	return peer.headInfo.Number >= light.HelperTrieConfirmations && r.ChtNum <= (peer.headInfo.Number-light.HelperTrieConfirmations)/light.CHTFrequencyClient
 }
 
-// Request sends an ODR request to the LES network (implementation of LesOdrRequest)
+                                                                                    
 func (r *ChtRequest) Request(reqID uint64, peer *peer) error {
 	peer.Log().Debug("Requesting CHT", "cht", r.ChtNum, "block", r.BlockNum)
 	var encNum [8]byte
@@ -382,21 +382,21 @@ func (r *ChtRequest) Request(reqID uint64, peer *peer) error {
 	return peer.RequestHelperTrieProofs(reqID, r.GetCost(peer), []HelperTrieReq{req})
 }
 
-// Valid processes an ODR request reply message from the LES network
-// returns true and stores results in memory if the message was a valid reply
-// to the request (implementation of LesOdrRequest)
+                                                                    
+                                                                             
+                                                   
 func (r *ChtRequest) Validate(db epvdb.Database, msg *Msg) error {
 	log.Debug("Validating CHT", "cht", r.ChtNum, "block", r.BlockNum)
 
 	switch msg.MsgType {
-	case MsgHeaderProofs: // LES/1 backwards compatibility
+	case MsgHeaderProofs:                                 
 		proofs := msg.Obj.([]ChtResp)
 		if len(proofs) != 1 {
 			return errInvalidEntryCount
 		}
 		proof := proofs[0]
 
-		// Verify the CHT
+		                 
 		var encNumber [8]byte
 		binary.BigEndian.PutUint64(encNumber[:], r.BlockNum)
 
@@ -411,7 +411,7 @@ func (r *ChtRequest) Validate(db epvdb.Database, msg *Msg) error {
 		if node.Hash != proof.Header.Hash() {
 			return errCHTHashMismatch
 		}
-		// Verifications passed, store and return
+		                                         
 		r.Header = proof.Header
 		r.Proof = light.NodeList(proof.Proof).NodeSet()
 		r.Td = node.Td
@@ -430,7 +430,7 @@ func (r *ChtRequest) Validate(db epvdb.Database, msg *Msg) error {
 			return errHeaderUnavailable
 		}
 
-		// Verify the CHT
+		                 
 		var encNumber [8]byte
 		binary.BigEndian.PutUint64(encNumber[:], r.BlockNum)
 
@@ -453,7 +453,7 @@ func (r *ChtRequest) Validate(db epvdb.Database, msg *Msg) error {
 		if r.BlockNum != header.Number.Uint64() {
 			return errCHTNumberMismatch
 		}
-		// Verifications passed, store and return
+		                                         
 		r.Header = header
 		r.Proof = nodeSet
 		r.Td = node.Td
@@ -467,16 +467,16 @@ type BloomReq struct {
 	BloomTrieNum, BitIdx, SectionIdx, FromLevel uint64
 }
 
-// ODR request type for requesting headers by Canonical Hash Trie, see LesOdrRequest interface
+                                                                                              
 type BloomRequest light.BloomRequest
 
-// GetCost returns the cost of the given ODR request according to the serving
-// peer's cost table (implementation of LesOdrRequest)
+                                                                             
+                                                      
 func (r *BloomRequest) GetCost(peer *peer) uint64 {
 	return peer.GetRequestCost(GetHelperTrieProofsMsg, len(r.SectionIdxList))
 }
 
-// CanSend tells if a certain peer is suitable for serving the given request
+                                                                            
 func (r *BloomRequest) CanSend(peer *peer) bool {
 	peer.lock.RLock()
 	defer peer.lock.RUnlock()
@@ -487,7 +487,7 @@ func (r *BloomRequest) CanSend(peer *peer) bool {
 	return peer.headInfo.Number >= light.HelperTrieConfirmations && r.BloomTrieNum <= (peer.headInfo.Number-light.HelperTrieConfirmations)/light.BloomTrieFrequency
 }
 
-// Request sends an ODR request to the LES network (implementation of LesOdrRequest)
+                                                                                    
 func (r *BloomRequest) Request(reqID uint64, peer *peer) error {
 	peer.Log().Debug("Requesting BloomBits", "bloomTrie", r.BloomTrieNum, "bitIdx", r.BitIdx, "sections", r.SectionIdxList)
 	reqs := make([]HelperTrieReq, len(r.SectionIdxList))
@@ -506,13 +506,13 @@ func (r *BloomRequest) Request(reqID uint64, peer *peer) error {
 	return peer.RequestHelperTrieProofs(reqID, r.GetCost(peer), reqs)
 }
 
-// Valid processes an ODR request reply message from the LES network
-// returns true and stores results in memory if the message was a valid reply
-// to the request (implementation of LesOdrRequest)
+                                                                    
+                                                                             
+                                                   
 func (r *BloomRequest) Validate(db epvdb.Database, msg *Msg) error {
 	log.Debug("Validating BloomBits", "bloomTrie", r.BloomTrieNum, "bitIdx", r.BitIdx, "sections", r.SectionIdxList)
 
-	// Ensure we have a correct message with a single proof element
+	                                                               
 	if msg.MsgType != MsgHelperTrieProofs {
 		return errInvalidMessageType
 	}
@@ -523,7 +523,7 @@ func (r *BloomRequest) Validate(db epvdb.Database, msg *Msg) error {
 
 	r.BloomBits = make([][]byte, len(r.SectionIdxList))
 
-	// Verify the proofs
+	                    
 	var encNumber [10]byte
 	binary.BigEndian.PutUint16(encNumber[:2], uint16(r.BitIdx))
 
@@ -543,14 +543,14 @@ func (r *BloomRequest) Validate(db epvdb.Database, msg *Msg) error {
 	return nil
 }
 
-// readTraceDB stores the keys of database reads. We use this to check that received node
-// sets contain only the trie nodes necessary to make proofs pass.
+                                                                                         
+                                                                  
 type readTraceDB struct {
 	db    trie.DatabaseReader
 	reads map[string]struct{}
 }
 
-// Get returns a stored node
+                            
 func (db *readTraceDB) Get(k []byte) ([]byte, error) {
 	if db.reads == nil {
 		db.reads = make(map[string]struct{})
@@ -559,7 +559,7 @@ func (db *readTraceDB) Get(k []byte) ([]byte, error) {
 	return db.db.Get(k)
 }
 
-// Has returns true if the node set contains the given key
+                                                          
 func (db *readTraceDB) Has(key []byte) (bool, error) {
 	_, err := db.Get(key)
 	return err == nil, nil

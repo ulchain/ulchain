@@ -1,18 +1,18 @@
-// Copyright 2016 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                                
+  
+                                                                                  
+                                                                              
+                                                                    
+                                      
+  
+                                                                             
+                                                                 
+                                                               
+                                                      
+  
+                                                                           
+                                                                                  
 
 package les
 
@@ -64,12 +64,12 @@ func (self *LesTxRelay) unregisterPeer(p *peer) {
 	self.peerList = self.ps.AllPeers()
 }
 
-// send sends a list of transactions to at most a given number of peers at
-// once, never resending any particular transaction to the same peer twice
+                                                                          
+                                                                          
 func (self *LesTxRelay) send(txs types.Transactions, count int) {
 	sendTo := make(map[*peer]types.Transactions)
 
-	self.peerStartPos++ // rotate the starting position of the peer list
+	self.peerStartPos++                                                 
 	if self.peerStartPos >= len(self.peerList) {
 		self.peerStartPos = 0
 	}
@@ -97,14 +97,14 @@ func (self *LesTxRelay) send(txs types.Transactions, count int) {
 					cnt--
 				}
 				if cnt == 0 {
-					break // sent it to the desired number of peers
+					break                                          
 				}
 				pos++
 				if pos == len(self.peerList) {
 					pos = 0
 				}
 				if pos == self.peerStartPos {
-					break // tried all available peers
+					break                             
 				}
 			}
 		}

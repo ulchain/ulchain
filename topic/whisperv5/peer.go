@@ -1,18 +1,18 @@
-// Copyright 2016 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                                
+  
+                                                                                  
+                                                                              
+                                                                    
+                                      
+  
+                                                                             
+                                                                 
+                                                               
+                                                      
+  
+                                                                           
+                                                                                  
 
 package whisperv5
 
@@ -27,19 +27,19 @@ import (
 	set "gopkg.in/fatih/set.v0"
 )
 
-// peer represents a whisper protocol peer connection.
+                                                      
 type Peer struct {
 	host    *Whisper
 	peer    *p2p.Peer
 	ws      p2p.MsgReadWriter
 	trusted bool
 
-	known *set.Set // Messages already known by the peer to avoid wasting bandwidth
+	known *set.Set                                                                 
 
 	quit chan struct{}
 }
 
-// newPeer creates a new whisper peer object, but does not run the handshake itself.
+                                                                                    
 func newPeer(host *Whisper, remote *p2p.Peer, rw p2p.MsgReadWriter) *Peer {
 	return &Peer{
 		host:    host,
@@ -51,28 +51,28 @@ func newPeer(host *Whisper, remote *p2p.Peer, rw p2p.MsgReadWriter) *Peer {
 	}
 }
 
-// start initiates the peer updater, periodically broadcasting the whisper packets
-// into the network.
+                                                                                  
+                    
 func (p *Peer) start() {
 	go p.update()
 	log.Trace("start", "peer", p.ID())
 }
 
-// stop terminates the peer updater, stopping message forwarding to it.
+                                                                       
 func (p *Peer) stop() {
 	close(p.quit)
 	log.Trace("stop", "peer", p.ID())
 }
 
-// handshake sends the protocol initiation status message to the remote peer and
-// verifies the remote status too.
+                                                                                
+                                  
 func (p *Peer) handshake() error {
-	// Send the handshake status message asynchronously
+	                                                   
 	errc := make(chan error, 1)
 	go func() {
 		errc <- p2p.Send(p.ws, statusCode, ProtocolVersion)
 	}()
-	// Fetch the remote status packet and verify protocol match
+	                                                           
 	packet, err := p.ws.ReadMsg()
 	if err != nil {
 		return err
@@ -88,21 +88,21 @@ func (p *Peer) handshake() error {
 	if peerVersion != ProtocolVersion {
 		return fmt.Errorf("peer [%x]: protocol version mismatch %d != %d", p.ID(), peerVersion, ProtocolVersion)
 	}
-	// Wait until out own status is consumed too
+	                                            
 	if err := <-errc; err != nil {
 		return fmt.Errorf("peer [%x] failed to send status packet: %v", p.ID(), err)
 	}
 	return nil
 }
 
-// update executes periodic operations on the peer, including message transmission
-// and expiration.
+                                                                                  
+                  
 func (p *Peer) update() {
-	// Start the tickers for the updates
+	                                    
 	expire := time.NewTicker(expirationCycle)
 	transmit := time.NewTicker(transmissionCycle)
 
-	// Loop and transmit until termination is requested
+	                                                   
 	for {
 		select {
 		case <-expire.C:
@@ -120,18 +120,18 @@ func (p *Peer) update() {
 	}
 }
 
-// mark marks an envelope known to the peer so that it won't be sent back.
+                                                                          
 func (peer *Peer) mark(envelope *Envelope) {
 	peer.known.Add(envelope.Hash())
 }
 
-// marked checks if an envelope is already known to the remote peer.
+                                                                    
 func (peer *Peer) marked(envelope *Envelope) bool {
 	return peer.known.Has(envelope.Hash())
 }
 
-// expire iterates over all the known envelopes in the host and removes all
-// expired (unknown) ones from the known list.
+                                                                           
+                                              
 func (peer *Peer) expire() {
 	unmark := make(map[common.Hash]struct{})
 	peer.known.Each(func(v interface{}) bool {
@@ -140,14 +140,14 @@ func (peer *Peer) expire() {
 		}
 		return true
 	})
-	// Dump all known but no longer cached
+	                                      
 	for hash := range unmark {
 		peer.known.Remove(hash)
 	}
 }
 
-// broadcast iterates over the collection of envelopes and transmits yet unknown
-// ones over the network.
+                                                                                
+                         
 func (p *Peer) broadcast() error {
 	var cnt int
 	envelopes := p.host.Envelopes()

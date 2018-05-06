@@ -1,18 +1,18 @@
-// Copyright 2016 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
+                                         
+                                                
+  
+                                                                                  
+                                                                              
+                                                                    
+                                      
+  
+                                                                             
+                                                                 
+                                                               
+                                                      
+  
+                                                                           
+                                                                                  
 
 package params
 
@@ -26,17 +26,17 @@ type GasTable struct {
 
 	ExpByte uint64
 
-	// CreateBySuicide occurs when the
-	// refunded account is one that does
-	// not exist. This logic is similar
-	// to call. May be left nil. Nil means
-	// not charged.
+	                                  
+	                                    
+	                                   
+	                                      
+	               
 	CreateBySuicide uint64
 }
 
 var (
-	// GasTableHomestead contain the gas prices for
-	// the homestead phase.
+	                                               
+	                       
 	GasTableHomestead = GasTable{
 		ExtcodeSize: 20,
 		ExtcodeCopy: 20,
@@ -47,8 +47,8 @@ var (
 		ExpByte:     10,
 	}
 
-	// GasTableHomestead contain the gas re-prices for
-	// the homestead phase.
+	                                                  
+	                       
 	GasTableEIP150 = GasTable{
 		ExtcodeSize: 700,
 		ExtcodeCopy: 700,
