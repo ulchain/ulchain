@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package rpc
 
@@ -37,25 +22,21 @@ var (
 	subscriptionIDGen   = idGenerator()
 )
 
-                                           
 func isExported(name string) bool {
 	rune, _ := utf8.DecodeRuneInString(name)
 	return unicode.IsUpper(rune)
 }
 
-                                      
 func isExportedOrBuiltinType(t reflect.Type) bool {
 	for t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
-	                                                       
-	                                             
+
 	return isExported(t.Name()) || t.PkgPath() == ""
 }
 
 var contextType = reflect.TypeOf((*context.Context)(nil)).Elem()
 
-                                                                                                    
 func isContextType(t reflect.Type) bool {
 	for t.Kind() == reflect.Ptr {
 		t = t.Elem()
@@ -65,7 +46,6 @@ func isContextType(t reflect.Type) bool {
 
 var errorType = reflect.TypeOf((*error)(nil)).Elem()
 
-                                           
 func isErrorType(t reflect.Type) bool {
 	for t.Kind() == reflect.Ptr {
 		t = t.Elem()
@@ -75,7 +55,6 @@ func isErrorType(t reflect.Type) bool {
 
 var subscriptionType = reflect.TypeOf((*Subscription)(nil)).Elem()
 
-                                                                                                   
 func isSubscriptionType(t reflect.Type) bool {
 	for t.Kind() == reflect.Ptr {
 		t = t.Elem()
@@ -83,10 +62,8 @@ func isSubscriptionType(t reflect.Type) bool {
 	return t == subscriptionType
 }
 
-                                                                                     
-                                             
 func isPubSub(methodType reflect.Type) bool {
-	                                
+
 	if methodType.NumIn() < 2 || methodType.NumOut() != 2 {
 		return false
 	}
@@ -96,7 +73,6 @@ func isPubSub(methodType reflect.Type) bool {
 		isErrorType(methodType.Out(1))
 }
 
-                                                           
 func formatName(name string) string {
 	ret := []rune(name)
 	if len(ret) > 0 {
@@ -107,7 +83,6 @@ func formatName(name string) string {
 
 var bigIntType = reflect.TypeOf((*big.Int)(nil)).Elem()
 
-                                                      
 func isHexNum(t reflect.Type) bool {
 	if t == nil {
 		return false
@@ -119,9 +94,6 @@ func isHexNum(t reflect.Type) bool {
 	return t == bigIntType
 }
 
-                                                                                                                      
-                                                                                                                        
-                                                 
 func suitableCallbacks(rcvr reflect.Value, typ reflect.Type) (callbacks, subscriptions) {
 	callbacks := make(callbacks)
 	subscriptions := make(subscriptions)
@@ -131,7 +103,7 @@ METHODS:
 		method := typ.Method(m)
 		mtype := method.Type
 		mname := formatName(method.Name)
-		if method.PkgPath != "" {                           
+		if method.PkgPath != "" { 
 			continue
 		}
 
@@ -149,7 +121,7 @@ METHODS:
 		}
 
 		if h.isSubscribe {
-			h.argTypes = make([]reflect.Type, numIn-firstArg)                  
+			h.argTypes = make([]reflect.Type, numIn-firstArg) 
 			for i := firstArg; i < numIn; i++ {
 				argType := mtype.In(i)
 				if isExportedOrBuiltinType(argType) {
@@ -163,8 +135,6 @@ METHODS:
 			continue METHODS
 		}
 
-		                                                                            
-		                                              
 		h.argTypes = make([]reflect.Type, numIn-firstArg)
 		for i := firstArg; i < numIn; i++ {
 			argType := mtype.In(i)
@@ -174,14 +144,12 @@ METHODS:
 			h.argTypes[i-firstArg] = argType
 		}
 
-		                                                               
 		for i := 0; i < mtype.NumOut(); i++ {
 			if !isExportedOrBuiltinType(mtype.Out(i)) {
 				continue METHODS
 			}
 		}
 
-		                                                                    
 		h.errPos = -1
 		for i := 0; i < mtype.NumOut(); i++ {
 			if isErrorType(mtype.Out(i)) {
@@ -196,7 +164,7 @@ METHODS:
 
 		switch mtype.NumOut() {
 		case 0, 1, 2:
-			if mtype.NumOut() == 2 && h.errPos == -1 {                                            
+			if mtype.NumOut() == 2 && h.errPos == -1 { 
 				continue METHODS
 			}
 			callbacks[mname] = &h
@@ -206,8 +174,6 @@ METHODS:
 	return callbacks, subscriptions
 }
 
-                                                                          
-                                               
 func idGenerator() *rand.Rand {
 	if seed, err := binary.ReadVarint(bufio.NewReader(crand.Reader)); err == nil {
 		return rand.New(rand.NewSource(seed))
@@ -215,8 +181,6 @@ func idGenerator() *rand.Rand {
 	return rand.New(rand.NewSource(int64(time.Now().Nanosecond())))
 }
 
-                                                                                       
-                                           
 func NewID() ID {
 	subscriptionIDGenMu.Lock()
 	defer subscriptionIDGenMu.Unlock()
@@ -231,7 +195,7 @@ func NewID() ID {
 	}
 
 	rpcId := hex.EncodeToString(id)
-	                                                              
+
 	rpcId = strings.TrimLeft(rpcId, "0")
 	if rpcId == "" {
 		rpcId = "0"

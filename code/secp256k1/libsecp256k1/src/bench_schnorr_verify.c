@@ -1,8 +1,3 @@
-/**********************************************************************
- * Copyright (c) 2014 Pieter Wuille                                   *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
 
 #include <stdio.h>
 #include <string.h>
@@ -57,8 +52,6 @@ static void benchmark_schnorr_verify(void* arg) {
         data->sigs[0].sig[(i >> 8) % 64] ^= (i & 0xFF);
     }
 }
-
-
 
 int main(void) {
     benchmark_schnorr_verify_t data;

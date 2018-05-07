@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                         
 package les
 
 import (
@@ -32,33 +16,29 @@ import (
 )
 
 const (
-	blockDelayTimeout = time.Second * 10                                                                                   
-	maxNodeCount      = 20                                                                                    
+	blockDelayTimeout = time.Second * 10 
+	maxNodeCount      = 20               
 )
 
-                                                                                                                 
-                                                                                                                  
-                            
 type lightFetcher struct {
 	pm    *ProtocolManager
 	odr   *LesOdr
 	chain *light.LightChain
 
-	lock            sync.Mutex                                                                                       
+	lock            sync.Mutex 
 	maxConfirmedTd  *big.Int
 	peers           map[*peer]*fetcherPeerInfo
 	lastUpdateStats *updateStatsEntry
 	syncing         bool
 	syncDone        chan *peer
 
-	reqMu      sync.RWMutex                                                       
+	reqMu      sync.RWMutex 
 	requested  map[uint64]fetchRequest
 	deliverChn chan fetchResponse
 	timeoutChn chan uint64
-	requestChn chan bool                                  
+	requestChn chan bool 
 }
 
-                                                                            
 type fetcherPeerInfo struct {
 	root, lastAnnounced *fetcherTreeNode
 	nodeCnt             int
@@ -68,17 +48,6 @@ type fetcherPeerInfo struct {
 	firstUpdateStats    *updateStatsEntry
 }
 
-                                                                                   
-                                                                                   
-                                                                                    
-                                                   
-                                                                               
-                                                                                              
-                                                                       
-                                                                                  
-                                                                                 
-                                                                               
-                                           
 type fetcherTreeNode struct {
 	hash             common.Hash
 	number           uint64
@@ -88,7 +57,6 @@ type fetcherTreeNode struct {
 	children         []*fetcherTreeNode
 }
 
-                                                    
 type fetchRequest struct {
 	hash    common.Hash
 	amount  uint64
@@ -97,14 +65,12 @@ type fetchRequest struct {
 	timeout bool
 }
 
-                                                      
 type fetchResponse struct {
 	reqID   uint64
 	headers []*types.Header
 	peer    *peer
 }
 
-                                              
 func newLightFetcher(pm *ProtocolManager) *lightFetcher {
 	f := &lightFetcher{
 		pm:             pm,
@@ -125,7 +91,6 @@ func newLightFetcher(pm *ProtocolManager) *lightFetcher {
 	return f
 }
 
-                                                       
 func (f *lightFetcher) syncLoop() {
 	requesting := false
 	defer f.pm.wg.Done()
@@ -133,8 +98,7 @@ func (f *lightFetcher) syncLoop() {
 		select {
 		case <-f.pm.quitSync:
 			return
-		                                                                    
-		                                                
+
 		case newAnnounce := <-f.requestChn:
 			f.lock.Lock()
 			s := requesting
@@ -166,7 +130,7 @@ func (f *lightFetcher) syncLoop() {
 							f.requested[reqID] = req
 						}
 						f.reqMu.Unlock()
-						                                            
+
 						f.requestChn <- false
 					}()
 				}
@@ -212,7 +176,6 @@ func (f *lightFetcher) syncLoop() {
 	}
 }
 
-                                                         
 func (f *lightFetcher) registerPeer(p *peer) {
 	p.lock.Lock()
 	p.hasBlock = func(hash common.Hash, number uint64) bool {
@@ -226,7 +189,6 @@ func (f *lightFetcher) registerPeer(p *peer) {
 	f.peers[p] = &fetcherPeerInfo{nodeByHash: make(map[common.Hash]*fetcherTreeNode)}
 }
 
-                                                                
 func (f *lightFetcher) unregisterPeer(p *peer) {
 	p.lock.Lock()
 	p.hasBlock = nil
@@ -235,13 +197,10 @@ func (f *lightFetcher) unregisterPeer(p *peer) {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 
-	                                                       
 	f.checkUpdateStats(p, nil)
 	delete(f.peers, p)
 }
 
-                                                                                 
-                                                                     
 func (f *lightFetcher) announce(p *peer, head *announceData) {
 	f.lock.Lock()
 	defer f.lock.Unlock()
@@ -254,7 +213,7 @@ func (f *lightFetcher) announce(p *peer, head *announceData) {
 	}
 
 	if fp.lastAnnounced != nil && head.Td.Cmp(fp.lastAnnounced.td) <= 0 {
-		                                             
+
 		p.Log().Debug("Received non-monotonic td", "current", head.Td, "previous", fp.lastAnnounced.td)
 		go f.pm.removePeer(p.id)
 		return
@@ -268,8 +227,7 @@ func (f *lightFetcher) announce(p *peer, head *announceData) {
 		n = n.parent
 	}
 	if n != nil {
-		                                                                
-		                                                       
+
 		locked := false
 		for uint64(fp.nodeCnt)+head.Number-n.number > maxNodeCount && fp.root != nil {
 			if !locked {
@@ -277,7 +235,7 @@ func (f *lightFetcher) announce(p *peer, head *announceData) {
 				defer f.chain.UnlockChain()
 				locked = true
 			}
-			                                                                                         
+
 			var newRoot *fetcherTreeNode
 			for i, nn := range fp.root.children {
 				if core.GetCanonicalHash(f.pm.chainDb, nn.number) == nn.hash {
@@ -314,7 +272,7 @@ func (f *lightFetcher) announce(p *peer, head *announceData) {
 		}
 	}
 	if n == nil {
-		                                                                                                       
+
 		if fp.root != nil {
 			fp.deleteNode(fp.root)
 		}
@@ -335,15 +293,12 @@ func (f *lightFetcher) announce(p *peer, head *announceData) {
 	f.requestChn <- true
 }
 
-                                                                            
-                             
 func (f *lightFetcher) peerHasBlock(p *peer, hash common.Hash, number uint64) bool {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 
 	if f.syncing {
-		                                  
-		                                                                                          
+
 		return true
 	}
 
@@ -353,21 +308,15 @@ func (f *lightFetcher) peerHasBlock(p *peer, hash common.Hash, number uint64) bo
 	}
 
 	if number >= fp.root.number {
-		                                                                                 
+
 		return fp.nodeByHash[hash] != nil
 	}
 	f.chain.LockChain()
 	defer f.chain.UnlockChain()
-	                                                                                     
-	                                                      
-	  
-	                                                                                        
-	                                                             
+
 	return core.GetCanonicalHash(f.pm.chainDb, fp.root.number) == fp.root.hash && core.GetCanonicalHash(f.pm.chainDb, number) == hash
 }
 
-                                                                           
-                                
 func (f *lightFetcher) requestAmount(p *peer, n *fetcherTreeNode) uint64 {
 	amount := uint64(0)
 	nn := n
@@ -381,7 +330,6 @@ func (f *lightFetcher) requestAmount(p *peer, n *fetcherTreeNode) uint64 {
 	return amount
 }
 
-                                                                         
 func (f *lightFetcher) requestedID(reqID uint64) bool {
 	f.reqMu.RLock()
 	_, ok := f.requested[reqID]
@@ -389,8 +337,6 @@ func (f *lightFetcher) requestedID(reqID uint64) bool {
 	return ok
 }
 
-                                                                               
-                                                                     
 func (f *lightFetcher) nextRequest() (*distReq, uint64) {
 	var (
 		bestHash   common.Hash
@@ -489,12 +435,10 @@ func (f *lightFetcher) nextRequest() (*distReq, uint64) {
 	return rq, reqID
 }
 
-                                                                           
 func (f *lightFetcher) deliverHeaders(peer *peer, reqID uint64, headers []*types.Header) {
 	f.deliverChn <- fetchResponse{reqID: reqID, headers: headers, peer: peer}
 }
 
-                                                                                          
 func (f *lightFetcher) processResponse(req fetchRequest, resp fetchResponse) bool {
 	if uint64(len(resp.headers)) != req.amount || resp.headers[0].Hash() != req.hash {
 		req.peer.Log().Debug("Response content mismatch", "requested", len(resp.headers), "reqfrom", resp.headers[0], "delivered", req.amount, "delfrom", req.hash)
@@ -524,8 +468,6 @@ func (f *lightFetcher) processResponse(req fetchRequest, resp fetchResponse) boo
 	return true
 }
 
-                                                                              
-                                            
 func (f *lightFetcher) newHeaders(headers []*types.Header, tds []*big.Int) {
 	var maxTd *big.Int
 	for p, fp := range f.peers {
@@ -542,12 +484,6 @@ func (f *lightFetcher) newHeaders(headers []*types.Header, tds []*big.Int) {
 	}
 }
 
-                                                                                
-                                                                                
-                                                                               
-                                                                                  
-                                                                             
-                                                                            
 func (f *lightFetcher) checkAnnouncedHeaders(fp *fetcherPeerInfo, headers []*types.Header, tds []*big.Int) bool {
 	var (
 		n      *fetcherTreeNode
@@ -558,10 +494,10 @@ func (f *lightFetcher) checkAnnouncedHeaders(fp *fetcherPeerInfo, headers []*typ
 	for i := len(headers) - 1; ; i-- {
 		if i < 0 {
 			if n == nil {
-				                                       
+
 				return true
 			}
-			                                                                                                                 
+
 			hash, number := header.ParentHash, header.Number.Uint64()-1
 			td = f.chain.GetTd(hash, number)
 			header = f.chain.GetHeader(hash, number)
@@ -580,9 +516,9 @@ func (f *lightFetcher) checkAnnouncedHeaders(fp *fetcherPeerInfo, headers []*typ
 		}
 		if n != nil {
 			if n.td == nil {
-				                       
+
 				if nn := fp.nodeByHash[hash]; nn != nil {
-					                                                                                   
+
 					nn.children = append(nn.children, n.children...)
 					n.children = nil
 					fp.deleteNode(n)
@@ -593,13 +529,13 @@ func (f *lightFetcher) checkAnnouncedHeaders(fp *fetcherPeerInfo, headers []*typ
 					fp.nodeByHash[hash] = n
 				}
 			}
-			                                 
+
 			if n.hash != hash || n.number != number || n.td.Cmp(td) != 0 {
-				                                                   
+
 				return false
 			}
 			if n.known {
-				                                                                             
+
 				return true
 			}
 			n.known = true
@@ -615,9 +551,6 @@ func (f *lightFetcher) checkAnnouncedHeaders(fp *fetcherPeerInfo, headers []*typ
 	}
 }
 
-                                                                                
-                                                                                
-                                
 func (f *lightFetcher) checkSyncedHeaders(p *peer) {
 	fp := f.peers[p]
 	if fp == nil {
@@ -632,7 +565,7 @@ func (f *lightFetcher) checkSyncedHeaders(p *peer) {
 		}
 		n = n.parent
 	}
-	                                                      
+
 	if n == nil {
 		p.Log().Debug("Synchronisation failed")
 		go f.pm.removePeer(p.id)
@@ -642,8 +575,6 @@ func (f *lightFetcher) checkSyncedHeaders(p *peer) {
 	}
 }
 
-                                                                                 
-                                                                                
 func (f *lightFetcher) checkKnownNode(p *peer, n *fetcherTreeNode) bool {
 	if n.known {
 		return true
@@ -653,8 +584,7 @@ func (f *lightFetcher) checkKnownNode(p *peer, n *fetcherTreeNode) bool {
 		return false
 	}
 	header := f.chain.GetHeader(n.hash, n.number)
-	                                                                                                 
-	                                            
+
 	if header == nil {
 		return false
 	}
@@ -674,7 +604,6 @@ func (f *lightFetcher) checkKnownNode(p *peer, n *fetcherTreeNode) bool {
 	return n.known
 }
 
-                                                                            
 func (fp *fetcherPeerInfo) deleteNode(n *fetcherTreeNode) {
 	if n.parent != nil {
 		for i, nn := range n.parent.children {
@@ -702,25 +631,12 @@ func (fp *fetcherPeerInfo) deleteNode(n *fetcherTreeNode) {
 	}
 }
 
-                                                                                                                    
-                                                                                                                     
-                                                                                                                     
-                                                                                                                    
-                                                                                                 
-                                                                                                                
-                                                                                                                 
-                            
 type updateStatsEntry struct {
 	time mclock.AbsTime
 	td   *big.Int
 	next *updateStatsEntry
 }
 
-                                                                                                                   
-                                                                                                                 
-                                                                                                                       
-                                                                                                               
-                              
 func (f *lightFetcher) updateMaxConfirmedTd(td *big.Int) {
 	if f.maxConfirmedTd == nil || td.Cmp(f.maxConfirmedTd) > 0 {
 		f.maxConfirmedTd = td
@@ -738,14 +654,6 @@ func (f *lightFetcher) updateMaxConfirmedTd(td *big.Int) {
 	}
 }
 
-                                                                                                                   
-                                                                                                                  
-                                                                                                                      
-                                                                                                                  
-                                                      
-                                                                                                               
-                                                                                                                  
-                                       
 func (f *lightFetcher) checkUpdateStats(p *peer, newEntry *updateStatsEntry) {
 	now := mclock.Now()
 	fp := f.peers[p]

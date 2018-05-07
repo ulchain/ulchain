@@ -1,25 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                           
-  
-                                                                     
-                                                                      
-                                                                 
-         
 package discover
 
 import (
@@ -40,22 +19,19 @@ import (
 )
 
 const (
-	alpha           = 3                                
-	bucketSize      = 16                        
-	maxReplacements = 10                                       
+	alpha           = 3  
+	bucketSize      = 16 
+	maxReplacements = 10 
 
-	                                                          
-	                                                                
 	hashBits          = len(common.Hash{}) * 8
-	nBuckets          = hashBits / 15                           
-	bucketMinDistance = hashBits - nBuckets                                  
+	nBuckets          = hashBits / 15       
+	bucketMinDistance = hashBits - nBuckets 
 
-	                     
-	bucketIPLimit, bucketSubnet = 2, 24                                         
+	bucketIPLimit, bucketSubnet = 2, 24 
 	tableIPLimit, tableSubnet   = 10, 24
 
-	maxBondingPingPongs = 16                                                            
-	maxFindnodeFailures = 5                                           
+	maxBondingPingPongs = 16 
+	maxFindnodeFailures = 5  
 
 	refreshInterval    = 30 * time.Minute
 	revalidateInterval = 10 * time.Second
@@ -66,13 +42,13 @@ const (
 )
 
 type Table struct {
-	mutex   sync.Mutex                                                          
-	buckets [nBuckets]*bucket                                    
-	nursery []*Node                             
-	rand    *mrand.Rand                                                     
+	mutex   sync.Mutex        
+	buckets [nBuckets]*bucket 
+	nursery []*Node           
+	rand    *mrand.Rand       
 	ips     netutil.DistinctNetSet
 
-	db         *nodeDB                           
+	db         *nodeDB 
 	refreshReq chan chan struct{}
 	initDone   chan struct{}
 	closeReq   chan struct{}
@@ -80,12 +56,12 @@ type Table struct {
 
 	bondmu    sync.Mutex
 	bonding   map[NodeID]*bondproc
-	bondslots chan struct{}                                                   
+	bondslots chan struct{} 
 
-	nodeAddedHook func(*Node)               
+	nodeAddedHook func(*Node) 
 
 	net  transport
-	self *Node                              
+	self *Node 
 }
 
 type bondproc struct {
@@ -94,9 +70,6 @@ type bondproc struct {
 	done chan struct{}
 }
 
-                                                 
-                                                                
-                                                
 type transport interface {
 	ping(NodeID, *net.UDPAddr) error
 	waitping(NodeID) error
@@ -104,16 +77,14 @@ type transport interface {
 	close()
 }
 
-                                                                   
-                                                                 
 type bucket struct {
-	entries      []*Node                                                
-	replacements []*Node                                                        
+	entries      []*Node 
+	replacements []*Node 
 	ips          netutil.DistinctNetSet
 }
 
 func newTable(t transport, ourID NodeID, ourAddr *net.UDPAddr, nodeDBPath string, bootnodes []*Node) (*Table, error) {
-	                                                      
+
 	db, err := newNodeDB(nodeDBPath, Version, ourID)
 	if err != nil {
 		return nil, err
@@ -144,9 +115,7 @@ func newTable(t transport, ourID NodeID, ourAddr *net.UDPAddr, nodeDBPath string
 	}
 	tab.seedRand()
 	tab.loadSeedNodes(false)
-	                                                                                       
-	                                                                               
-	              
+
 	tab.db.ensureExpirer()
 	go tab.loop()
 	return tab, nil
@@ -161,15 +130,10 @@ func (tab *Table) seedRand() {
 	tab.mutex.Unlock()
 }
 
-                               
-                                                          
 func (tab *Table) Self() *Node {
 	return tab.self
 }
 
-                                                                   
-                                                                      
-                                                          
 func (tab *Table) ReadRandomNodes(buf []*Node) (n int) {
 	if !tab.isInitDone() {
 		return 0
@@ -177,7 +141,6 @@ func (tab *Table) ReadRandomNodes(buf []*Node) (n int) {
 	tab.mutex.Lock()
 	defer tab.mutex.Unlock()
 
-	                                                                     
 	var buckets [][]*Node
 	for _, b := range tab.buckets {
 		if len(b.entries) > 0 {
@@ -187,12 +150,12 @@ func (tab *Table) ReadRandomNodes(buf []*Node) (n int) {
 	if len(buckets) == 0 {
 		return 0
 	}
-	                       
+
 	for i := len(buckets) - 1; i > 0; i-- {
 		j := tab.rand.Intn(len(buckets))
 		buckets[i], buckets[j] = buckets[j], buckets[i]
 	}
-	                                                                         
+
 	var i, j int
 	for ; i < len(buf); i, j = i+1, (j+1)%len(buckets) {
 		b := buckets[j]
@@ -208,19 +171,15 @@ func (tab *Table) ReadRandomNodes(buf []*Node) (n int) {
 	return i + 1
 }
 
-                                                                       
 func (tab *Table) Close() {
 	select {
 	case <-tab.closed:
-		                  
+
 	case tab.closeReq <- struct{}{}:
-		<-tab.closed                                
+		<-tab.closed 
 	}
 }
 
-                                                                   
-                                                                     
-                                      
 func (tab *Table) setFallbackNodes(nodes []*Node) error {
 	for _, n := range nodes {
 		if err := n.validateComplete(); err != nil {
@@ -230,15 +189,13 @@ func (tab *Table) setFallbackNodes(nodes []*Node) error {
 	tab.nursery = make([]*Node, 0, len(nodes))
 	for _, n := range nodes {
 		cpy := *n
-		                                                         
-		                                   
+
 		cpy.sha = crypto.Keccak256Hash(n.ID[:])
 		tab.nursery = append(tab.nursery, &cpy)
 	}
 	return nil
 }
 
-                                                                                  
 func (tab *Table) isInitDone() bool {
 	select {
 	case <-tab.initDone:
@@ -248,11 +205,8 @@ func (tab *Table) isInitDone() bool {
 	}
 }
 
-                                                          
-                                                 
 func (tab *Table) Resolve(targetID NodeID) *Node {
-	                                                
-	                                   
+
 	hash := crypto.Keccak256Hash(targetID[:])
 	tab.mutex.Lock()
 	cl := tab.closest(hash, 1)
@@ -260,7 +214,7 @@ func (tab *Table) Resolve(targetID NodeID) *Node {
 	if len(cl.entries) > 0 && cl.entries[0].ID == targetID {
 		return cl.entries[0]
 	}
-	                                  
+
 	result := tab.Lookup(targetID)
 	for _, n := range result {
 		if n.ID == targetID {
@@ -270,11 +224,6 @@ func (tab *Table) Resolve(targetID NodeID) *Node {
 	return nil
 }
 
-                                                   
-                                                            
-                                                 
-                                                      
-              
 func (tab *Table) Lookup(targetID NodeID) []*Node {
 	return tab.lookup(targetID, true)
 }
@@ -288,38 +237,34 @@ func (tab *Table) lookup(targetID NodeID, refreshIfEmpty bool) []*Node {
 		pendingQueries = 0
 		result         *nodesByDistance
 	)
-	                                         
-	                                        
+
 	asked[tab.self.ID] = true
 
 	for {
 		tab.mutex.Lock()
-		                              
+
 		result = tab.closest(target, bucketSize)
 		tab.mutex.Unlock()
 		if len(result.entries) > 0 || !refreshIfEmpty {
 			break
 		}
-		                                                            
-		                                                              
-		                                                           
-		         
+
 		<-tab.refresh()
 		refreshIfEmpty = false
 	}
 
 	for {
-		                                                        
+
 		for i := 0; i < len(result.entries) && pendingQueries < alpha; i++ {
 			n := result.entries[i]
 			if !asked[n.ID] {
 				asked[n.ID] = true
 				pendingQueries++
 				go func() {
-					                                        
+
 					r, err := tab.net.findnode(n.ID, n.addr(), targetID)
 					if err != nil {
-						                                                                     
+
 						fails := tab.db.findFails(n.ID) + 1
 						tab.db.updateFindFails(n.ID, fails)
 						log.Trace("Bumping findnode failure counter", "id", n.ID, "failcount", fails)
@@ -334,10 +279,10 @@ func (tab *Table) lookup(targetID NodeID, refreshIfEmpty bool) []*Node {
 			}
 		}
 		if pendingQueries == 0 {
-			                                                   
+
 			break
 		}
-		                          
+
 		for _, n := range <-reply {
 			if n != nil && !seen[n.ID] {
 				seen[n.ID] = true
@@ -359,21 +304,19 @@ func (tab *Table) refresh() <-chan struct{} {
 	return done
 }
 
-                                                                    
 func (tab *Table) loop() {
 	var (
 		revalidate     = time.NewTimer(tab.nextRevalidateTime())
 		refresh        = time.NewTicker(refreshInterval)
 		copyNodes      = time.NewTicker(copyNodesInterval)
 		revalidateDone = make(chan struct{})
-		refreshDone    = make(chan struct{})                                                
-		waiting        = []chan struct{}{tab.initDone}                                              
+		refreshDone    = make(chan struct{})           
+		waiting        = []chan struct{}{tab.initDone} 
 	)
 	defer refresh.Stop()
 	defer revalidate.Stop()
 	defer copyNodes.Stop()
 
-	                         
 	go tab.doRefresh(refreshDone)
 
 loop:
@@ -420,26 +363,13 @@ loop:
 	close(tab.closed)
 }
 
-                                                                  
-                                                               
-                                        
 func (tab *Table) doRefresh(done chan struct{}) {
 	defer close(done)
 
-	                                          
-	                                                               
-	                           
 	tab.loadSeedNodes(true)
 
-	                                                  
 	tab.lookup(tab.self.ID, false)
 
-	                                                              
-	                                                                
-	                                                               
-	                                                               
-	                                                 
-	                                                         
 	for i := 0; i < 3; i++ {
 		var target NodeID
 		crand.Read(target[:])
@@ -461,31 +391,27 @@ func (tab *Table) loadSeedNodes(bond bool) {
 	}
 }
 
-                                                                          
-                                                
 func (tab *Table) doRevalidate(done chan<- struct{}) {
 	defer func() { done <- struct{}{} }()
 
 	last, bi := tab.nodeToRevalidate()
 	if last == nil {
-		                             
+
 		return
 	}
 
-	                                              
 	err := tab.ping(last.ID, last.addr())
 
 	tab.mutex.Lock()
 	defer tab.mutex.Unlock()
 	b := tab.buckets[bi]
 	if err == nil {
-		                                            
+
 		log.Debug("Revalidated node", "b", bi, "id", last.ID)
 		b.bump(last)
 		return
 	}
-	                                                                           
-	                    
+
 	if r := tab.replace(b, last); r != nil {
 		log.Debug("Replaced dead node", "b", bi, "id", last.ID, "ip", last.IP, "r", r.ID, "rip", r.IP)
 	} else {
@@ -493,7 +419,6 @@ func (tab *Table) doRevalidate(done chan<- struct{}) {
 	}
 }
 
-                                                                        
 func (tab *Table) nodeToRevalidate() (n *Node, bi int) {
 	tab.mutex.Lock()
 	defer tab.mutex.Unlock()
@@ -515,8 +440,6 @@ func (tab *Table) nextRevalidateTime() time.Duration {
 	return time.Duration(tab.rand.Int63n(int64(revalidateInterval)))
 }
 
-                                                                                           
-                            
 func (tab *Table) copyBondedNodes() {
 	tab.mutex.Lock()
 	defer tab.mutex.Unlock()
@@ -531,12 +454,8 @@ func (tab *Table) copyBondedNodes() {
 	}
 }
 
-                                                                   
-                                            
 func (tab *Table) closest(target common.Hash, nresults int) *nodesByDistance {
-	                                                            
-	                                                                  
-	                                        
+
 	close := &nodesByDistance{target: target}
 	for _, b := range tab.buckets {
 		for _, n := range b.entries {
@@ -553,8 +472,6 @@ func (tab *Table) len() (n int) {
 	return n
 }
 
-                                                              
-                                                        
 func (tab *Table) bondall(nodes []*Node) (result []*Node) {
 	rc := make(chan *Node, len(nodes))
 	for i := range nodes {
@@ -571,22 +488,6 @@ func (tab *Table) bondall(nodes []*Node) (result []*Node) {
 	return result
 }
 
-                                                                     
-                                                                          
-                                      
-  
-                                                                  
-                                                                    
-                                                                    
-                                 
-  
-                                                                      
-                                                                      
-                                                                     
-               
-  
-                                                                     
-                                 
 func (tab *Table) bond(pinged bool, id NodeID, addr *net.UDPAddr, tcpPort uint16) (*Node, error) {
 	if id == tab.self.ID {
 		return nil, errors.New("is self")
@@ -594,7 +495,7 @@ func (tab *Table) bond(pinged bool, id NodeID, addr *net.UDPAddr, tcpPort uint16
 	if pinged && !tab.isInitDone() {
 		return nil, errors.New("still initializing")
 	}
-	                                                                                             
+
 	node, fails := tab.db.node(id), tab.db.findFails(id)
 	age := time.Since(tab.db.bondTime(id))
 	var result error
@@ -604,30 +505,28 @@ func (tab *Table) bond(pinged bool, id NodeID, addr *net.UDPAddr, tcpPort uint16
 		tab.bondmu.Lock()
 		w := tab.bonding[id]
 		if w != nil {
-			                                                    
+
 			tab.bondmu.Unlock()
 			<-w.done
 		} else {
-			                                  
+
 			w = &bondproc{done: make(chan struct{})}
 			tab.bonding[id] = w
 			tab.bondmu.Unlock()
-			                                            
+
 			tab.pingpong(w, pinged, id, addr, tcpPort)
-			                                          
+
 			tab.bondmu.Lock()
 			delete(tab.bonding, id)
 			tab.bondmu.Unlock()
 		}
-		                               
+
 		result = w.err
 		if result == nil {
 			node = w.n
 		}
 	}
-	                                                          
-	                                                          
-	                
+
 	if node != nil {
 		tab.add(node)
 		tab.db.updateFindFails(id, 0)
@@ -636,28 +535,23 @@ func (tab *Table) bond(pinged bool, id NodeID, addr *net.UDPAddr, tcpPort uint16
 }
 
 func (tab *Table) pingpong(w *bondproc, pinged bool, id NodeID, addr *net.UDPAddr, tcpPort uint16) {
-	                                                
+
 	<-tab.bondslots
 	defer func() { tab.bondslots <- struct{}{} }()
 
-	                                            
 	if w.err = tab.ping(id, addr); w.err != nil {
 		close(w.done)
 		return
 	}
 	if !pinged {
-		                                                           
-		                                                        
-		                                 
+
 		tab.net.waitping(id)
 	}
-	                                               
+
 	w.n = NewNode(id, addr.IP, uint16(addr.Port), tcpPort)
 	close(w.done)
 }
 
-                                                                      
-                        
 func (tab *Table) ping(id NodeID, addr *net.UDPAddr) error {
 	tab.db.updateLastPing(id, time.Now())
 	if err := tab.net.ping(id, addr); err != nil {
@@ -667,7 +561,6 @@ func (tab *Table) ping(id NodeID, addr *net.UDPAddr) error {
 	return nil
 }
 
-                                                        
 func (tab *Table) bucket(sha common.Hash) *bucket {
 	d := logdist(tab.self.sha, sha)
 	if d <= bucketMinDistance {
@@ -676,32 +569,24 @@ func (tab *Table) bucket(sha common.Hash) *bucket {
 	return tab.buckets[d-bucketMinDistance-1]
 }
 
-                                                                      
-                                                                    
-                                                                    
-                                                
-  
-                                      
 func (tab *Table) add(new *Node) {
 	tab.mutex.Lock()
 	defer tab.mutex.Unlock()
 
 	b := tab.bucket(new.sha)
 	if !tab.bumpOrAdd(b, new) {
-		                                                        
+
 		tab.addReplacement(b, new)
 	}
 }
 
-                                                                      
-                                                                 
 func (tab *Table) stuff(nodes []*Node) {
 	tab.mutex.Lock()
 	defer tab.mutex.Unlock()
 
 	for _, n := range nodes {
 		if n.ID == tab.self.ID {
-			continue                  
+			continue 
 		}
 		b := tab.bucket(n.sha)
 		if len(b.entries) < bucketSize {
@@ -710,8 +595,6 @@ func (tab *Table) stuff(nodes []*Node) {
 	}
 }
 
-                                                                
-                                      
 func (tab *Table) delete(node *Node) {
 	tab.mutex.Lock()
 	defer tab.mutex.Unlock()
@@ -746,7 +629,7 @@ func (tab *Table) removeIP(b *bucket, ip net.IP) {
 func (tab *Table) addReplacement(b *bucket, n *Node) {
 	for _, e := range b.replacements {
 		if e.ID == n.ID {
-			return                   
+			return 
 		}
 	}
 	if !tab.addIP(b, n.IP) {
@@ -759,15 +642,12 @@ func (tab *Table) addReplacement(b *bucket, n *Node) {
 	}
 }
 
-                                                                                       
-                                                                                        
-                                      
 func (tab *Table) replace(b *bucket, last *Node) *Node {
 	if len(b.entries) == 0 || b.entries[len(b.entries)-1].ID != last.ID {
-		                                     
+
 		return nil
 	}
-	                        
+
 	if len(b.replacements) == 0 {
 		tab.deleteInBucket(b, last)
 		return nil
@@ -779,12 +659,10 @@ func (tab *Table) replace(b *bucket, last *Node) *Node {
 	return r
 }
 
-                                                                  
-                                   
 func (b *bucket) bump(n *Node) bool {
 	for i := range b.entries {
 		if b.entries[i].ID == n.ID {
-			                       
+
 			copy(b.entries[1:], b.entries[:i])
 			b.entries[0] = n
 			return true
@@ -793,8 +671,6 @@ func (b *bucket) bump(n *Node) bool {
 	return false
 }
 
-                                                                                       
-                                                        
 func (tab *Table) bumpOrAdd(b *bucket, n *Node) bool {
 	if b.bump(n) {
 		return true
@@ -816,7 +692,6 @@ func (tab *Table) deleteInBucket(b *bucket, n *Node) {
 	tab.removeIP(b, n.IP)
 }
 
-                                                                   
 func pushNode(list []*Node, n *Node, max int) ([]*Node, *Node) {
 	if len(list) < max {
 		list = append(list, nil)
@@ -827,7 +702,6 @@ func pushNode(list []*Node, n *Node, max int) ([]*Node, *Node) {
 	return list, removed
 }
 
-                                  
 func deleteNode(list []*Node, n *Node) []*Node {
 	for i := range list {
 		if list[i].ID == n.ID {
@@ -837,14 +711,11 @@ func deleteNode(list []*Node, n *Node) []*Node {
 	return list
 }
 
-                                                 
-                      
 type nodesByDistance struct {
 	entries []*Node
 	target  common.Hash
 }
 
-                                                                               
 func (h *nodesByDistance) push(n *Node, maxElems int) {
 	ix := sort.Search(len(h.entries), func(i int) bool {
 		return distcmp(h.target, h.entries[i].sha, n.sha) > 0
@@ -853,11 +724,9 @@ func (h *nodesByDistance) push(n *Node, maxElems int) {
 		h.entries = append(h.entries, n)
 	}
 	if ix == len(h.entries) {
-		                                               
-		                                                              
+
 	} else {
-		                                           
-		                                                  
+
 		copy(h.entries[ix+1:], h.entries[ix:])
 		h.entries[ix] = n
 	}

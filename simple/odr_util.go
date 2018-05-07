@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package light
 
@@ -33,7 +18,7 @@ func GetHeaderByNumber(ctx context.Context, odr OdrBackend, number uint64) (*typ
 	db := odr.Database()
 	hash := core.GetCanonicalHash(db, number)
 	if (hash != common.Hash{}) {
-		                                                      
+
 		header := core.GetHeader(db, hash, number)
 		if header == nil {
 			panic("Canonical hash present but header not found")
@@ -48,7 +33,7 @@ func GetHeaderByNumber(ctx context.Context, odr OdrBackend, number uint64) (*typ
 	if odr.ChtIndexer() != nil {
 		chtCount, sectionHeadNum, sectionHead = odr.ChtIndexer().Sections()
 		canonicalHash := core.GetCanonicalHash(db, sectionHeadNum)
-		                                                                                                            
+
 		for chtCount > 0 && canonicalHash != sectionHead && canonicalHash != (common.Hash{}) {
 			chtCount--
 			if chtCount > 0 {
@@ -80,7 +65,6 @@ func GetCanonicalHash(ctx context.Context, odr OdrBackend, number uint64) (commo
 	return common.Hash{}, err
 }
 
-                                                                                 
 func GetBodyRLP(ctx context.Context, odr OdrBackend, hash common.Hash, number uint64) (rlp.RawValue, error) {
 	if data := core.GetBodyRLP(odr.Database(), hash, number); data != nil {
 		return data, nil
@@ -93,8 +77,6 @@ func GetBodyRLP(ctx context.Context, odr OdrBackend, hash common.Hash, number ui
 	}
 }
 
-                                                                              
-        
 func GetBody(ctx context.Context, odr OdrBackend, hash common.Hash, number uint64) (*types.Body, error) {
 	data, err := GetBodyRLP(ctx, odr, hash, number)
 	if err != nil {
@@ -107,10 +89,8 @@ func GetBody(ctx context.Context, odr OdrBackend, hash common.Hash, number uint6
 	return body, nil
 }
 
-                                                                              
-                                        
 func GetBlock(ctx context.Context, odr OdrBackend, hash common.Hash, number uint64) (*types.Block, error) {
-	                                              
+
 	header := core.GetHeader(odr.Database(), hash, number)
 	if header == nil {
 		return nil, ErrNoHeader
@@ -119,12 +99,10 @@ func GetBlock(ctx context.Context, odr OdrBackend, hash common.Hash, number uint
 	if err != nil {
 		return nil, err
 	}
-	                                  
+
 	return types.NewBlockWithHeader(header).WithBody(body.Transactions, body.Uncles), nil
 }
 
-                                                                                 
-                                
 func GetBlockReceipts(ctx context.Context, odr OdrBackend, hash common.Hash, number uint64) (types.Receipts, error) {
 	receipts := core.GetBlockReceipts(odr.Database(), hash, number)
 	if receipts != nil {
@@ -137,7 +115,6 @@ func GetBlockReceipts(ctx context.Context, odr OdrBackend, hash common.Hash, num
 	return r.Receipts, nil
 }
 
-                                                                                                                      
 func GetBloomBits(ctx context.Context, odr OdrBackend, bitIdx uint, sectionIdxList []uint64) ([][]byte, error) {
 	db := odr.Database()
 	result := make([][]byte, len(sectionIdxList))
@@ -153,7 +130,7 @@ func GetBloomBits(ctx context.Context, odr OdrBackend, bitIdx uint, sectionIdxLi
 	if odr.BloomTrieIndexer() != nil {
 		bloomTrieCount, sectionHeadNum, sectionHead = odr.BloomTrieIndexer().Sections()
 		canonicalHash := core.GetCanonicalHash(db, sectionHeadNum)
-		                                                                                                                  
+
 		for bloomTrieCount > 0 && canonicalHash != sectionHead && canonicalHash != (common.Hash{}) {
 			bloomTrieCount--
 			if bloomTrieCount > 0 {
@@ -166,9 +143,7 @@ func GetBloomBits(ctx context.Context, odr OdrBackend, bitIdx uint, sectionIdxLi
 
 	for i, sectionIdx := range sectionIdxList {
 		sectionHead := core.GetCanonicalHash(db, (sectionIdx+1)*BloomTrieFrequency-1)
-		                                                                                                
-		                                                                                               
-		                                
+
 		bloomBits, err := core.GetBloomBits(db, bitIdx, sectionIdx, sectionHead)
 		if err == nil {
 			result[i] = bloomBits

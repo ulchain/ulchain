@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package rpc
 
@@ -32,10 +17,6 @@ import (
 	"gopkg.in/fatih/set.v0"
 )
 
-                                                                                    
-  
-                                                                          
-                                                  
 func (srv *Server) WebsocketHandler(allowedOrigins []string) http.Handler {
 	return websocket.Server{
 		Handshake: wsHandshakeValidator(allowedOrigins),
@@ -45,16 +26,10 @@ func (srv *Server) WebsocketHandler(allowedOrigins []string) http.Handler {
 	}
 }
 
-                                                                         
-  
-                                          
 func NewWSServer(allowedOrigins []string, srv *Server) *http.Server {
 	return &http.Server{Handler: srv.WebsocketHandler(allowedOrigins)}
 }
 
-                                                                             
-                                                                               
-                            
 func wsHandshakeValidator(allowedOrigins []string) func(*websocket.Config, *http.Request) error {
 	origins := set.New()
 	allowAllOrigins := false
@@ -68,7 +43,6 @@ func wsHandshakeValidator(allowedOrigins []string) func(*websocket.Config, *http
 		}
 	}
 
-	                                                      
 	if len(origins.List()) == 0 {
 		origins.Add("http://localhost")
 		if hostname, err := os.Hostname(); err == nil {
@@ -90,11 +64,6 @@ func wsHandshakeValidator(allowedOrigins []string) func(*websocket.Config, *http
 	return f
 }
 
-                                                                                  
-                                           
-  
-                                                                            
-                                                  
 func DialWebsocket(ctx context.Context, endpoint, origin string) (*Client, error) {
 	if origin == "" {
 		var err error

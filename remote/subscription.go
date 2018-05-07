@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package rpc
 
@@ -23,42 +8,33 @@ import (
 )
 
 var (
-	                                                                                            
+
 	ErrNotificationsUnsupported = errors.New("notifications not supported")
-	                                                                                          
+
 	ErrSubscriptionNotFound = errors.New("subscription not found")
 )
 
-                                                                                
 type ID string
 
-                                                                                         
-                                                                                  
 type Subscription struct {
 	ID        ID
 	namespace string
-	err       chan error                         
+	err       chan error 
 }
 
-                                                                                    
 func (s *Subscription) Err() <-chan error {
 	return s.err
 }
 
-                                                                         
 type notifierKey struct{}
 
-                                                                     
-                                                           
 type Notifier struct {
 	codec    ServerCodec
-	subMu    sync.RWMutex                                   
+	subMu    sync.RWMutex 
 	active   map[ID]*Subscription
 	inactive map[ID]*Subscription
 }
 
-                                                                           
-                               
 func newNotifier(codec ServerCodec) *Notifier {
 	return &Notifier{
 		codec:    codec,
@@ -67,16 +43,11 @@ func newNotifier(codec ServerCodec) *Notifier {
 	}
 }
 
-                                                                        
 func NotifierFromContext(ctx context.Context) (*Notifier, bool) {
 	n, ok := ctx.Value(notifierKey{}).(*Notifier)
 	return n, ok
 }
 
-                                                                       
-                                                                          
-                                                                       
-                                                                     
 func (n *Notifier) CreateSubscription() *Subscription {
 	s := &Subscription{ID: NewID(), err: make(chan error)}
 	n.subMu.Lock()
@@ -85,8 +56,6 @@ func (n *Notifier) CreateSubscription() *Subscription {
 	return s
 }
 
-                                                                            
-                                                                             
 func (n *Notifier) Notify(id ID, data interface{}) error {
 	n.subMu.RLock()
 	defer n.subMu.RUnlock()
@@ -102,13 +71,10 @@ func (n *Notifier) Notify(id ID, data interface{}) error {
 	return nil
 }
 
-                                                                             
 func (n *Notifier) Closed() <-chan interface{} {
 	return n.codec.Closed()
 }
 
-                              
-                                                                              
 func (n *Notifier) unsubscribe(id ID) error {
 	n.subMu.Lock()
 	defer n.subMu.Unlock()
@@ -120,10 +86,6 @@ func (n *Notifier) unsubscribe(id ID) error {
 	return ErrSubscriptionNotFound
 }
 
-                                                                       
-                                                                           
-                                                                            
-                                                                       
 func (n *Notifier) activate(id ID, namespace string) {
 	n.subMu.Lock()
 	defer n.subMu.Unlock()

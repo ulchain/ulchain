@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package node
 
@@ -30,27 +15,21 @@ import (
 	"github.com/rcrowley/go-metrics"
 )
 
-                                                                               
-                             
 type PrivateAdminAPI struct {
-	node *Node                               
+	node *Node 
 }
 
-                                                                                
-                      
 func NewPrivateAdminAPI(node *Node) *PrivateAdminAPI {
 	return &PrivateAdminAPI{node: node}
 }
 
-                                                                             
-                                                            
 func (api *PrivateAdminAPI) AddPeer(url string) (bool, error) {
-	                                                  
+
 	server := api.node.Server()
 	if server == nil {
 		return false, ErrNodeStopped
 	}
-	                                                 
+
 	node, err := discover.ParseNode(url)
 	if err != nil {
 		return false, fmt.Errorf("invalid enode: %v", err)
@@ -59,14 +38,13 @@ func (api *PrivateAdminAPI) AddPeer(url string) (bool, error) {
 	return true, nil
 }
 
-                                                                       
 func (api *PrivateAdminAPI) RemovePeer(url string) (bool, error) {
-	                                                  
+
 	server := api.node.Server()
 	if server == nil {
 		return false, ErrNodeStopped
 	}
-	                                                    
+
 	node, err := discover.ParseNode(url)
 	if err != nil {
 		return false, fmt.Errorf("invalid enode: %v", err)
@@ -75,16 +53,13 @@ func (api *PrivateAdminAPI) RemovePeer(url string) (bool, error) {
 	return true, nil
 }
 
-                                                                             
-                    
 func (api *PrivateAdminAPI) PeerEvents(ctx context.Context) (*rpc.Subscription, error) {
-	                                                  
+
 	server := api.node.Server()
 	if server == nil {
 		return nil, ErrNodeStopped
 	}
 
-	                          
 	notifier, supported := rpc.NotifierFromContext(ctx)
 	if !supported {
 		return nil, rpc.ErrNotificationsUnsupported
@@ -113,7 +88,6 @@ func (api *PrivateAdminAPI) PeerEvents(ctx context.Context) (*rpc.Subscription, 
 	return rpcSub, nil
 }
 
-                                           
 func (api *PrivateAdminAPI) StartRPC(host *string, port *int, cors *string, apis *string, vhosts *string) (bool, error) {
 	api.node.lock.Lock()
 	defer api.node.lock.Unlock()
@@ -163,7 +137,6 @@ func (api *PrivateAdminAPI) StartRPC(host *string, port *int, cors *string, apis
 	return true, nil
 }
 
-                                                               
 func (api *PrivateAdminAPI) StopRPC() (bool, error) {
 	api.node.lock.Lock()
 	defer api.node.lock.Unlock()
@@ -175,7 +148,6 @@ func (api *PrivateAdminAPI) StopRPC() (bool, error) {
 	return true, nil
 }
 
-                                               
 func (api *PrivateAdminAPI) StartWS(host *string, port *int, allowedOrigins *string, apis *string) (bool, error) {
 	api.node.lock.Lock()
 	defer api.node.lock.Unlock()
@@ -217,7 +189,6 @@ func (api *PrivateAdminAPI) StartWS(host *string, port *int, allowedOrigins *str
 	return true, nil
 }
 
-                                                                    
 func (api *PrivateAdminAPI) StopWS() (bool, error) {
 	api.node.lock.Lock()
 	defer api.node.lock.Unlock()
@@ -229,20 +200,14 @@ func (api *PrivateAdminAPI) StopWS() (bool, error) {
 	return true, nil
 }
 
-                                                                              
-                                         
 type PublicAdminAPI struct {
-	node *Node                               
+	node *Node 
 }
 
-                                                                              
-                      
 func NewPublicAdminAPI(node *Node) *PublicAdminAPI {
 	return &PublicAdminAPI{node: node}
 }
 
-                                                                                
-                        
 func (api *PublicAdminAPI) Peers() ([]*p2p.PeerInfo, error) {
 	server := api.node.Server()
 	if server == nil {
@@ -251,8 +216,6 @@ func (api *PublicAdminAPI) Peers() ([]*p2p.PeerInfo, error) {
 	return server.PeersInfo(), nil
 }
 
-                                                                            
-                        
 func (api *PublicAdminAPI) NodeInfo() (*p2p.NodeInfo, error) {
 	server := api.node.Server()
 	if server == nil {
@@ -261,26 +224,20 @@ func (api *PublicAdminAPI) NodeInfo() (*p2p.NodeInfo, error) {
 	return server.NodeInfo(), nil
 }
 
-                                                                  
 func (api *PublicAdminAPI) Datadir() string {
 	return api.node.DataDir()
 }
 
-                                                                                 
-                                         
 type PublicDebugAPI struct {
-	node *Node                               
+	node *Node 
 }
 
-                                                                              
-                      
 func NewPublicDebugAPI(node *Node) *PublicDebugAPI {
 	return &PublicDebugAPI{node: node}
 }
 
-                                                                       
 func (api *PublicDebugAPI) Metrics(raw bool) (map[string]interface{}, error) {
-	                          
+
 	units := []string{"", "K", "M", "G", "T", "E", "P"}
 	round := func(value float64, prec int) string {
 		unit := 0
@@ -292,10 +249,10 @@ func (api *PublicDebugAPI) Metrics(raw bool) (map[string]interface{}, error) {
 	format := func(total float64, rate float64) string {
 		return fmt.Sprintf("%s (%s/s)", round(total, 0), round(rate, 2))
 	}
-	                                                      
+
 	counters := make(map[string]interface{})
 	metrics.DefaultRegistry.Each(func(name string, metric interface{}) {
-		                                                           
+
 		root, parts := counters, strings.Split(name, "/")
 		for _, part := range parts[:len(parts)-1] {
 			if _, ok := root[part]; !ok {
@@ -305,7 +262,6 @@ func (api *PublicDebugAPI) Metrics(raw bool) (map[string]interface{}, error) {
 		}
 		name = parts[len(parts)-1]
 
-		                                                                    
 		if raw {
 			switch metric := metric.(type) {
 			case metrics.Meter:
@@ -371,23 +327,18 @@ func (api *PublicDebugAPI) Metrics(raw bool) (map[string]interface{}, error) {
 	return counters, nil
 }
 
-                                    
 type PublicWeb3API struct {
 	stack *Node
 }
 
-                                                      
 func NewPublicWeb3API(stack *Node) *PublicWeb3API {
 	return &PublicWeb3API{stack}
 }
 
-                                      
 func (s *PublicWeb3API) ClientVersion() string {
 	return s.stack.Server().Name
 }
 
-                                                              
-                                       
 func (s *PublicWeb3API) Sha3(input hexutil.Bytes) hexutil.Bytes {
 	return crypto.Keccak256(input)
 }

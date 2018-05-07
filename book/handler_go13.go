@@ -7,8 +7,6 @@ import (
 	"unsafe"
 )
 
-                                                            
-                                                   
 type swapHandler struct {
 	handler unsafe.Pointer
 }

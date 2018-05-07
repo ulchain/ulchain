@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package state
 
@@ -24,7 +9,6 @@ import (
 	"github.com/epvchain/go-epvchain/fast"
 )
 
-                                                           
 func NewStateSync(root common.Hash, database trie.DatabaseReader) *trie.TrieSync {
 	var syncer *trie.TrieSync
 	callback := func(leaf []byte, parent common.Hash) error {

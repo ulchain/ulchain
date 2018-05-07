@@ -1,8 +1,3 @@
-/**********************************************************************
- * Copyright (c) 2014-2015 Pieter Wuille                              *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
 
 #include "include/secp256k1.h"
 #include "include/secp256k1_recovery.h"
@@ -29,9 +24,9 @@ void bench_recover(void* arg) {
         CHECK(secp256k1_ecdsa_recover(data->ctx, &pubkey, &sig, data->msg));
         CHECK(secp256k1_ec_pubkey_serialize(data->ctx, pubkeyc, &pubkeylen, &pubkey, SECP256K1_EC_COMPRESSED));
         for (j = 0; j < 32; j++) {
-            data->sig[j + 32] = data->msg[j];    /* Move former message to S. */
-            data->msg[j] = data->sig[j];         /* Move former R to message. */
-            data->sig[j] = pubkeyc[j + 1];       /* Move recovered pubkey X coordinate to R (which must be a valid X coordinate). */
+            data->sig[j + 32] = data->msg[j];    
+            data->msg[j] = data->sig[j];         
+            data->sig[j] = pubkeyc[j + 1];       
         }
     }
 }

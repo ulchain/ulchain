@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                                        
 package nat
 
 import (
@@ -29,36 +13,16 @@ import (
 	"github.com/jackpal/go-nat-pmp"
 )
 
-                                                                  
-                                
 type Interface interface {
-	                                                             
-	                                                                
-	  
-	                                                                 
-	                                                                
-	                                      
+
 	AddMapping(protocol string, extport, intport int, name string, lifetime time.Duration) error
 	DeleteMapping(protocol string, extport, intport int) error
 
-	                                                           
-	                                 
 	ExternalIP() (net.IP, error)
 
-	                                                              
 	String() string
 }
 
-                                            
-                                                
-                                                    
-  
-                                      
-                                                                                      
-                                                                  
-                                                                     
-                                                                              
-                                                                       
 func Parse(spec string) (Interface, error) {
 	var (
 		parts = strings.SplitN(spec, ":", 2)
@@ -95,8 +59,6 @@ const (
 	mapUpdateInterval = 15 * time.Minute
 )
 
-                                                                     
-                                                           
 func Map(m Interface, c chan struct{}, protocol string, extport, intport int, name string) {
 	log := log.New("proto", protocol, "extport", extport, "intport", intport, "interface", m)
 	refresh := time.NewTimer(mapUpdateInterval)
@@ -126,9 +88,6 @@ func Map(m Interface, c chan struct{}, protocol string, extport, intport int, na
 	}
 }
 
-                                                                 
-                                                                         
-                                                                              
 func ExtIP(ip net.IP) Interface {
 	if ip == nil {
 		panic("IP must not be nil")
@@ -141,15 +100,11 @@ type extIP net.IP
 func (n extIP) ExternalIP() (net.IP, error) { return net.IP(n), nil }
 func (n extIP) String() string              { return fmt.Sprintf("ExtIP(%v)", net.IP(n)) }
 
-                    
 func (extIP) AddMapping(string, int, int, string, time.Duration) error { return nil }
 func (extIP) DeleteMapping(string, int, int) error                     { return nil }
 
-                                                                 
-                                  
 func Any() Interface {
-	                                                             
-	                                                     
+
 	return startautodisc("UPnP or NAT-PMP", func() Interface {
 		found := make(chan Interface, 2)
 		go func() { found <- discoverUPnP() }()
@@ -163,15 +118,10 @@ func Any() Interface {
 	})
 }
 
-                                                                
-                                                            
 func UPnP() Interface {
 	return startautodisc("UPnP", discoverUPnP)
 }
 
-                                                                    
-                                                                
-                                                                
 func PMP(gateway net.IP) Interface {
 	if gateway != nil {
 		return &pmp{gw: gateway, c: natpmp.NewClient(gateway)}
@@ -179,15 +129,8 @@ func PMP(gateway net.IP) Interface {
 	return startautodisc("NAT-PMP", discoverPMP)
 }
 
-                                                                   
-                                                                    
-                                                                   
-                        
-  
-                                                                
-                                                                      
 type autodisc struct {
-	what string                                          
+	what string 
 	once sync.Once
 	doit func() Interface
 
@@ -196,7 +139,7 @@ type autodisc struct {
 }
 
 func startautodisc(what string, doit func() Interface) Interface {
-	                                                                      
+
 	return &autodisc{what: what, doit: doit}
 }
 
@@ -231,7 +174,6 @@ func (n *autodisc) String() string {
 	}
 }
 
-                                                       
 func (n *autodisc) wait() error {
 	n.once.Do(func() {
 		n.mu.Lock()

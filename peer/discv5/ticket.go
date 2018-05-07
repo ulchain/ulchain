@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package discv5
 
@@ -33,7 +18,7 @@ import (
 
 const (
 	ticketTimeBucketLen = time.Minute
-	timeWindow          = 10                         
+	timeWindow          = 10 
 	wantTicketsInWindow = 10
 	collectFrequency    = time.Second * 30
 	registerFrequency   = time.Second * 60
@@ -44,7 +29,7 @@ const (
 	targetWaitTime      = time.Minute * 10
 	topicQueryTimeout   = time.Second * 5
 	topicQueryResend    = time.Minute
-	                         
+
 	maxRadius           = 0xffffffffffffffff
 	radiusTC            = time.Minute * 20
 	radiusBucketsPerBit = 8
@@ -56,29 +41,24 @@ const (
 	searchForceQuery    = 4
 )
 
-                                                            
-                                                             
 type timeBucket int
 
 type ticket struct {
 	topics  []Topic
-	regTime []mclock.AbsTime                                                              
+	regTime []mclock.AbsTime 
 
-	                                                   
 	serial uint32
-	                                                                       
+
 	issueTime mclock.AbsTime
 
-	                                  
-	node   *Node                                               
-	refCnt int                                                                        
-	pong   []byte                                               
+	node   *Node  
+	refCnt int    
+	pong   []byte 
 }
 
-                                                  
 type ticketRef struct {
 	t   *ticket
-	idx int                                                
+	idx int 
 }
 
 func (ref ticketRef) topic() Topic {
@@ -104,7 +84,7 @@ func pongToTicket(localTime mclock.AbsTime, topics []Topic, node *Node, p *ingre
 		pong:      p.rawData,
 		regTime:   make([]mclock.AbsTime, len(wps)),
 	}
-	                                               
+
 	for i, wp := range wps {
 		t.regTime[i] = localTime + mclock.AbsTime(time.Second*time.Duration(wp))
 	}
@@ -122,17 +102,13 @@ func ticketToPong(t *ticket, pong *pong) {
 }
 
 type ticketStore struct {
-	                                               
-	                                                 
+
 	radius map[Topic]*topicRadius
 
-	                                                         
-	                                   
-	                                                     
 	tickets map[Topic]*topicTickets
 
-	regQueue []Topic                                                                
-	regSet   map[Topic]struct{}                                                      
+	regQueue []Topic            
+	regSet   map[Topic]struct{} 
 
 	nodes       map[*Node]*ticket
 	nodeLastReq map[*Node]reqInfo
@@ -173,8 +149,6 @@ func newTicketStore() *ticketStore {
 	}
 }
 
-                                                         
-                                                                        
 func (s *ticketStore) addTopic(topic Topic, register bool) {
 	log.Trace("Adding discovery topic", "topic", topic, "register", register)
 	if s.radius[topic] == nil {
@@ -198,7 +172,6 @@ func (s *ticketStore) removeSearchTopic(t Topic) {
 	}
 }
 
-                                                               
 func (s *ticketStore) removeRegisterTopic(topic Topic) {
 	log.Trace("Removing discovery topic", "topic", topic)
 	if s.tickets[topic] == nil {
@@ -225,18 +198,17 @@ func (s *ticketStore) regTopicSet() []Topic {
 	return topics
 }
 
-                                                                                  
 func (s *ticketStore) nextRegisterLookup() (lookupInfo, time.Duration) {
-	                                                                          
+
 	for topic := range s.tickets {
 		if _, ok := s.regSet[topic]; !ok {
 			s.regQueue = append(s.regQueue, topic)
 			s.regSet[topic] = struct{}{}
 		}
 	}
-	                                                                       
+
 	for len(s.regQueue) > 0 {
-		                                                                  
+
 		topic := s.regQueue[0]
 		s.regQueue = s.regQueue[1:]
 		delete(s.regSet, topic)
@@ -244,14 +216,14 @@ func (s *ticketStore) nextRegisterLookup() (lookupInfo, time.Duration) {
 		if s.tickets[topic] == nil {
 			continue
 		}
-		                                             
+
 		if s.tickets[topic].nextLookup < mclock.Now() {
 			next, delay := s.radius[topic].nextTarget(false), 100*time.Millisecond
 			log.Trace("Found discovery topic to register", "topic", topic, "target", next.target, "delay", delay)
 			return next, delay
 		}
 	}
-	                                                       
+
 	delay := 40 * time.Second
 	log.Trace("No topic found to register", "delay", delay)
 	return lookupInfo{}, delay
@@ -268,14 +240,13 @@ func (s *ticketStore) nextSearchLookup(topic Topic) lookupInfo {
 	return target
 }
 
-                                                                                   
 func (s *ticketStore) ticketsInWindow(topic Topic) []ticketRef {
-	                                                                  
+
 	if s.tickets[topic] == nil {
 		log.Warn("Listing non-existing discovery tickets", "topic", topic)
 		return nil
 	}
-	                                                 
+
 	var tickets []ticketRef
 
 	buckets := s.tickets[topic].buckets
@@ -299,7 +270,6 @@ func (s *ticketStore) removeExcessTickets(t Topic) {
 
 type ticketRefByWaitTime []ticketRef
 
-                                                   
 func (s ticketRefByWaitTime) Len() int {
 	return len(s)
 }
@@ -308,13 +278,10 @@ func (r ticketRef) waitTime() mclock.AbsTime {
 	return r.t.regTime[r.idx] - r.t.issueTime
 }
 
-                                        
-                                                       
 func (s ticketRefByWaitTime) Less(i, j int) bool {
 	return s[i].waitTime() < s[j].waitTime()
 }
 
-                                                
 func (s ticketRefByWaitTime) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
@@ -336,7 +303,6 @@ func (s *ticketStore) addTicketRef(r ticketRef) {
 	}
 	tickets.nextLookup += mclock.AbsTime(collectFrequency)
 
-	                              
 }
 
 func (s *ticketStore) nextFilteredTicket() (*ticketRef, time.Duration) {
@@ -372,14 +338,6 @@ func (s *ticketStore) ticketRegistered(ref ticketRef) {
 	s.removeTicketRef(ref)
 }
 
-                                                                  
-               
-  
-                                                                           
-                                                              
-  
-                                                                         
-                                       
 func (s *ticketStore) nextRegisterableTicket() (*ticketRef, time.Duration) {
 	now := mclock.Now()
 	if s.nextTicketCached != nil {
@@ -388,17 +346,17 @@ func (s *ticketStore) nextRegisterableTicket() (*ticketRef, time.Duration) {
 
 	for bucket := s.lastBucketFetched; ; bucket++ {
 		var (
-			empty      = true                                   
-			nextTicket ticketRef                                         
+			empty      = true    
+			nextTicket ticketRef 
 		)
 		for _, tickets := range s.tickets {
-			                              
+
 			if len(tickets.buckets) != 0 {
 				empty = false
 
 				list := tickets.buckets[bucket]
 				for _, ref := range list {
-					                                                                                                                                                       
+
 					if nextTicket.t == nil || ref.topicRegTime() < nextTicket.topicRegTime() {
 						nextTicket = ref
 					}
@@ -416,11 +374,9 @@ func (s *ticketStore) nextRegisterableTicket() (*ticketRef, time.Duration) {
 	}
 }
 
-                                                      
 func (s *ticketStore) removeTicketRef(ref ticketRef) {
 	log.Trace("Removing discovery ticket reference", "node", ref.t.node.ID, "serial", ref.t.serial)
 
-	                                                                
 	s.nextTicketCached = nil
 
 	topic := ref.topic()
@@ -467,7 +423,6 @@ type reqInfo struct {
 	time     mclock.AbsTime
 }
 
-                          
 func (t *ticket) findIdx(topic Topic) int {
 	for i, tt := range t.topics {
 		if tt == topic {
@@ -502,14 +457,14 @@ func (s *ticketStore) searchLookupDone(lookup lookupInfo, nodes []*Node, query f
 				if lastReq, ok := s.nodeLastReq[n]; !ok || time.Duration(now-lastReq.time) > radiusTC {
 					s.nodeLastReq[n] = reqInfo{pingHash: nil, lookup: lookup, time: now}
 				}
-			}          
+			} 
 			if s.canQueryTopic(n, lookup.topic) {
 				hash := query(n, lookup.topic)
 				if hash != nil {
 					s.addTopicQuery(common.BytesToHash(hash), n, lookup)
 				}
 			}
-			   
+
 		}
 	}
 }
@@ -553,8 +508,7 @@ func (s *ticketStore) addTicket(localTime mclock.AbsTime, pingHash []byte, ticke
 			rnd = 10
 		}
 		if float64(wait) < float64(keepTicketConst)+float64(keepTicketExp)*rnd {
-			                                        
-			                                                                                                       
+
 			s.addTicketRef(ticketRef{ticket, topicIdx})
 		}
 	}
@@ -618,7 +572,7 @@ func (s *ticketStore) cleanupTopicQueries(now mclock.AbsTime) {
 
 func (s *ticketStore) gotTopicNodes(from *Node, hash common.Hash, nodes []rpcNode) (timeout bool) {
 	now := mclock.Now()
-	                                                            
+
 	qq := s.queriesSent[from]
 	if qq == nil {
 		return true
@@ -634,7 +588,7 @@ func (s *ticketStore) gotTopicNodes(from *Node, hash common.Hash, nodes []rpcNod
 	s.radius[q.lookup.topic].adjust(now, q.lookup.target, from.sha, inside)
 	chn := s.searchTopicMap[q.lookup.topic].foundChn
 	if chn == nil {
-		                           
+
 		return false
 	}
 	for _, node := range nodes {
@@ -754,8 +708,6 @@ func (r *topicRadius) targetForBucket(bucket int) common.Hash {
 	return target
 }
 
-                                                                 
-                                                       
 func globalRandRead(b []byte) {
 	pos := 0
 	val := 0
@@ -801,7 +753,7 @@ func (r *topicRadius) chooseLookupBucket(a, b int) int {
 			rnd--
 		}
 	}
-	panic(nil)                       
+	panic(nil) 
 }
 
 func (r *topicRadius) needMoreLookups(a, b int, maxValue float64) bool {
@@ -834,9 +786,9 @@ func (r *topicRadius) recalcRadius() (radius uint64, radiusLookup int) {
 		r.buckets[i].update(now)
 		v += r.buckets[i].weights[trOutside] - r.buckets[i].weights[trInside]
 		r.buckets[i].value = v
-		                                                             
+
 	}
-	               
+
 	slopeCross := -1
 	for i, b := range r.buckets {
 		v := b.value
@@ -884,10 +836,8 @@ func (r *topicRadius) recalcRadius() (radius uint64, radiusLookup int) {
 		}
 	}
 
-	                                                                                                                          
-
 	if radiusLookup == -1 {
-		                                                               
+
 		r.converged = true
 		rad := maxBucket
 		if minRadBucket < rad {
@@ -945,7 +895,7 @@ func (r *topicRadius) adjustWithTicket(now mclock.AbsTime, targetHash common.Has
 
 func (r *topicRadius) adjust(now mclock.AbsTime, targetHash, addrHash common.Hash, inside float64) {
 	bucket := r.getBucketIdx(addrHash)
-	                                                       
+
 	if bucket >= len(r.buckets) {
 		return
 	}

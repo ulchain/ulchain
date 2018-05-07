@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package whisperv5
 
@@ -27,19 +12,17 @@ import (
 	set "gopkg.in/fatih/set.v0"
 )
 
-                                                      
 type Peer struct {
 	host    *Whisper
 	peer    *p2p.Peer
 	ws      p2p.MsgReadWriter
 	trusted bool
 
-	known *set.Set                                                                 
+	known *set.Set 
 
 	quit chan struct{}
 }
 
-                                                                                    
 func newPeer(host *Whisper, remote *p2p.Peer, rw p2p.MsgReadWriter) *Peer {
 	return &Peer{
 		host:    host,
@@ -51,28 +34,23 @@ func newPeer(host *Whisper, remote *p2p.Peer, rw p2p.MsgReadWriter) *Peer {
 	}
 }
 
-                                                                                  
-                    
 func (p *Peer) start() {
 	go p.update()
 	log.Trace("start", "peer", p.ID())
 }
 
-                                                                       
 func (p *Peer) stop() {
 	close(p.quit)
 	log.Trace("stop", "peer", p.ID())
 }
 
-                                                                                
-                                  
 func (p *Peer) handshake() error {
-	                                                   
+
 	errc := make(chan error, 1)
 	go func() {
 		errc <- p2p.Send(p.ws, statusCode, ProtocolVersion)
 	}()
-	                                                           
+
 	packet, err := p.ws.ReadMsg()
 	if err != nil {
 		return err
@@ -88,21 +66,18 @@ func (p *Peer) handshake() error {
 	if peerVersion != ProtocolVersion {
 		return fmt.Errorf("peer [%x]: protocol version mismatch %d != %d", p.ID(), peerVersion, ProtocolVersion)
 	}
-	                                            
+
 	if err := <-errc; err != nil {
 		return fmt.Errorf("peer [%x] failed to send status packet: %v", p.ID(), err)
 	}
 	return nil
 }
 
-                                                                                  
-                  
 func (p *Peer) update() {
-	                                    
+
 	expire := time.NewTicker(expirationCycle)
 	transmit := time.NewTicker(transmissionCycle)
 
-	                                                   
 	for {
 		select {
 		case <-expire.C:
@@ -120,18 +95,14 @@ func (p *Peer) update() {
 	}
 }
 
-                                                                          
 func (peer *Peer) mark(envelope *Envelope) {
 	peer.known.Add(envelope.Hash())
 }
 
-                                                                    
 func (peer *Peer) marked(envelope *Envelope) bool {
 	return peer.known.Has(envelope.Hash())
 }
 
-                                                                           
-                                              
 func (peer *Peer) expire() {
 	unmark := make(map[common.Hash]struct{})
 	peer.known.Each(func(v interface{}) bool {
@@ -140,14 +111,12 @@ func (peer *Peer) expire() {
 		}
 		return true
 	})
-	                                      
+
 	for hash := range unmark {
 		peer.known.Remove(hash)
 	}
 }
 
-                                                                                
-                         
 func (p *Peer) broadcast() error {
 	var cnt int
 	envelopes := p.host.Envelopes()

@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package vm
 
@@ -20,7 +5,6 @@ import (
 	"fmt"
 )
 
-                          
 type OpCode byte
 
 func (op OpCode) IsPush() bool {
@@ -36,7 +20,7 @@ func (op OpCode) IsStaticJump() bool {
 }
 
 const (
-	                             
+
 	STOP OpCode = iota
 	ADD
 	MUL
@@ -68,7 +52,7 @@ const (
 )
 
 const (
-	                             
+
 	ADDRESS OpCode = 0x30 + iota
 	BALANCE
 	ORIGIN
@@ -87,7 +71,7 @@ const (
 )
 
 const (
-	                                
+
 	BLOCKHASH OpCode = 0x40 + iota
 	COINBASE
 	TIMESTAMP
@@ -97,7 +81,7 @@ const (
 )
 
 const (
-	                                       
+
 	POP OpCode = 0x50 + iota
 	MLOAD
 	MSTORE
@@ -113,7 +97,7 @@ const (
 )
 
 const (
-	             
+
 	PUSH1 OpCode = 0x60 + iota
 	PUSH2
 	PUSH3
@@ -188,7 +172,6 @@ const (
 	LOG4
 )
 
-                                      
 const (
 	PUSH OpCode = 0xb0 + iota
 	DUP
@@ -196,7 +179,7 @@ const (
 )
 
 const (
-	                        
+
 	CREATE OpCode = 0xf0 + iota
 	CALL
 	CALLCODE
@@ -208,9 +191,8 @@ const (
 	SELFDESTRUCT = 0xff
 )
 
-                                                                     
 var opCodeToString = map[OpCode]string{
-	                             
+
 	STOP:       "STOP",
 	ADD:        "ADD",
 	MUL:        "MUL",
@@ -229,7 +211,6 @@ var opCodeToString = map[OpCode]string{
 	ISZERO:     "ISZERO",
 	SIGNEXTEND: "SIGNEXTEND",
 
-	                       
 	AND:    "AND",
 	OR:     "OR",
 	XOR:    "XOR",
@@ -237,10 +218,8 @@ var opCodeToString = map[OpCode]string{
 	ADDMOD: "ADDMOD",
 	MULMOD: "MULMOD",
 
-	                      
 	SHA3: "SHA3",
 
-	                             
 	ADDRESS:        "ADDRESS",
 	BALANCE:        "BALANCE",
 	ORIGIN:         "ORIGIN",
@@ -257,7 +236,6 @@ var opCodeToString = map[OpCode]string{
 	RETURNDATASIZE: "RETURNDATASIZE",
 	RETURNDATACOPY: "RETURNDATACOPY",
 
-	                                
 	BLOCKHASH:  "BLOCKHASH",
 	COINBASE:   "COINBASE",
 	TIMESTAMP:  "TIMESTAMP",
@@ -265,10 +243,8 @@ var opCodeToString = map[OpCode]string{
 	DIFFICULTY: "DIFFICULTY",
 	GASLIMIT:   "GASLIMIT",
 
-	                                       
 	POP: "POP",
-	                 
-	                  
+
 	MLOAD:    "MLOAD",
 	MSTORE:   "MSTORE",
 	MSTORE8:  "MSTORE8",
@@ -281,7 +257,6 @@ var opCodeToString = map[OpCode]string{
 	GAS:      "GAS",
 	JUMPDEST: "JUMPDEST",
 
-	                    
 	PUSH1:  "PUSH1",
 	PUSH2:  "PUSH2",
 	PUSH3:  "PUSH3",
@@ -354,7 +329,6 @@ var opCodeToString = map[OpCode]string{
 	LOG3:   "LOG3",
 	LOG4:   "LOG4",
 
-	             
 	CREATE:       "CREATE",
 	CALL:         "CALL",
 	RETURN:       "RETURN",

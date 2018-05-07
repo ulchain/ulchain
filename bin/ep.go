@@ -22,13 +22,12 @@ import (
 )
 
 var (
-	                                              
+
 	gepvArchiveFiles = []string{
 		"COPYING",
 		executablePath("gepv"),
 	}
 
-	                                                       
 	allToolsArchiveFiles = []string{
 		"COPYING",
 		executablePath("abigen"),
@@ -41,7 +40,6 @@ var (
 		executablePath("wnode"),
 	}
 
-	                                                               
 	debExecutables = []debExecutable{
 		{
 			Name:        "abigen",
@@ -77,11 +75,6 @@ var (
 		},
 	}
 
-	                                          
-	                                                                            
-	                                                                              
-	                                                                                 
-	                                                                               
 	debDistros = []string{"trusty", "xenial", "artful", "bionic"}
 )
 
@@ -128,8 +121,6 @@ func main() {
 	}
 }
 
-            
-
 func doInstall(cmdline []string) {
 	var (
 		arch = flag.String("arch", "", "Architecture to cross build for")
@@ -138,10 +129,8 @@ func doInstall(cmdline []string) {
 	flag.CommandLine.Parse(cmdline)
 	env := build.Env()
 
-	                                                                   
-	                                                               
 	if !strings.Contains(runtime.Version(), "devel") {
-		                                                                                    
+
 		var minor int
 		fmt.Sscanf(strings.TrimPrefix(runtime.Version(), "go1."), "%d", &minor)
 
@@ -219,8 +208,7 @@ func goTool(subcmd string, args ...string) *exec.Cmd {
 func goToolArch(arch string, cc string, subcmd string, args ...string) *exec.Cmd {
 	cmd := build.GoTool(subcmd, args...)
 	if subcmd == "build" || subcmd == "install" || subcmd == "test" {
-		                                                                                             
-		                                                                      
+
 		var minor int
 		fmt.Sscanf(strings.TrimPrefix(runtime.Version(), "go1."), "%d", &minor)
 
@@ -247,10 +235,6 @@ func goToolArch(arch string, cc string, subcmd string, args ...string) *exec.Cmd
 	return cmd
 }
 
-                    
-  
-                                                           
-
 func doTest(cmdline []string) {
 	var (
 		coverage = flag.Bool("coverage", false, "Whether to record code coverage")
@@ -264,13 +248,10 @@ func doTest(cmdline []string) {
 	}
 	packages = build.ExpandPackagesNoVendor(packages)
 
-	                                       
 	build.MustRun(goTool("vet", packages...))
 
-	                        
 	gotest := goTool("test", buildFlags(env)...)
-	                                                        
-	                                               
+
 	gotest.Args = append(gotest.Args, "-p", "1")
 	if *coverage {
 		gotest.Args = append(gotest.Args, "-covermode=atomic", "-cover")
@@ -280,7 +261,6 @@ func doTest(cmdline []string) {
 	build.MustRun(gotest)
 }
 
-                                          
 func doLint(cmdline []string) {
 	flag.CommandLine.Parse(cmdline)
 
@@ -288,11 +268,10 @@ func doLint(cmdline []string) {
 	if len(flag.CommandLine.Args()) > 0 {
 		packages = flag.CommandLine.Args()
 	}
-	                                                   
+
 	build.MustRun(goTool("get", "gopkg.in/alecthomas/gometalinter.v2"))
 	build.MustRunCommand(filepath.Join(GOBIN, "gometalinter.v2"), "--install")
 
-	                                    
 	configs := []string{
 		"--vendor",
 		"--disable-all",
@@ -300,18 +279,15 @@ func doLint(cmdline []string) {
 		"--enable=gofmt",
 		"--enable=misspell",
 		"--enable=goconst",
-		"--min-occurrences=6",               
+		"--min-occurrences=6",
 	}
 	build.MustRunCommand(filepath.Join(GOBIN, "gometalinter.v2"), append(configs, packages...)...)
 
-	                              
 	for _, linter := range []string{"unconvert", "gosimple"} {
 		configs = []string{"--vendor", "--deadline=10m", "--disable-all", "--enable=" + linter}
 		build.MustRunCommand(filepath.Join(GOBIN, "gometalinter.v2"), append(configs, packages...)...)
 	}
 }
-
-                    
 
 func doArchive(cmdline []string) {
 	var (
@@ -377,7 +353,7 @@ func archiveVersion(env build.Environment) string {
 }
 
 func archiveUpload(archive string, blobstore string, signer string) error {
-	                                                         
+
 	if signer != "" {
 		pgpkey, err := base64.StdEncoding.DecodeString(os.Getenv(signer))
 		if err != nil {
@@ -387,7 +363,7 @@ func archiveUpload(archive string, blobstore string, signer string) error {
 			return err
 		}
 	}
-	                                                                                    
+
 	if blobstore != "" {
 		auth := build.AzureBlobstoreConfig{
 			Account:   strings.Split(blobstore, "/")[0],
@@ -406,7 +382,6 @@ func archiveUpload(archive string, blobstore string, signer string) error {
 	return nil
 }
 
-                                                 
 func maybeSkipArchive(env build.Environment) {
 	if env.IsPullRequest {
 		log.Printf("skipping because this is a PR build")
@@ -422,8 +397,6 @@ func maybeSkipArchive(env build.Environment) {
 	}
 }
 
-                   
-
 func doDebianSource(cmdline []string) {
 	var (
 		signer  = flag.String("signer", "", `Signing key name, also used as package author`)
@@ -436,7 +409,6 @@ func doDebianSource(cmdline []string) {
 	env := build.Env()
 	maybeSkipArchive(env)
 
-	                          
 	if b64key := os.Getenv("PPA_SIGNING_KEY"); b64key != "" {
 		key, err := base64.StdEncoding.DecodeString(b64key)
 		if err != nil {
@@ -447,7 +419,6 @@ func doDebianSource(cmdline []string) {
 		build.MustRun(gpg)
 	}
 
-	                       
 	for _, distro := range debDistros {
 		meta := newDebMetadata(distro, *signer, env, now)
 		pkgdir := stageDebianSource(*workdir, meta)
@@ -489,12 +460,9 @@ func isUnstableBuild(env build.Environment) bool {
 type debMetadata struct {
 	Env build.Environment
 
-	                                                  
-	                                                         
-	                                   
 	Version string
 
-	Author       string                                            
+	Author       string
 	Distro, Time string
 	Executables  []debExecutable
 }
@@ -505,8 +473,8 @@ type debExecutable struct {
 
 func newDebMetadata(distro, author string, env build.Environment, t time.Time) debMetadata {
 	if author == "" {
-		                                      
-		author = "EPVchain Builds <fjl@epvchain.org>"
+
+		author = "EPVchain Builds"
 	}
 	return debMetadata{
 		Env:         env,
@@ -518,8 +486,6 @@ func newDebMetadata(distro, author string, env build.Environment, t time.Time) d
 	}
 }
 
-                                                        
-                              
 func (meta debMetadata) Name() string {
 	if isUnstableBuild(meta.Env) {
 		return "epvchain-unstable"
@@ -527,7 +493,6 @@ func (meta debMetadata) Name() string {
 	return "epvchain"
 }
 
-                                                            
 func (meta debMetadata) VersionString() string {
 	vsn := meta.Version
 	if meta.Env.Buildnum != "" {
@@ -539,7 +504,6 @@ func (meta debMetadata) VersionString() string {
 	return vsn
 }
 
-                                                       
 func (meta debMetadata) ExeList() string {
 	names := make([]string, len(meta.Executables))
 	for i, e := range meta.Executables {
@@ -548,7 +512,6 @@ func (meta debMetadata) ExeList() string {
 	return strings.Join(names, ", ")
 }
 
-                                                             
 func (meta debMetadata) ExeName(exe debExecutable) string {
 	if isUnstableBuild(meta.Env) {
 		return exe.Name + "-unstable"
@@ -556,18 +519,9 @@ func (meta debMetadata) ExeName(exe debExecutable) string {
 	return exe.Name
 }
 
-                                                          
-                           
 func (meta debMetadata) ExeConflicts(exe debExecutable) string {
 	if isUnstableBuild(meta.Env) {
-		                                                            
-		                                                     
-		  
-		                                                                 
-		                                                                 
-		                                                               
-		                                                                  
-		              
+
 		return "epvchain, " + exe.Name
 	}
 	return ""
@@ -580,10 +534,8 @@ func stageDebianSource(tmpdir string, meta debMetadata) (pkgdir string) {
 		log.Fatal(err)
 	}
 
-	                        
 	build.MustRunCommand("git", "checkout-index", "-a", "--prefix", pkgdir+string(filepath.Separator))
 
-	                                       
 	debian := filepath.Join(pkgdir, "debian")
 	build.Render("bin/deb.rules", filepath.Join(debian, "rules"), 0755, meta)
 	build.Render("bin/deb.changelog", filepath.Join(debian, "changelog"), 0644, meta)
@@ -601,10 +553,8 @@ func stageDebianSource(tmpdir string, meta debMetadata) (pkgdir string) {
 	return pkgdir
 }
 
-                    
-
 func doWindowsInstaller(cmdline []string) {
-	                                                            
+
 	var (
 		arch    = flag.String("arch", runtime.GOARCH, "Architecture for cross build packaging")
 		signer  = flag.String("signer", "", `Environment variable holding the signing key (e.g. WINDOWS_SIGNING_KEY)`)
@@ -616,14 +566,13 @@ func doWindowsInstaller(cmdline []string) {
 	env := build.Env()
 	maybeSkipArchive(env)
 
-	                                                        
 	var (
 		devTools []string
 		allTools []string
 		gepvTool string
 	)
 	for _, file := range allToolsArchiveFiles {
-		if file == "COPYING" {                         
+		if file == "COPYING" {
 			continue
 		}
 		allTools = append(allTools, filepath.Base(file))
@@ -634,8 +583,6 @@ func doWindowsInstaller(cmdline []string) {
 		}
 	}
 
-	                                                                       
-	                                                                              
 	templateData := map[string]interface{}{
 		"License":  "COPYING",
 		"Gepv":     gepvTool,
@@ -649,9 +596,6 @@ func doWindowsInstaller(cmdline []string) {
 	build.CopyFile(filepath.Join(*workdir, "SimpleFC.dll"), "bin/nsis.simplefc.dll", 0755)
 	build.CopyFile(filepath.Join(*workdir, "COPYING"), "COPYING", 0755)
 
-	                                                                                   
-	                                                                                    
-	            
 	version := strings.Split(build.VERSION(), ".")
 	if env.Commit != "" {
 		version[2] += "-" + env.Commit[:8]
@@ -666,13 +610,10 @@ func doWindowsInstaller(cmdline []string) {
 		filepath.Join(*workdir, "gepv.nsi"),
 	)
 
-	                              
 	if err := archiveUpload(installer, *upload, *signer); err != nil {
 		log.Fatal(err)
 	}
 }
-
-                   
 
 func doAndroidArchive(cmdline []string) {
 	var (
@@ -684,40 +625,37 @@ func doAndroidArchive(cmdline []string) {
 	flag.CommandLine.Parse(cmdline)
 	env := build.Env()
 
-	                                                          
 	if os.Getenv("ANDROID_HOME") == "" {
 		log.Fatal("Please ensure ANDROID_HOME points to your Android SDK")
 	}
 	if os.Getenv("ANDROID_NDK") == "" {
 		log.Fatal("Please ensure ANDROID_NDK points to your Android NDK")
 	}
-	                                                
+
 	build.MustRun(goTool("get", "golang.org/x/mobile/cmd/gomobile"))
 	build.MustRun(gomobileTool("init", "--ndk", os.Getenv("ANDROID_NDK")))
 	build.MustRun(gomobileTool("bind", "--target", "android", "--javapkg", "org.epvchain", "-v", "github.com/epvchain/go-epvchain/mobile"))
 
 	if *local {
-		                                                                     
+
 		os.Rename("gepv.aar", filepath.Join(GOBIN, "gepv.aar"))
 		return
 	}
 	meta := newMavenMetadata(env)
 	build.Render("bin/mvn.pom", meta.Package+".pom", 0755, meta)
 
-	                                                   
 	maybeSkipArchive(env)
 
-	                                       
 	archive := "gepv-" + archiveBasename("android", env) + ".aar"
 	os.Rename("gepv.aar", archive)
 
 	if err := archiveUpload(archive, *upload, *signer); err != nil {
 		log.Fatal(err)
 	}
-	                                                     
+
 	os.Rename(archive, meta.Package+".aar")
 	if *signer != "" && *deploy != "" {
-		                                                     
+
 		if b64key := os.Getenv(*signer); b64key != "" {
 			key, err := base64.StdEncoding.DecodeString(b64key)
 			if err != nil {
@@ -727,7 +665,7 @@ func doAndroidArchive(cmdline []string) {
 			gpg.Stdin = bytes.NewReader(key)
 			build.MustRun(gpg)
 		}
-		                                                        
+
 		repo := *deploy + "/service/local/staging/deploy/maven2"
 		if meta.Develop {
 			repo = *deploy + "/content/repositories/snapshots"
@@ -766,19 +704,19 @@ type mavenContributor struct {
 }
 
 func newMavenMetadata(env build.Environment) mavenMetadata {
-	                                                 
+
 	contribs := []mavenContributor{}
 	if authors, err := os.Open("AUTHORS"); err == nil {
 		defer authors.Close()
 
 		scanner := bufio.NewScanner(authors)
 		for scanner.Scan() {
-			                                            
+
 			line := strings.TrimSpace(scanner.Text())
 			if line == "" || line[0] == '#' {
 				continue
 			}
-			                                               
+
 			re := regexp.MustCompile("([^<]+) <(.+)>")
 			parts := re.FindStringSubmatch(line)
 			if len(parts) == 3 {
@@ -786,7 +724,7 @@ func newMavenMetadata(env build.Environment) mavenMetadata {
 			}
 		}
 	}
-	                                         
+
 	version := build.VERSION()
 	if isUnstableBuild(env) {
 		version += "-SNAPSHOT"
@@ -799,8 +737,6 @@ func newMavenMetadata(env build.Environment) mavenMetadata {
 	}
 }
 
-                   
-
 func doXCodeFramework(cmdline []string) {
 	var (
 		local  = flag.Bool("local", false, `Flag whether we're only doing a local build (skip Maven artifacts)`)
@@ -811,13 +747,12 @@ func doXCodeFramework(cmdline []string) {
 	flag.CommandLine.Parse(cmdline)
 	env := build.Env()
 
-	                                
 	build.MustRun(goTool("get", "golang.org/x/mobile/cmd/gomobile"))
 	build.MustRun(gomobileTool("init"))
 	bind := gomobileTool("bind", "--target", "ios", "--tags", "ios", "-v", "github.com/epvchain/go-epvchain/mobile")
 
 	if *local {
-		                                                                      
+
 		bind.Dir, _ = filepath.Abs(GOBIN)
 		build.MustRun(bind)
 		return
@@ -830,14 +765,12 @@ func doXCodeFramework(cmdline []string) {
 	build.MustRun(bind)
 	build.MustRunCommand("tar", "-zcvf", archive+".tar.gz", archive)
 
-	                                                       
 	maybeSkipArchive(env)
 
-	                                         
 	if err := archiveUpload(archive+".tar.gz", *upload, *signer); err != nil {
 		log.Fatal(err)
 	}
-	                                            
+
 	if *deploy != "" {
 		meta := newPodMetadata(env, archive)
 		build.Render("bin/pod.podspec", "Gepv.podspec", 0755, meta)
@@ -858,19 +791,19 @@ type podContributor struct {
 }
 
 func newPodMetadata(env build.Environment, archive string) podMetadata {
-	                                                 
+
 	contribs := []podContributor{}
 	if authors, err := os.Open("AUTHORS"); err == nil {
 		defer authors.Close()
 
 		scanner := bufio.NewScanner(authors)
 		for scanner.Scan() {
-			                                            
+
 			line := strings.TrimSpace(scanner.Text())
 			if line == "" || line[0] == '#' {
 				continue
 			}
-			                                               
+
 			re := regexp.MustCompile("([^<]+) <(.+)>")
 			parts := re.FindStringSubmatch(line)
 			if len(parts) == 3 {
@@ -890,8 +823,6 @@ func newPodMetadata(env build.Environment, archive string) podMetadata {
 	}
 }
 
-                    
-
 func doXgo(cmdline []string) {
 	var (
 		alltools = flag.Bool("alltools", false, `Flag whether we're building all known tools, or only on in particular`)
@@ -899,11 +830,9 @@ func doXgo(cmdline []string) {
 	flag.CommandLine.Parse(cmdline)
 	env := build.Env()
 
-	                                                   
 	gogetxgo := goTool("get", "github.com/karalabe/xgo")
 	build.MustRun(gogetxgo)
 
-	                                                                         
 	args := append(buildFlags(env), flag.Args()...)
 
 	if *alltools {
@@ -940,8 +869,6 @@ func xgoTool(args []string) *exec.Cmd {
 	return cmd
 }
 
-                               
-
 func doPurge(cmdline []string) {
 	var (
 		store = flag.String("store", "", `Destination from where to purge archives (usually "gepvstore/builds")`)
@@ -953,7 +880,7 @@ func doPurge(cmdline []string) {
 		log.Printf("skipping because not a cron job")
 		os.Exit(0)
 	}
-	                                                                
+
 	auth := build.AzureBlobstoreConfig{
 		Account:   strings.Split(*store, "/")[0],
 		Token:     os.Getenv("AZURE_BLOBSTORE_TOKEN"),
@@ -963,7 +890,7 @@ func doPurge(cmdline []string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	                                                               
+
 	for i := 0; i < len(blobs); i++ {
 		if !strings.Contains(blobs[i].Name, "unstable") {
 			blobs = append(blobs[:i], blobs[i+1:]...)
@@ -985,7 +912,7 @@ func doPurge(cmdline []string) {
 			}
 		}
 	}
-	                                                               
+
 	for i, blob := range blobs {
 		timestamp, _ := time.Parse(time.RFC1123, blob.Properties.LastModified)
 		if time.Since(timestamp) < time.Duration(*limit)*24*time.Hour {
@@ -993,7 +920,7 @@ func doPurge(cmdline []string) {
 			break
 		}
 	}
-	                                       
+
 	if err := build.AzureBlobstoreDelete(auth, blobs); err != nil {
 		log.Fatal(err)
 	}

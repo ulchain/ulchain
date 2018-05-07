@@ -1,4 +1,3 @@
-// Copyright (c) 2012 VMware, Inc.
 
 package gosigar
 
@@ -10,7 +9,6 @@ import (
 	"time"
 )
 
-// Go version of apr_strfsize
 func FormatSize(size uint64) string {
 	ord := []string{"K", "M", "G", "T", "P", "E"}
 	o := 0

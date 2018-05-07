@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package core
 
@@ -36,13 +21,11 @@ import (
 	"github.com/epvchain/go-epvchain/process"
 )
 
-                                                                                              
-                                                                                                                
+//go:generate gencodec -type Genesis -field-override genesisSpecMarshaling -out gen_genesis.go
+//go:generate gencodec -type GenesisAccount -field-override genesisAccountMarshaling -out gen_genesis_account.go
 
 var errGenesisNoConfig = errors.New("genesis has no chain configuration")
 
-                                                                                      
-                                                           
 type Genesis struct {
 	Config     *params.ChainConfig `json:"config"`
 	Nonce      uint64              `json:"nonce"`
@@ -54,14 +37,11 @@ type Genesis struct {
 	Coinbase   common.Address      `json:"coinbase"`
 	Alloc      GenesisAlloc        `json:"alloc"      gencodec:"required"`
 
-	                                                                   
-	                            
 	Number     uint64      `json:"number"`
 	GasUsed    uint64      `json:"gasUsed"`
 	ParentHash common.Hash `json:"parentHash"`
 }
 
-                                                                              
 type GenesisAlloc map[common.Address]GenesisAccount
 
 func (ga *GenesisAlloc) UnmarshalJSON(data []byte) error {
@@ -76,16 +56,14 @@ func (ga *GenesisAlloc) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-                                                                  
 type GenesisAccount struct {
 	Code       []byte                      `json:"code,omitempty"`
 	Storage    map[common.Hash]common.Hash `json:"storage,omitempty"`
 	Balance    *big.Int                    `json:"balance" gencodec:"required"`
 	Nonce      uint64                      `json:"nonce,omitempty"`
-	PrivateKey []byte                      `json:"secretKey,omitempty"`             
+	PrivateKey []byte                      `json:"secretKey,omitempty"` 
 }
 
-                                    
 type genesisSpecMarshaling struct {
 	Nonce      math.HexOrDecimal64
 	Timestamp  math.HexOrDecimal64
@@ -105,8 +83,6 @@ type genesisAccountMarshaling struct {
 	PrivateKey hexutil.Bytes
 }
 
-                                                                                  
-                         
 type storageJSON common.Hash
 
 func (h *storageJSON) UnmarshalText(text []byte) error {
@@ -114,7 +90,7 @@ func (h *storageJSON) UnmarshalText(text []byte) error {
 	if len(text) > 64 {
 		return fmt.Errorf("too many hex characters in storage key/value %q", text)
 	}
-	offset := len(h) - len(text)/2                   
+	offset := len(h) - len(text)/2 
 	if _, err := hex.Decode(h[offset:], text); err != nil {
 		fmt.Println(err)
 		return fmt.Errorf("invalid hex storage key/value %q", text)
@@ -126,8 +102,6 @@ func (h storageJSON) MarshalText() ([]byte, error) {
 	return hexutil.Bytes(h[:]).MarshalText()
 }
 
-                                                                      
-                                          
 type GenesisMismatchError struct {
 	Stored, New common.Hash
 }
@@ -136,25 +110,11 @@ func (e *GenesisMismatchError) Error() string {
 	return fmt.Sprintf("database already contains an incompatible genesis block (have %x, new %x)", e.Stored[:8], e.New[:8])
 }
 
-                                                               
-                                  
-  
-                                                               
-                                                                    
-                                                        
-                                                                        
-  
-                                                                                    
-                                                                               
-                                                                                  
-  
-                                                 
 func SetupGenesisBlock(db epvdb.Database, genesis *Genesis) (*params.ChainConfig, common.Hash, error) {
 	if genesis != nil && genesis.Config == nil {
 		return params.AllEPVhashProtocolChanges, common.Hash{}, errGenesisNoConfig
 	}
 
-	                                                                 
 	stored := GetCanonicalHash(db, 0)
 	if (stored == common.Hash{}) {
 		if genesis == nil {
@@ -167,7 +127,6 @@ func SetupGenesisBlock(db epvdb.Database, genesis *Genesis) (*params.ChainConfig
 		return genesis.Config, block.Hash(), err
 	}
 
-	                                                      
 	if genesis != nil {
 		hash := genesis.ToBlock(nil).Hash()
 		if hash != stored {
@@ -175,26 +134,21 @@ func SetupGenesisBlock(db epvdb.Database, genesis *Genesis) (*params.ChainConfig
 		}
 	}
 
-	                                        
 	newcfg := genesis.configOrDefault(stored)
 	storedcfg, err := GetChainConfig(db, stored)
 	if err != nil {
 		if err == ErrChainConfigNotFound {
-			                                                        
+
 			log.Warn("Found genesis block without chain config")
 			err = WriteChainConfig(db, stored, newcfg)
 		}
 		return newcfg, stored, err
 	}
-	                                                                                  
-	                                                                                     
-	                             
+
 	if genesis == nil && stored != params.MainnetGenesisHash {
 		return storedcfg, stored, nil
 	}
 
-	                                                                        
-	                                                                 
 	height := GetBlockNumber(db, GetHeadHeaderHash(db))
 	if height == missingNumber {
 		return newcfg, stored, fmt.Errorf("missing block number for head header hash")
@@ -219,8 +173,6 @@ func (g *Genesis) configOrDefault(ghash common.Hash) *params.ChainConfig {
 	}
 }
 
-                                                                                
-                                                 
 func (g *Genesis) ToBlock(db epvdb.Database) *types.Block {
 	if db == nil {
 		db, _ = epvdb.NewMemDatabase()
@@ -260,8 +212,6 @@ func (g *Genesis) ToBlock(db epvdb.Database) *types.Block {
 	return types.NewBlock(head, nil, nil, nil)
 }
 
-                                                                                
-                                                      
 func (g *Genesis) Commit(db epvdb.Database) (*types.Block, error) {
 	block := g.ToBlock(db)
 	if block.Number().Sign() != 0 {
@@ -292,8 +242,6 @@ func (g *Genesis) Commit(db epvdb.Database) (*types.Block, error) {
 	return block, WriteChainConfig(db, block.Hash(), config)
 }
 
-                                                                           
-                                                      
 func (g *Genesis) MustCommit(db epvdb.Database) *types.Block {
 	block, err := g.Commit(db)
 	if err != nil {
@@ -302,13 +250,11 @@ func (g *Genesis) MustCommit(db epvdb.Database) *types.Block {
 	return block
 }
 
-                                                                                             
 func GenesisBlockForTesting(db epvdb.Database, addr common.Address, balance *big.Int) *types.Block {
 	g := Genesis{Alloc: GenesisAlloc{addr: {Balance: balance}}}
 	return g.MustCommit(db)
 }
 
-                                                                   
 func DefaultGenesisBlock() *Genesis {
 	return &Genesis{
 		Config:     params.MainnetChainConfig,
@@ -320,7 +266,6 @@ func DefaultGenesisBlock() *Genesis {
 	}
 }
 
-                                                                        
 func DefaultTestnetGenesisBlock() *Genesis {
 	return &Genesis{
 		Config:     params.TestnetChainConfig,
@@ -332,7 +277,6 @@ func DefaultTestnetGenesisBlock() *Genesis {
 	}
 }
 
-                                                                        
 func DefaultRinkebyGenesisBlock() *Genesis {
 	return &Genesis{
 		Config:     params.RinkebyChainConfig,
@@ -344,28 +288,25 @@ func DefaultRinkebyGenesisBlock() *Genesis {
 	}
 }
 
-                                                                                
-                     
 func DeveloperGenesisBlock(period uint64, faucet common.Address) *Genesis {
-	                                                        
+
 	config := *params.AllDPosProtocolChanges
 	config.DPos.Period = period
 
-	                                                                             
 	return &Genesis{
 		Config:     &config,
 		ExtraData:  append(append(make([]byte, 32), faucet[:]...), make([]byte, 65)...),
 		GasLimit:   6283185,
 		Difficulty: big.NewInt(1),
 		Alloc: map[common.Address]GenesisAccount{
-			common.BytesToAddress([]byte{1}): {Balance: big.NewInt(1)},             
-			common.BytesToAddress([]byte{2}): {Balance: big.NewInt(1)},          
-			common.BytesToAddress([]byte{3}): {Balance: big.NewInt(1)},          
-			common.BytesToAddress([]byte{4}): {Balance: big.NewInt(1)},            
-			common.BytesToAddress([]byte{5}): {Balance: big.NewInt(1)},          
-			common.BytesToAddress([]byte{6}): {Balance: big.NewInt(1)},         
-			common.BytesToAddress([]byte{7}): {Balance: big.NewInt(1)},               
-			common.BytesToAddress([]byte{8}): {Balance: big.NewInt(1)},             
+			common.BytesToAddress([]byte{1}): {Balance: big.NewInt(1)}, 
+			common.BytesToAddress([]byte{2}): {Balance: big.NewInt(1)}, 
+			common.BytesToAddress([]byte{3}): {Balance: big.NewInt(1)}, 
+			common.BytesToAddress([]byte{4}): {Balance: big.NewInt(1)}, 
+			common.BytesToAddress([]byte{5}): {Balance: big.NewInt(1)}, 
+			common.BytesToAddress([]byte{6}): {Balance: big.NewInt(1)}, 
+			common.BytesToAddress([]byte{7}): {Balance: big.NewInt(1)}, 
+			common.BytesToAddress([]byte{8}): {Balance: big.NewInt(1)}, 
 			faucet: {Balance: new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(9))},
 		},
 	}

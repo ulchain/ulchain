@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package state
 
@@ -29,7 +14,7 @@ type journalEntry interface {
 type journal []journalEntry
 
 type (
-	                               
+
 	createObjectChange struct {
 		account *common.Address
 	}
@@ -38,11 +23,10 @@ type (
 	}
 	suicideChange struct {
 		account     *common.Address
-		prev        bool                                        
+		prev        bool 
 		prevbalance *big.Int
 	}
 
-	                                  
 	balanceChange struct {
 		account *common.Address
 		prev    *big.Int
@@ -60,7 +44,6 @@ type (
 		prevcode, prevhash []byte
 	}
 
-	                                 
 	refundChange struct {
 		prev uint64
 	}

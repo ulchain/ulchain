@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package state
 
@@ -32,7 +17,7 @@ var emptyCodeHash = crypto.Keccak256(nil)
 type Code []byte
 
 func (self Code) String() string {
-	return string(self)                                       
+	return string(self) 
 }
 
 type Storage map[common.Hash]common.Hash
@@ -54,57 +39,38 @@ func (self Storage) Copy() Storage {
 	return cpy
 }
 
-                                                                      
-  
-                                   
-                                           
-                                                                  
-                                                                               
 type stateObject struct {
 	address  common.Address
-	addrHash common.Hash                                           
+	addrHash common.Hash 
 	data     Account
 	db       *StateDB
 
-	            
-	                                                                
-	                                                                   
-	                                                                          
-	                     
 	dbErr error
 
-	                
-	trie Trie                                                       
-	code Code                                                         
+	trie Trie 
+	code Code 
 
-	cachedStorage Storage                                                
-	dirtyStorage  Storage                                                   
+	cachedStorage Storage 
+	dirtyStorage  Storage 
 
-	               
-	                                                                    
-	                                                     
-	dirtyCode bool                                
+	dirtyCode bool 
 	suicided  bool
 	touched   bool
 	deleted   bool
-	onDirty   func(addr common.Address)                                                      
+	onDirty   func(addr common.Address) 
 }
 
-                                                         
 func (s *stateObject) empty() bool {
 	return s.data.Nonce == 0 && s.data.Balance.Sign() == 0 && bytes.Equal(s.data.CodeHash, emptyCodeHash)
 }
 
-                                                                
-                                                     
 type Account struct {
 	Nonce    uint64
 	Balance  *big.Int
-	Root     common.Hash                                   
+	Root     common.Hash 
 	CodeHash []byte
 }
 
-                                    
 func newObject(db *StateDB, address common.Address, data Account, onDirty func(addr common.Address)) *stateObject {
 	if data.Balance == nil {
 		data.Balance = new(big.Int)
@@ -123,12 +89,10 @@ func newObject(db *StateDB, address common.Address, data Account, onDirty func(a
 	}
 }
 
-                                    
 func (c *stateObject) EncodeRLP(w io.Writer) error {
 	return rlp.Encode(w, c.data)
 }
 
-                                                                
 func (self *stateObject) setError(err error) {
 	if self.dbErr == nil {
 		self.dbErr = err
@@ -168,13 +132,12 @@ func (c *stateObject) getTrie(db Database) Trie {
 	return c.trie
 }
 
-                                               
 func (self *stateObject) GetState(db Database, key common.Hash) common.Hash {
 	value, exists := self.cachedStorage[key]
 	if exists {
 		return value
 	}
-	                                      
+
 	enc, err := self.getTrie(db).TryGet(key[:])
 	if err != nil {
 		self.setError(err)
@@ -193,7 +156,6 @@ func (self *stateObject) GetState(db Database, key common.Hash) common.Hash {
 	return value
 }
 
-                                               
 func (self *stateObject) SetState(db Database, key, value common.Hash) {
 	self.db.journal = append(self.db.journal, storageChange{
 		account:  &self.address,
@@ -213,7 +175,6 @@ func (self *stateObject) setState(key, value common.Hash) {
 	}
 }
 
-                                                                                 
 func (self *stateObject) updateTrie(db Database) Trie {
 	tr := self.getTrie(db)
 	for key, value := range self.dirtyStorage {
@@ -222,21 +183,18 @@ func (self *stateObject) updateTrie(db Database) Trie {
 			self.setError(tr.TryDelete(key[:]))
 			continue
 		}
-		                                                       
+
 		v, _ := rlp.EncodeToBytes(bytes.TrimLeft(value[:], "\x00"))
 		self.setError(tr.TryUpdate(key[:], v))
 	}
 	return tr
 }
 
-                                                            
 func (self *stateObject) updateRoot(db Database) {
 	self.updateTrie(db)
 	self.data.Root = self.trie.Hash()
 }
 
-                                                    
-                              
 func (self *stateObject) CommitTrie(db Database) error {
 	self.updateTrie(db)
 	if self.dbErr != nil {
@@ -249,11 +207,8 @@ func (self *stateObject) CommitTrie(db Database) error {
 	return err
 }
 
-                                              
-                                                                    
 func (c *stateObject) AddBalance(amount *big.Int) {
-	                                                                        
-	                                            
+
 	if amount.Sign() == 0 {
 		if c.empty() {
 			c.touch()
@@ -264,8 +219,6 @@ func (c *stateObject) AddBalance(amount *big.Int) {
 	c.SetBalance(new(big.Int).Add(c.Balance(), amount))
 }
 
-                                              
-                                                                    
 func (c *stateObject) SubBalance(amount *big.Int) {
 	if amount.Sign() == 0 {
 		return
@@ -289,7 +242,6 @@ func (self *stateObject) setBalance(amount *big.Int) {
 	}
 }
 
-                                                                             
 func (c *stateObject) ReturnGas(gas *big.Int) {}
 
 func (self *stateObject) deepCopy(db *StateDB, onDirty func(addr common.Address)) *stateObject {
@@ -306,16 +258,10 @@ func (self *stateObject) deepCopy(db *StateDB, onDirty func(addr common.Address)
 	return stateObject
 }
 
-  
-                      
-  
-
-                                              
 func (c *stateObject) Address() common.Address {
 	return c.address
 }
 
-                                                                      
 func (self *stateObject) Code(db Database) []byte {
 	if self.code != nil {
 		return self.code
@@ -379,9 +325,6 @@ func (self *stateObject) Nonce() uint64 {
 	return self.data.Nonce
 }
 
-                                                                    
-                                                                   
-                                     
 func (self *stateObject) Value() *big.Int {
 	panic("Value on stateObject should never be called")
 }

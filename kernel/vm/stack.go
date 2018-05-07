@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package vm
 
@@ -21,9 +6,6 @@ import (
 	"math/big"
 )
 
-                                                                               
-                                                                                
-                       
 type Stack struct {
 	data []*big.Int
 }
@@ -37,9 +19,7 @@ func (st *Stack) Data() []*big.Int {
 }
 
 func (st *Stack) push(d *big.Int) {
-	                                                 
-	                                  
-	                                      
+
 	st.data = append(st.data, d)
 }
 func (st *Stack) pushN(ds ...*big.Int) {
@@ -68,7 +48,6 @@ func (st *Stack) peek() *big.Int {
 	return st.data[st.len()-1]
 }
 
-                                      
 func (st *Stack) Back(n int) *big.Int {
 	return st.data[st.len()-n-1]
 }

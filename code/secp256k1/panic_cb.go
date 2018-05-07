@@ -1,26 +1,8 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package secp256k1
 
 import "C"
 import "unsafe"
-
-                                                             
-                         
 
 //export secp256k1GoPanicIllegal
 func secp256k1GoPanicIllegal(msg *C.char, data unsafe.Pointer) {

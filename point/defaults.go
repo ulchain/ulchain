@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package node
 
@@ -27,13 +12,12 @@ import (
 )
 
 const (
-	DefaultHTTPHost = "localhost"                                                  
-	DefaultHTTPPort = 7545                                                   
-	DefaultWSHost   = "localhost"                                                       
-	DefaultWSPort   = 7546                                                        
+	DefaultHTTPHost = "localhost" 
+	DefaultHTTPPort = 7545        
+	DefaultWSHost   = "localhost" 
+	DefaultWSPort   = 7546        
 )
 
-                                                      
 var DefaultConfig = Config{
 	DataDir:     DefaultDataDir(),
 	HTTPPort:    DefaultHTTPPort,
@@ -47,10 +31,8 @@ var DefaultConfig = Config{
 	},
 }
 
-                                                                                  
-                            
 func DefaultDataDir() string {
-	                                                      
+
 	home := homeDir()
 	if home != "" {
 		if runtime.GOOS == "darwin" {
@@ -61,7 +43,7 @@ func DefaultDataDir() string {
 			return filepath.Join(home, ".epvchain")
 		}
 	}
-	                                                                      
+
 	return ""
 }
 

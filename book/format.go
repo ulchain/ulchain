@@ -14,19 +14,16 @@ import (
 )
 
 const (
-	timeFormat     = "2006-01-02T15:04:05-0700"
+	timeFormat     = "2018-01-02T15:04:05-0700"
 	termTimeFormat = "01-02|15:04:05"
 	floatFormat    = 'f'
 	termMsgJust    = 40
 )
 
-                                                                     
 var locationTrims = []string{
 	"github.com/epvchain/go-epvchain/",
 }
 
-                                                                             
-                 
 func PrintOrigins(print bool) {
 	if print {
 		atomic.StoreUint32(&locationEnabled, 1)
@@ -35,27 +32,18 @@ func PrintOrigins(print bool) {
 	}
 }
 
-                                                                               
-                                                             
 var locationEnabled uint32
 
-                                                                             
-                                 
 var locationLength uint32
 
-                                                                               
-                                                      
 var fieldPadding = make(map[string]int)
 
-                                                                       
 var fieldPaddingLock sync.RWMutex
 
 type Format interface {
 	Format(r *Record) []byte
 }
 
-                                                    
-                                                   
 func FormatFunc(f func(*Record) []byte) Format {
 	return formatFunc(f)
 }
@@ -66,23 +54,10 @@ func (f formatFunc) Format(r *Record) []byte {
 	return f(r)
 }
 
-                                                                              
-                                                                               
-          
 type TerminalStringer interface {
 	TerminalString() string
 }
 
-                                                                        
-                                                                                
-                                                                                
-  
-                                                    
-  
-           
-  
-                                                                            
-  
 func TerminalFormat(usecolor bool) Format {
 	return FormatFunc(func(r *Record) []byte {
 		var color = 0
@@ -106,12 +81,12 @@ func TerminalFormat(usecolor bool) Format {
 		b := &bytes.Buffer{}
 		lvl := r.Lvl.AlignedString()
 		if atomic.LoadUint32(&locationEnabled) != 0 {
-			                                                                              
+
 			location := fmt.Sprintf("%+v", r.Call)
 			for _, prefix := range locationTrims {
 				location = strings.TrimPrefix(location, prefix)
 			}
-			                                                             
+
 			align := int(atomic.LoadUint32(&locationLength))
 			if align < len(location) {
 				align = len(location)
@@ -119,7 +94,6 @@ func TerminalFormat(usecolor bool) Format {
 			}
 			padding := strings.Repeat(" ", align-len(location))
 
-			                                     
 			if color > 0 {
 				fmt.Fprintf(b, "\x1b[%dm%s\x1b[0m[%s|%s]%s %s ", color, lvl, r.Time.Format(termTimeFormat), location, padding, r.Msg)
 			} else {
@@ -132,22 +106,17 @@ func TerminalFormat(usecolor bool) Format {
 				fmt.Fprintf(b, "%s[%s] %s ", lvl, r.Time.Format(termTimeFormat), r.Msg)
 			}
 		}
-		                                                   
+
 		length := utf8.RuneCountInString(r.Msg)
 		if len(r.Ctx) > 0 && length < termMsgJust {
 			b.Write(bytes.Repeat([]byte{' '}, termMsgJust-length))
 		}
-		                              
+
 		logfmt(b, r.Ctx, color, true)
 		return b.Bytes()
 	})
 }
 
-                                                                                             
-                              
-  
-                                                              
-  
 func LogfmtFormat() Format {
 	return FormatFunc(func(r *Record) []byte {
 		common := []interface{}{r.KeyNames.Time, r.Time, r.KeyNames.Lvl, r.Lvl, r.KeyNames.Msg, r.Msg}
@@ -169,7 +138,6 @@ func logfmt(buf *bytes.Buffer, ctx []interface{}, color int, term bool) {
 			k, v = errorKey, formatLogfmtValue(k, term)
 		}
 
-		                                                                          
 		fieldPaddingLock.RLock()
 		padding := fieldPadding[k]
 		fieldPaddingLock.RUnlock()
@@ -196,15 +164,10 @@ func logfmt(buf *bytes.Buffer, ctx []interface{}, color int, term bool) {
 	buf.WriteByte('\n')
 }
 
-                                                                        
-                                                     
 func JsonFormat() Format {
 	return JsonFormatEx(false, true)
 }
 
-                                                                       
-                                                                    
-                                                      
 func JsonFormatEx(pretty, lineSeparated bool) Format {
 	jsonMarshal := json.Marshal
 	if pretty {
@@ -280,21 +243,18 @@ func formatJsonValue(value interface{}) interface{} {
 	}
 }
 
-                                                
 func formatLogfmtValue(value interface{}, term bool) string {
 	if value == nil {
 		return "nil"
 	}
 
 	if t, ok := value.(time.Time); ok {
-		                                                                    
-		                                                                 
-		             
+
 		return t.Format(timeFormat)
 	}
 	if term {
 		if s, ok := value.(TerminalStringer); ok {
-			                                              
+
 			return escapeString(s.TerminalString())
 		}
 	}

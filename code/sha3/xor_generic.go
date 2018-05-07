@@ -1,14 +1,8 @@
-                                                      
-                                                     
-                                                 
 
 package sha3
 
 import "encoding/binary"
 
-                                                        
-                                                        
-                
 func xorInGeneric(d *state, buf []byte) {
 	n := len(buf) / 8
 
@@ -19,7 +13,6 @@ func xorInGeneric(d *state, buf []byte) {
 	}
 }
 
-                                                   
 func copyOutGeneric(d *state, b []byte) {
 	for i := 0; len(b) >= 8; i++ {
 		binary.LittleEndian.PutUint64(b, d.a[i])

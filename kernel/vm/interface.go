@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package vm
 
@@ -23,7 +8,6 @@ import (
 	"github.com/epvchain/go-epvchain/kernel/types"
 )
 
-                                                      
 type StateDB interface {
 	CreateAccount(common.Address)
 
@@ -48,11 +32,8 @@ type StateDB interface {
 	Suicide(common.Address) bool
 	HasSuicided(common.Address) bool
 
-	                                                           
-	                                                              
 	Exist(common.Address) bool
-	                                                          
-	                                                               
+
 	Empty(common.Address) bool
 
 	RevertToSnapshot(int)
@@ -64,15 +45,13 @@ type StateDB interface {
 	ForEachStorage(common.Address, func(common.Hash, common.Hash) bool)
 }
 
-                                                                                      
-                                                                                                   
 type CallContext interface {
-	                        
+
 	Call(env *EVM, me ContractRef, addr common.Address, data []byte, gas, value *big.Int) ([]byte, error)
-	                                                                  
+
 	CallCode(env *EVM, me ContractRef, addr common.Address, data []byte, gas, value *big.Int) ([]byte, error)
-	                                                                                    
+
 	DelegateCall(env *EVM, me ContractRef, addr common.Address, data []byte, gas *big.Int) ([]byte, error)
-	                        
+
 	Create(env *EVM, me ContractRef, data []byte, gas, value *big.Int) ([]byte, common.Address, error)
 }

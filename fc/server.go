@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                         
 package les
 
 import (
@@ -39,7 +23,7 @@ import (
 type LesServer struct {
 	config          *epv.Config
 	protocolManager *ProtocolManager
-	fcManager       *flowcontrol.ClientManager                                  
+	fcManager       *flowcontrol.ClientManager 
 	fcCostStats     *requestCostStats
 	defParams       *flowcontrol.ServerParams
 	lesTopics       []discv5.Topic
@@ -71,12 +55,12 @@ func NewLesServer(epv *epv.EPVchain, config *epv.Config) (*LesServer, error) {
 	}
 	logger := log.New()
 
-	chtV1SectionCount, _, _ := srv.chtIndexer.Sections()                                                                               
+	chtV1SectionCount, _, _ := srv.chtIndexer.Sections() 
 	chtV2SectionCount := chtV1SectionCount / (light.CHTFrequencyClient / light.CHTFrequencyServer)
 	if chtV2SectionCount != 0 {
-		                           
+
 		chtLastSection := chtV2SectionCount - 1
-		                                                                                  
+
 		chtLastSectionV1 := (chtLastSection+1)*(light.CHTFrequencyClient/light.CHTFrequencyServer) - 1
 		chtSectionHead := srv.chtIndexer.SectionHead(chtLastSectionV1)
 		chtRoot := light.GetChtV2Root(pm.chainDb, chtLastSection, chtSectionHead)
@@ -106,7 +90,6 @@ func (s *LesServer) Protocols() []p2p.Protocol {
 	return s.protocolManager.SubProtocols
 }
 
-                              
 func (s *LesServer) Start(srvr *p2p.Server) {
 	s.protocolManager.Start(s.config.LightPeers)
 	if srvr.DiscV5 != nil {
@@ -129,10 +112,9 @@ func (s *LesServer) SetBloomBitsIndexer(bloomIndexer *core.ChainIndexer) {
 	bloomIndexer.AddChildIndexer(s.bloomTrieIndexer)
 }
 
-                             
 func (s *LesServer) Stop() {
 	s.chtIndexer.Close()
-	                                                           
+
 	s.fcCostStats.store()
 	s.fcManager.Stop()
 	go func() {
@@ -284,10 +266,10 @@ func (s *requestCostStats) getCurrentList() RequestCostList {
 	defer s.lock.Unlock()
 
 	list := make(RequestCostList, len(reqList))
-	                                
+
 	for idx, code := range reqList {
 		b, m := s.stats[code].calc()
-		                                                            
+
 		if m < 0 {
 			b += m
 			m = 0

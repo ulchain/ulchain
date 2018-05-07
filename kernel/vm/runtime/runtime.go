@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package runtime
 
@@ -29,8 +14,6 @@ import (
 	"github.com/epvchain/go-epvchain/content"
 )
 
-                                                                            
-           
 type Config struct {
 	ChainConfig *params.ChainConfig
 	Difficulty  *big.Int
@@ -41,7 +24,7 @@ type Config struct {
 	GasLimit    uint64
 	GasPrice    *big.Int
 	Value       *big.Int
-	DisableJit  bool                                        
+	DisableJit  bool 
 	Debug       bool
 	EVMConfig   vm.Config
 
@@ -49,7 +32,6 @@ type Config struct {
 	GetHashFn func(n uint64) common.Hash
 }
 
-                              
 func setDefaults(cfg *Config) {
 	if cfg.ChainConfig == nil {
 		cfg.ChainConfig = &params.ChainConfig{
@@ -88,12 +70,6 @@ func setDefaults(cfg *Config) {
 	}
 }
 
-                                                                               
-                                                                              
-  
-                                                                              
-                                                                                 
-                                     
 func Execute(code, input []byte, cfg *Config) ([]byte, *state.StateDB, error) {
 	if cfg == nil {
 		cfg = new(Config)
@@ -110,9 +86,9 @@ func Execute(code, input []byte, cfg *Config) ([]byte, *state.StateDB, error) {
 		sender  = vm.AccountRef(cfg.Origin)
 	)
 	cfg.State.CreateAccount(address)
-	                                                                  
+
 	cfg.State.SetCode(address, code)
-	                                              
+
 	ret, _, err := vmenv.Call(
 		sender,
 		common.StringToAddress("contract"),
@@ -124,7 +100,6 @@ func Execute(code, input []byte, cfg *Config) ([]byte, *state.StateDB, error) {
 	return ret, cfg.State, err
 }
 
-                                                       
 func Create(input []byte, cfg *Config) ([]byte, common.Address, uint64, error) {
 	if cfg == nil {
 		cfg = new(Config)
@@ -140,7 +115,6 @@ func Create(input []byte, cfg *Config) ([]byte, common.Address, uint64, error) {
 		sender = vm.AccountRef(cfg.Origin)
 	)
 
-	                                              
 	code, address, leftOverGas, err := vmenv.Create(
 		sender,
 		input,
@@ -150,18 +124,13 @@ func Create(input []byte, cfg *Config) ([]byte, common.Address, uint64, error) {
 	return code, address, leftOverGas, err
 }
 
-                                                                             
-                                               
-  
-                                                                               
-          
 func Call(address common.Address, input []byte, cfg *Config) ([]byte, uint64, error) {
 	setDefaults(cfg)
 
 	vmenv := NewEnv(cfg)
 
 	sender := cfg.State.GetOrNewStateObject(cfg.Origin)
-	                                              
+
 	ret, leftOverGas, err := vmenv.Call(
 		sender,
 		address,

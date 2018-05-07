@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                                       
 package state
 
 import (
@@ -37,34 +21,21 @@ type revision struct {
 }
 
 var (
-	                                                             
+
 	emptyState = crypto.Keccak256Hash(nil)
 
-	                                                         
 	emptyCode = crypto.Keccak256Hash(nil)
 )
 
-                                                                   
-                                                                    
-                                                               
-              
-             
 type StateDB struct {
 	db   Database
 	trie Trie
 
-	                                                                                              
 	stateObjects      map[common.Address]*stateObject
 	stateObjectsDirty map[common.Address]struct{}
 
-	            
-	                                                                
-	                                                                   
-	                                                                          
-	                     
 	dbErr error
 
-	                                                        
 	refund uint64
 
 	thash, bhash common.Hash
@@ -74,8 +45,6 @@ type StateDB struct {
 
 	preimages map[common.Hash][]byte
 
-	                                                          
-	                                 
 	journal        journal
 	validRevisions []revision
 	nextRevisionId int
@@ -83,7 +52,6 @@ type StateDB struct {
 	lock sync.Mutex
 }
 
-                                       
 func New(root common.Hash, db Database) (*StateDB, error) {
 	tr, err := db.OpenTrie(root)
 	if err != nil {
@@ -99,7 +67,6 @@ func New(root common.Hash, db Database) (*StateDB, error) {
 	}, nil
 }
 
-                                                                
 func (self *StateDB) setError(err error) {
 	if self.dbErr == nil {
 		self.dbErr = err
@@ -110,8 +77,6 @@ func (self *StateDB) Error() error {
 	return self.dbErr
 }
 
-                                                                             
-                                                                             
 func (self *StateDB) Reset(root common.Hash) error {
 	tr, err := self.db.OpenTrie(root)
 	if err != nil {
@@ -153,7 +118,6 @@ func (self *StateDB) Logs() []*types.Log {
 	return logs
 }
 
-                                                      
 func (self *StateDB) AddPreimage(hash common.Hash, preimage []byte) {
 	if _, ok := self.preimages[hash]; !ok {
 		self.journal = append(self.journal, addPreimageChange{hash: hash})
@@ -163,7 +127,6 @@ func (self *StateDB) AddPreimage(hash common.Hash, preimage []byte) {
 	}
 }
 
-                                                                       
 func (self *StateDB) Preimages() map[common.Hash][]byte {
 	return self.preimages
 }
@@ -173,20 +136,15 @@ func (self *StateDB) AddRefund(gas uint64) {
 	self.refund += gas
 }
 
-                                                                       
-                                                        
 func (self *StateDB) Exist(addr common.Address) bool {
 	return self.getStateObject(addr) != nil
 }
 
-                                                                
-                                                                              
 func (self *StateDB) Empty(addr common.Address) bool {
 	so := self.getStateObject(addr)
 	return so == nil || so.empty()
 }
 
-                                                                       
 func (self *StateDB) GetBalance(addr common.Address) *big.Int {
 	stateObject := self.getStateObject(addr)
 	if stateObject != nil {
@@ -243,13 +201,10 @@ func (self *StateDB) GetState(a common.Address, b common.Hash) common.Hash {
 	return common.Hash{}
 }
 
-                                                                                 
 func (self *StateDB) Database() Database {
 	return self.db
 }
 
-                                                      
-                                                                   
 func (self *StateDB) StorageTrie(a common.Address) Trie {
 	stateObject := self.getStateObject(a)
 	if stateObject == nil {
@@ -267,9 +222,6 @@ func (self *StateDB) HasSuicided(addr common.Address) bool {
 	return false
 }
 
-                 
-
-                                                             
 func (self *StateDB) AddBalance(addr common.Address, amount *big.Int) {
 	stateObject := self.GetOrNewStateObject(addr)
 	if stateObject != nil {
@@ -277,7 +229,6 @@ func (self *StateDB) AddBalance(addr common.Address, amount *big.Int) {
 	}
 }
 
-                                                                    
 func (self *StateDB) SubBalance(addr common.Address, amount *big.Int) {
 	stateObject := self.GetOrNewStateObject(addr)
 	if stateObject != nil {
@@ -313,11 +264,6 @@ func (self *StateDB) SetState(addr common.Address, key common.Hash, value common
 	}
 }
 
-                                               
-                                   
-  
-                                                                              
-                                                              
 func (self *StateDB) Suicide(addr common.Address) bool {
 	stateObject := self.getStateObject(addr)
 	if stateObject == nil {
@@ -334,11 +280,6 @@ func (self *StateDB) Suicide(addr common.Address) bool {
 	return true
 }
 
-  
-                                                    
-  
-
-                                                         
 func (self *StateDB) updateStateObject(stateObject *stateObject) {
 	addr := stateObject.Address()
 	data, err := rlp.EncodeToBytes(stateObject)
@@ -348,16 +289,14 @@ func (self *StateDB) updateStateObject(stateObject *stateObject) {
 	self.setError(self.trie.TryUpdate(addr[:], data))
 }
 
-                                                                  
 func (self *StateDB) deleteStateObject(stateObject *stateObject) {
 	stateObject.deleted = true
 	addr := stateObject.Address()
 	self.setError(self.trie.TryDelete(addr[:]))
 }
 
-                                                                          
 func (self *StateDB) getStateObject(addr common.Address) (stateObject *stateObject) {
-	                         
+
 	if obj := self.stateObjects[addr]; obj != nil {
 		if obj.deleted {
 			return nil
@@ -365,7 +304,6 @@ func (self *StateDB) getStateObject(addr common.Address) (stateObject *stateObje
 		return obj
 	}
 
-	                                     
 	enc, err := self.trie.TryGet(addr[:])
 	if len(enc) == 0 {
 		self.setError(err)
@@ -376,7 +314,7 @@ func (self *StateDB) getStateObject(addr common.Address) (stateObject *stateObje
 		log.Error("Failed to decode state object", "addr", addr, "err", err)
 		return nil
 	}
-	                            
+
 	obj := newObject(self, addr, data, self.MarkStateObjectDirty)
 	self.setStateObject(obj)
 	return obj
@@ -386,7 +324,6 @@ func (self *StateDB) setStateObject(object *stateObject) {
 	self.stateObjects[object.Address()] = object
 }
 
-                                                              
 func (self *StateDB) GetOrNewStateObject(addr common.Address) *stateObject {
 	stateObject := self.getStateObject(addr)
 	if stateObject == nil || stateObject.deleted {
@@ -395,18 +332,14 @@ func (self *StateDB) GetOrNewStateObject(addr common.Address) *stateObject {
 	return stateObject
 }
 
-                                                                                  
-                                                                   
 func (self *StateDB) MarkStateObjectDirty(addr common.Address) {
 	self.stateObjectsDirty[addr] = struct{}{}
 }
 
-                                                                                
-                                                                                
 func (self *StateDB) createObject(addr common.Address) (newobj, prev *stateObject) {
 	prev = self.getStateObject(addr)
 	newobj = newObject(self, addr, Account{}, self.MarkStateObjectDirty)
-	newobj.setNonce(0)                            
+	newobj.setNonce(0) 
 	if prev == nil {
 		self.journal = append(self.journal, createObjectChange{account: &addr})
 	} else {
@@ -416,16 +349,6 @@ func (self *StateDB) createObject(addr common.Address) (newobj, prev *stateObjec
 	return newobj, prev
 }
 
-                                                                                      
-                                                                 
-  
-                                                                                          
-                                 
-  
-                                                  
-                                                                               
-  
-                                                                 
 func (self *StateDB) CreateAccount(addr common.Address) {
 	new, prev := self.createObject(addr)
 	if prev != nil {
@@ -439,14 +362,13 @@ func (db *StateDB) ForEachStorage(addr common.Address, cb func(key, value common
 		return
 	}
 
-	                                                        
 	for h, value := range so.cachedStorage {
 		cb(h, value)
 	}
 
 	it := trie.NewIterator(so.getTrie(db.db).NodeIterator(nil))
 	for it.Next() {
-		                       
+
 		key := common.BytesToHash(db.trie.GetKey(it.Key))
 		if _, ok := so.cachedStorage[key]; !ok {
 			cb(key, common.BytesToHash(it.Value))
@@ -454,13 +376,10 @@ func (db *StateDB) ForEachStorage(addr common.Address, cb func(key, value common
 	}
 }
 
-                                                      
-                                                               
 func (self *StateDB) Copy() *StateDB {
 	self.lock.Lock()
 	defer self.lock.Unlock()
 
-	                                                        
 	state := &StateDB{
 		db:                self.db,
 		trie:              self.db.CopyTrie(self.trie),
@@ -471,7 +390,7 @@ func (self *StateDB) Copy() *StateDB {
 		logSize:           self.logSize,
 		preimages:         make(map[common.Hash][]byte),
 	}
-	                                             
+
 	for addr := range self.stateObjectsDirty {
 		state.stateObjects[addr] = self.stateObjects[addr].deepCopy(state, state.MarkStateObjectDirty)
 		state.stateObjectsDirty[addr] = struct{}{}
@@ -486,7 +405,6 @@ func (self *StateDB) Copy() *StateDB {
 	return state
 }
 
-                                                                        
 func (self *StateDB) Snapshot() int {
 	id := self.nextRevisionId
 	self.nextRevisionId++
@@ -494,9 +412,8 @@ func (self *StateDB) Snapshot() int {
 	return id
 }
 
-                                                                            
 func (self *StateDB) RevertToSnapshot(revid int) {
-	                                                     
+
 	idx := sort.Search(len(self.validRevisions), func(i int) bool {
 		return self.validRevisions[i].id >= revid
 	})
@@ -505,23 +422,18 @@ func (self *StateDB) RevertToSnapshot(revid int) {
 	}
 	snapshot := self.validRevisions[idx].journalIndex
 
-	                                      
 	for i := len(self.journal) - 1; i >= snapshot; i-- {
 		self.journal[i].undo(self)
 	}
 	self.journal = self.journal[:snapshot]
 
-	                                               
 	self.validRevisions = self.validRevisions[:idx]
 }
 
-                                                             
 func (self *StateDB) GetRefund() uint64 {
 	return self.refund
 }
 
-                                                                       
-                                                 
 func (s *StateDB) Finalise(deleteEmptyObjects bool) {
 	for addr := range s.stateObjectsDirty {
 		stateObject := s.stateObjects[addr]
@@ -532,40 +444,28 @@ func (s *StateDB) Finalise(deleteEmptyObjects bool) {
 			s.updateStateObject(stateObject)
 		}
 	}
-	                                                                           
+
 	s.clearJournalAndRefund()
 }
 
-                                                                     
-                                                                 
-                                  
 func (s *StateDB) IntermediateRoot(deleteEmptyObjects bool) common.Hash {
 	s.Finalise(deleteEmptyObjects)
 	return s.trie.Hash()
 }
 
-                                                                              
-                                          
 func (self *StateDB) Prepare(thash, bhash common.Hash, ti int) {
 	self.thash = thash
 	self.bhash = bhash
 	self.txIndex = ti
 }
 
-                                                                    
-                                                         
-  
-                                                                  
-                           
 func (s *StateDB) DeleteSuicides() {
-	                                                                      
+
 	s.clearJournalAndRefund()
 
 	for addr := range s.stateObjectsDirty {
 		stateObject := s.stateObjects[addr]
 
-		                                              
-		                              
 		if stateObject.suicided {
 			stateObject.deleted = true
 		}
@@ -579,34 +479,31 @@ func (s *StateDB) clearJournalAndRefund() {
 	s.refund = 0
 }
 
-                                                                     
 func (s *StateDB) Commit(deleteEmptyObjects bool) (root common.Hash, err error) {
 	defer s.clearJournalAndRefund()
 
-	                              
 	for addr, stateObject := range s.stateObjects {
 		_, isDirty := s.stateObjectsDirty[addr]
 		switch {
 		case stateObject.suicided || (isDirty && deleteEmptyObjects && stateObject.empty()):
-			                                                          
-			                                             
+
 			s.deleteStateObject(stateObject)
 		case isDirty:
-			                                                           
+
 			if stateObject.code != nil && stateObject.dirtyCode {
 				s.db.TrieDB().Insert(common.BytesToHash(stateObject.CodeHash()), stateObject.code)
 				stateObject.dirtyCode = false
 			}
-			                                                                     
+
 			if err := stateObject.CommitTrie(s.db); err != nil {
 				return common.Hash{}, err
 			}
-			                                              
+
 			s.updateStateObject(stateObject)
 		}
 		delete(s.stateObjectsDirty, addr)
 	}
-	                      
+
 	root, err = s.trie.Commit(func(leaf []byte, parent common.Hash) error {
 		var account Account
 		if err := rlp.DecodeBytes(leaf, &account); err != nil {

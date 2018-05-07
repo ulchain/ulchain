@@ -1,31 +1,3 @@
-                                                  
-                                                          
-  
-                                                                     
-                                                                         
-       
-  
-                                                                      
-                                                                
-                                                               
-                                                                         
-                                                                
-                
-                                                            
-                                                                       
-                                                           
-  
-                                                                      
-                                                                    
-                                                                        
-                                                                       
-                                                                        
-                                                                   
-                                                                        
-                                                                        
-                                                                      
-                                                                        
-                                                                       
 
 package ecies
 
@@ -50,7 +22,6 @@ var (
 	ErrSharedKeyTooBig            = fmt.Errorf("ecies: shared key params are too big")
 )
 
-                                                                 
 type PublicKey struct {
 	X *big.Int
 	Y *big.Int
@@ -58,12 +29,10 @@ type PublicKey struct {
 	Params *ECIESParams
 }
 
-                                                     
 func (pub *PublicKey) ExportECDSA() *ecdsa.PublicKey {
 	return &ecdsa.PublicKey{Curve: pub.Curve, X: pub.X, Y: pub.Y}
 }
 
-                                                     
 func ImportECDSAPublic(pub *ecdsa.PublicKey) *PublicKey {
 	return &PublicKey{
 		X:      pub.X,
@@ -73,27 +42,22 @@ func ImportECDSAPublic(pub *ecdsa.PublicKey) *PublicKey {
 	}
 }
 
-                                                                   
 type PrivateKey struct {
 	PublicKey
 	D *big.Int
 }
 
-                                                       
 func (prv *PrivateKey) ExportECDSA() *ecdsa.PrivateKey {
 	pub := &prv.PublicKey
 	pubECDSA := pub.ExportECDSA()
 	return &ecdsa.PrivateKey{PublicKey: *pubECDSA, D: prv.D}
 }
 
-                                                       
 func ImportECDSA(prv *ecdsa.PrivateKey) *PrivateKey {
 	pub := ImportECDSAPublic(&prv.PublicKey)
 	return &PrivateKey{*pub, prv.D}
 }
 
-                                                                         
-                                                                 
 func GenerateKey(rand io.Reader, curve elliptic.Curve, params *ECIESParams) (prv *PrivateKey, err error) {
 	pb, x, y, err := elliptic.GenerateKey(curve, rand)
 	if err != nil {
@@ -111,13 +75,10 @@ func GenerateKey(rand io.Reader, curve elliptic.Curve, params *ECIESParams) (prv
 	return
 }
 
-                                                                      
-                          
 func MaxSharedKeyLength(pub *PublicKey) int {
 	return (pub.Curve.Params().BitSize + 7) / 8
 }
 
-                                                                          
 func (prv *PrivateKey) GenerateShared(pub *PublicKey, skLen, macLen int) (sk []byte, err error) {
 	if prv.PublicKey.Curve != pub.Curve {
 		return nil, ErrInvalidCurve
@@ -163,7 +124,6 @@ func incCounter(ctr []byte) {
 	}
 }
 
-                                                                            
 func concatKDF(hash hash.Hash, z, s1 []byte, kdLen int) (k []byte, err error) {
 	if s1 == nil {
 		s1 = make([]byte, 0)
@@ -191,8 +151,6 @@ func concatKDF(hash hash.Hash, z, s1 []byte, kdLen int) (k []byte, err error) {
 	return
 }
 
-                                                                   
-              
 func messageTag(hash func() hash.Hash, km, msg, shared []byte) []byte {
 	mac := hmac.New(hash, km)
 	mac.Write(msg)
@@ -201,15 +159,12 @@ func messageTag(hash func() hash.Hash, km, msg, shared []byte) []byte {
 	return tag
 }
 
-                                                  
 func generateIV(params *ECIESParams, rand io.Reader) (iv []byte, err error) {
 	iv = make([]byte, params.BlockSize)
 	_, err = io.ReadFull(rand, iv)
 	return
 }
 
-                                                                                
-              
 func symEncrypt(rand io.Reader, params *ECIESParams, key, m []byte) (ct []byte, err error) {
 	c, err := params.Cipher(key)
 	if err != nil {
@@ -228,8 +183,6 @@ func symEncrypt(rand io.Reader, params *ECIESParams, key, m []byte) (ct []byte, 
 	return
 }
 
-                                                                            
-                 
 func symDecrypt(rand io.Reader, params *ECIESParams, key, ct []byte) (m []byte, err error) {
 	c, err := params.Cipher(key)
 	if err != nil {
@@ -243,11 +196,6 @@ func symDecrypt(rand io.Reader, params *ECIESParams, key, ct []byte) (m []byte, 
 	return
 }
 
-                                                                     
-  
-                                                                         
-                                                                            
-                                                                       
 func Encrypt(rand io.Reader, pub *PublicKey, m, s1, s2 []byte) (ct []byte, err error) {
 	params := pub.Params
 	if params == nil {
@@ -291,7 +239,6 @@ func Encrypt(rand io.Reader, pub *PublicKey, m, s1, s2 []byte) (ct []byte, err e
 	return
 }
 
-                                        
 func (prv *PrivateKey) Decrypt(rand io.Reader, c, s1, s2 []byte) (m []byte, err error) {
 	if len(c) == 0 {
 		return nil, ErrInvalidMessage

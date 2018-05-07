@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                              
 package event
 
 import (
@@ -25,38 +9,25 @@ import (
 	"time"
 )
 
-                                                                    
 type TypeMuxEvent struct {
 	Time time.Time
 	Data interface{}
 }
 
-                                                                        
-                                                             
-                                                        
-  
-                                  
-  
-                       
 type TypeMux struct {
 	mutex   sync.RWMutex
 	subm    map[reflect.Type][]*TypeMuxSubscription
 	stopped bool
 }
 
-                                                             
 var ErrMuxClosed = errors.New("event: mux closed")
 
-                                                                      
-                                                           
-                        
 func (mux *TypeMux) Subscribe(types ...interface{}) *TypeMuxSubscription {
 	sub := newsub(mux)
 	mux.mutex.Lock()
 	defer mux.mutex.Unlock()
 	if mux.stopped {
-		                                                                  
-		                           
+
 		sub.closed = true
 		close(sub.postC)
 	} else {
@@ -78,8 +49,6 @@ func (mux *TypeMux) Subscribe(types ...interface{}) *TypeMuxSubscription {
 	return sub
 }
 
-                                                                      
-                                                       
 func (mux *TypeMux) Post(ev interface{}) error {
 	event := &TypeMuxEvent{
 		Time: time.Now(),
@@ -99,9 +68,6 @@ func (mux *TypeMux) Post(ev interface{}) error {
 	return nil
 }
 
-                                                    
-                                                 
-                                                          
 func (mux *TypeMux) Stop() {
 	mux.mutex.Lock()
 	for _, subs := range mux.subm {
@@ -144,7 +110,6 @@ func posdelete(slice []*TypeMuxSubscription, pos int) []*TypeMuxSubscription {
 	return news
 }
 
-                                                                     
 type TypeMuxSubscription struct {
 	mux     *TypeMux
 	created time.Time
@@ -152,9 +117,6 @@ type TypeMuxSubscription struct {
 	closing chan struct{}
 	closed  bool
 
-	                                                                
-	                                                                
-	        
 	postMu sync.RWMutex
 	readC  <-chan *TypeMuxEvent
 	postC  chan<- *TypeMuxEvent
@@ -196,11 +158,11 @@ func (s *TypeMuxSubscription) closewait() {
 }
 
 func (s *TypeMuxSubscription) deliver(event *TypeMuxEvent) {
-	                                        
+
 	if s.created.After(event.Time) {
 		return
 	}
-	                              
+
 	s.postMu.RLock()
 	defer s.postMu.RUnlock()
 

@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 // +build !windows
 
@@ -24,7 +9,6 @@ import (
 	"github.com/epvchain/go-epvchain/book"
 )
 
-                                                                           
 func getProcessCPUTime() float64 {
 	var usage syscall.Rusage
 	if err := syscall.Getrusage(syscall.RUSAGE_SELF, &usage); err != nil {

@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                         
 package les
 
 import (
@@ -33,30 +17,26 @@ import (
 	"github.com/epvchain/go-epvchain/process"
 )
 
-                                                       
 const (
 	lpv1 = 1
 	lpv2 = 2
 )
 
-                                                            
 var (
 	ClientProtocolVersions    = []uint{lpv2, lpv1}
 	ServerProtocolVersions    = []uint{lpv2, lpv1}
-	AdvertiseProtocolVersions = []uint{lpv2}                                                                       
+	AdvertiseProtocolVersions = []uint{lpv2} 
 )
 
-                                                                              
 var ProtocolLengths = map[uint]uint64{lpv1: 15, lpv2: 22}
 
 const (
 	NetworkId          = 1
-	ProtocolMaxMsgSize = 10 * 1024 * 1024                                                 
+	ProtocolMaxMsgSize = 10 * 1024 * 1024 
 )
 
-                             
 const (
-	                                      
+
 	StatusMsg          = 0x00
 	AnnounceMsg        = 0x01
 	GetBlockHeadersMsg = 0x02
@@ -72,7 +52,7 @@ const (
 	SendTxMsg          = 0x0c
 	GetHeaderProofsMsg = 0x0d
 	HeaderProofsMsg    = 0x0e
-	                                      
+
 	GetProofsV2Msg         = 0x0f
 	ProofsV2Msg            = 0x10
 	GetHelperTrieProofsMsg = 0x11
@@ -106,7 +86,6 @@ func (e errCode) String() string {
 	return errorToString[int(e)]
 }
 
-                                     
 var errorToString = map[int]string{
 	ErrMsgTooLarge:             "Message too long",
 	ErrDecode:                  "Invalid message",
@@ -125,28 +104,25 @@ var errorToString = map[int]string{
 }
 
 type announceBlock struct {
-	Hash   common.Hash                                                
-	Number uint64                                                       
-	Td     *big.Int                                                               
+	Hash   common.Hash 
+	Number uint64      
+	Td     *big.Int    
 }
 
-                                                                  
 type announceData struct {
-	Hash       common.Hash                                                
-	Number     uint64                                                       
-	Td         *big.Int                                                               
+	Hash       common.Hash 
+	Number     uint64      
+	Td         *big.Int    
 	ReorgDepth uint64
 	Update     keyValueList
 }
 
-                                                                       
 func (a *announceData) sign(privKey *ecdsa.PrivateKey) {
 	rlp, _ := rlp.EncodeToBytes(announceBlock{a.Hash, a.Number, a.Td})
 	sig, _ := crypto.Sign(crypto.Keccak256(rlp), privKey)
 	a.Update = a.Update.add("sign", sig)
 }
 
-                                                                                              
 func (a *announceData) checkSignature(pubKey *ecdsa.PublicKey) error {
 	var sig []byte
 	if err := a.Update.decode().get("sign", &sig); err != nil {
@@ -166,27 +142,23 @@ func (a *announceData) checkSignature(pubKey *ecdsa.PublicKey) error {
 }
 
 type blockInfo struct {
-	Hash   common.Hash                                                
-	Number uint64                                                       
-	Td     *big.Int                                                               
+	Hash   common.Hash 
+	Number uint64      
+	Td     *big.Int    
 }
 
-                                                       
 type getBlockHeadersData struct {
-	Origin  hashOrNumber                                        
-	Amount  uint64                                               
-	Skip    uint64                                                    
-	Reverse bool                                                                                           
+	Origin  hashOrNumber 
+	Amount  uint64       
+	Skip    uint64       
+	Reverse bool         
 }
 
-                                                                   
 type hashOrNumber struct {
-	Hash   common.Hash                                                               
-	Number uint64                                                                  
+	Hash   common.Hash 
+	Number uint64      
 }
 
-                                                                                
-                              
 func (hn *hashOrNumber) EncodeRLP(w io.Writer) error {
 	if hn.Hash == (common.Hash{}) {
 		return rlp.Encode(w, hn.Number)
@@ -197,8 +169,6 @@ func (hn *hashOrNumber) EncodeRLP(w io.Writer) error {
 	return rlp.Encode(w, hn.Hash)
 }
 
-                                                                             
-                                              
 func (hn *hashOrNumber) DecodeRLP(s *rlp.Stream) error {
 	_, size, _ := s.Kind()
 	origin, err := s.Raw()
@@ -215,7 +185,6 @@ func (hn *hashOrNumber) DecodeRLP(s *rlp.Stream) error {
 	return err
 }
 
-                                                                     
 type CodeData []struct {
 	Value []byte
 }

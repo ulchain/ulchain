@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                         
 package les
 
 import (
@@ -41,7 +25,7 @@ var (
 	errNotRegistered     = errors.New("peer is not registered")
 )
 
-const maxResponseErrors = 50                                                                                                 
+const maxResponseErrors = 50 
 
 const (
 	announceTypeNone = iota
@@ -55,8 +39,8 @@ type peer struct {
 
 	rw p2p.MsgReadWriter
 
-	version int                                  
-	network uint64                       
+	version int    
+	network uint64 
 
 	announceType, requestAnnounceType uint64
 
@@ -72,8 +56,8 @@ type peer struct {
 	hasBlock       func(common.Hash, uint64) bool
 	responseErrors int
 
-	fcClient       *flowcontrol.ClientNode                                  
-	fcServer       *flowcontrol.ServerNode                                  
+	fcClient       *flowcontrol.ClientNode 
+	fcServer       *flowcontrol.ServerNode 
 	fcServerParams *flowcontrol.ServerParams
 	fcCosts        requestCostTable
 }
@@ -101,7 +85,6 @@ func (p *peer) queueSend(f func()) {
 	p.sendQueue.queue(f)
 }
 
-                                                                        
 func (p *peer) Info() *epv.PeerInfo {
 	return &epv.PeerInfo{
 		Version:    p.version,
@@ -110,7 +93,6 @@ func (p *peer) Info() *epv.PeerInfo {
 	}
 }
 
-                                                                            
 func (p *peer) Head() (hash common.Hash) {
 	p.lock.RLock()
 	defer p.lock.RUnlock()
@@ -134,7 +116,6 @@ func (p *peer) headBlockInfo() blockInfo {
 	return blockInfo{Hash: p.headInfo.Hash, Number: p.headInfo.Number, Td: p.headInfo.Td}
 }
 
-                                                       
 func (p *peer) Td() *big.Int {
 	p.lock.RLock()
 	defer p.lock.RUnlock()
@@ -142,7 +123,6 @@ func (p *peer) Td() *big.Int {
 	return new(big.Int).Set(p.headInfo.Td)
 }
 
-                                           
 func (p *peer) waitBefore(maxCost uint64) (time.Duration, float64) {
 	return p.fcServer.CanSend(maxCost)
 }
@@ -174,7 +154,6 @@ func (p *peer) GetRequestCost(msgcode uint64, amount int) uint64 {
 	return cost
 }
 
-                                                
 func (p *peer) HasBlock(hash common.Hash, number uint64) bool {
 	p.lock.RLock()
 	hasBlock := p.hasBlock
@@ -182,95 +161,71 @@ func (p *peer) HasBlock(hash common.Hash, number uint64) bool {
 	return hasBlock != nil && hasBlock(hash, number)
 }
 
-                                                                        
-                       
 func (p *peer) SendAnnounce(request announceData) error {
 	return p2p.Send(p.rw, AnnounceMsg, request)
 }
 
-                                                                      
 func (p *peer) SendBlockHeaders(reqID, bv uint64, headers []*types.Header) error {
 	return sendResponse(p.rw, BlockHeadersMsg, reqID, bv, headers)
 }
 
-                                                                             
-                                 
 func (p *peer) SendBlockBodiesRLP(reqID, bv uint64, bodies []rlp.RawValue) error {
 	return sendResponse(p.rw, BlockBodiesMsg, reqID, bv, bodies)
 }
 
-                                                                             
-                    
 func (p *peer) SendCode(reqID, bv uint64, data [][]byte) error {
 	return sendResponse(p.rw, CodeMsg, reqID, bv, data)
 }
 
-                                                                              
-                                                     
 func (p *peer) SendReceiptsRLP(reqID, bv uint64, receipts []rlp.RawValue) error {
 	return sendResponse(p.rw, ReceiptsMsg, reqID, bv, receipts)
 }
 
-                                                                                               
 func (p *peer) SendProofs(reqID, bv uint64, proofs proofsData) error {
 	return sendResponse(p.rw, ProofsV1Msg, reqID, bv, proofs)
 }
 
-                                                                                    
 func (p *peer) SendProofsV2(reqID, bv uint64, proofs light.NodeList) error {
 	return sendResponse(p.rw, ProofsV2Msg, reqID, bv, proofs)
 }
 
-                                                                                                     
 func (p *peer) SendHeaderProofs(reqID, bv uint64, proofs []ChtResp) error {
 	return sendResponse(p.rw, HeaderProofsMsg, reqID, bv, proofs)
 }
 
-                                                                                                
 func (p *peer) SendHelperTrieProofs(reqID, bv uint64, resp HelperTrieResps) error {
 	return sendResponse(p.rw, HelperTrieProofsMsg, reqID, bv, resp)
 }
 
-                                                                                                 
 func (p *peer) SendTxStatus(reqID, bv uint64, stats []txStatus) error {
 	return sendResponse(p.rw, TxStatusMsg, reqID, bv, stats)
 }
 
-                                                                               
-                                                                
 func (p *peer) RequestHeadersByHash(reqID, cost uint64, origin common.Hash, amount int, skip int, reverse bool) error {
 	p.Log().Debug("Fetching batch of headers", "count", amount, "fromhash", origin, "skip", skip, "reverse", reverse)
 	return sendRequest(p.rw, GetBlockHeadersMsg, reqID, cost, &getBlockHeadersData{Origin: hashOrNumber{Hash: origin}, Amount: uint64(amount), Skip: uint64(skip), Reverse: reverse})
 }
 
-                                                                                 
-                                                                  
 func (p *peer) RequestHeadersByNumber(reqID, cost, origin uint64, amount int, skip int, reverse bool) error {
 	p.Log().Debug("Fetching batch of headers", "count", amount, "fromnum", origin, "skip", skip, "reverse", reverse)
 	return sendRequest(p.rw, GetBlockHeadersMsg, reqID, cost, &getBlockHeadersData{Origin: hashOrNumber{Number: origin}, Amount: uint64(amount), Skip: uint64(skip), Reverse: reverse})
 }
 
-                                                                              
-             
 func (p *peer) RequestBodies(reqID, cost uint64, hashes []common.Hash) error {
 	p.Log().Debug("Fetching batch of block bodies", "count", len(hashes))
 	return sendRequest(p.rw, GetBlockBodiesMsg, reqID, cost, hashes)
 }
 
-                                                                          
-                                               
 func (p *peer) RequestCode(reqID, cost uint64, reqs []CodeReq) error {
 	p.Log().Debug("Fetching batch of codes", "count", len(reqs))
 	return sendRequest(p.rw, GetCodeMsg, reqID, cost, reqs)
 }
 
-                                                                              
 func (p *peer) RequestReceipts(reqID, cost uint64, hashes []common.Hash) error {
 	p.Log().Debug("Fetching batch of receipts", "count", len(hashes))
 	return sendRequest(p.rw, GetReceiptsMsg, reqID, cost, hashes)
 }
 
-                                                                     
 func (p *peer) RequestProofs(reqID, cost uint64, reqs []ProofReq) error {
 	p.Log().Debug("Fetching batch of proofs", "count", len(reqs))
 	switch p.version {
@@ -283,7 +238,6 @@ func (p *peer) RequestProofs(reqID, cost uint64, reqs []ProofReq) error {
 	}
 }
 
-                                                                                          
 func (p *peer) RequestHelperTrieProofs(reqID, cost uint64, reqs []HelperTrieReq) error {
 	p.Log().Debug("Fetching batch of HelperTrie proofs", "count", len(reqs))
 	switch p.version {
@@ -294,7 +248,7 @@ func (p *peer) RequestHelperTrieProofs(reqID, cost uint64, reqs []HelperTrieReq)
 				return fmt.Errorf("Request invalid in LES/1 mode")
 			}
 			blockNum := binary.BigEndian.Uint64(req.Key)
-			                                                
+
 			reqsV1[i] = ChtReq{ChtNum: (req.TrieIdx + 1) * (light.CHTFrequencyClient / light.CHTFrequencyServer), BlockNum: blockNum, FromLevel: req.FromLevel}
 		}
 		return sendRequest(p.rw, GetHeaderProofsMsg, reqID, cost, reqsV1)
@@ -305,18 +259,16 @@ func (p *peer) RequestHelperTrieProofs(reqID, cost uint64, reqs []HelperTrieReq)
 	}
 }
 
-                                                                                    
 func (p *peer) RequestTxStatus(reqID, cost uint64, txHashes []common.Hash) error {
 	p.Log().Debug("Requesting transaction status", "count", len(txHashes))
 	return sendRequest(p.rw, GetTxStatusMsg, reqID, cost, txHashes)
 }
 
-                                                                                         
 func (p *peer) SendTxs(reqID, cost uint64, txs types.Transactions) error {
 	p.Log().Debug("Fetching batch of transactions", "count", len(txs))
 	switch p.version {
 	case lpv1:
-		return p2p.Send(p.rw, SendTxMsg, txs)                                             
+		return p2p.Send(p.rw, SendTxMsg, txs) 
 	case lpv2:
 		return sendRequest(p.rw, SendTxV2Msg, reqID, cost, txs)
 	default:
@@ -364,12 +316,12 @@ func (m keyValueMap) get(key string, val interface{}) error {
 }
 
 func (p *peer) sendReceiveHandshake(sendList keyValueList) (keyValueList, error) {
-	                                         
+
 	errc := make(chan error, 1)
 	go func() {
 		errc <- p2p.Send(p.rw, StatusMsg, sendList)
 	}()
-	                                                      
+
 	msg, err := p.rw.ReadMsg()
 	if err != nil {
 		return nil, err
@@ -380,7 +332,7 @@ func (p *peer) sendReceiveHandshake(sendList keyValueList) (keyValueList, error)
 	if msg.Size > ProtocolMaxMsgSize {
 		return nil, errResp(ErrMsgTooLarge, "%v > %v", msg.Size, ProtocolMaxMsgSize)
 	}
-	                       
+
 	var recvList keyValueList
 	if err := msg.Decode(&recvList); err != nil {
 		return nil, errResp(ErrDecode, "msg %v: %v", msg, err)
@@ -391,8 +343,6 @@ func (p *peer) sendReceiveHandshake(sendList keyValueList) (keyValueList, error)
 	return recvList, nil
 }
 
-                                                                             
-                                                      
 func (p *peer) Handshake(td *big.Int, head common.Hash, headNum uint64, genesis common.Hash, server *LesServer) error {
 	p.lock.Lock()
 	defer p.lock.Unlock()
@@ -415,7 +365,7 @@ func (p *peer) Handshake(td *big.Int, head common.Hash, headNum uint64, genesis 
 		send = send.add("flowControl/MRC", list)
 		p.fcCosts = list.decode()
 	} else {
-		p.requestAnnounceType = announceTypeSimple                                                                
+		p.requestAnnounceType = announceTypeSimple 
 		send = send.add("announceType", p.requestAnnounceType)
 	}
 	recvList, err := p.sendReceiveHandshake(send)
@@ -457,8 +407,7 @@ func (p *peer) Handshake(td *big.Int, head common.Hash, headNum uint64, genesis 
 		return errResp(ErrProtocolVersionMismatch, "%d (!= %d)", rVersion, p.version)
 	}
 	if server != nil {
-		                                                                                      
-		                                                                                                                   
+
 		if recv.get("announceType", &p.announceType) != nil {
 			p.announceType = announceTypeSimple
 		}
@@ -493,22 +442,17 @@ func (p *peer) Handshake(td *big.Int, head common.Hash, headNum uint64, genesis 
 	return nil
 }
 
-                                  
 func (p *peer) String() string {
 	return fmt.Sprintf("Peer %s [%s]", p.id,
 		fmt.Sprintf("les/%d", p.version),
 	)
 }
 
-                                                                          
-                
 type peerSetNotify interface {
 	registerPeer(*peer)
 	unregisterPeer(*peer)
 }
 
-                                                                               
-                                   
 type peerSet struct {
 	peers      map[string]*peer
 	lock       sync.RWMutex
@@ -516,14 +460,12 @@ type peerSet struct {
 	closed     bool
 }
 
-                                                                      
 func newPeerSet() *peerSet {
 	return &peerSet{
 		peers: make(map[string]*peer),
 	}
 }
 
-                                                                    
 func (ps *peerSet) notify(n peerSetNotify) {
 	ps.lock.Lock()
 	ps.notifyList = append(ps.notifyList, n)
@@ -538,8 +480,6 @@ func (ps *peerSet) notify(n peerSetNotify) {
 	}
 }
 
-                                                                               
-                         
 func (ps *peerSet) Register(p *peer) error {
 	ps.lock.Lock()
 	if ps.closed {
@@ -560,8 +500,6 @@ func (ps *peerSet) Register(p *peer) error {
 	return nil
 }
 
-                                                                              
-                                                                                                   
 func (ps *peerSet) Unregister(id string) error {
 	ps.lock.Lock()
 	if p, ok := ps.peers[id]; !ok {
@@ -582,7 +520,6 @@ func (ps *peerSet) Unregister(id string) error {
 	}
 }
 
-                                                       
 func (ps *peerSet) AllPeerIDs() []string {
 	ps.lock.RLock()
 	defer ps.lock.RUnlock()
@@ -596,7 +533,6 @@ func (ps *peerSet) AllPeerIDs() []string {
 	return res
 }
 
-                                                        
 func (ps *peerSet) Peer(id string) *peer {
 	ps.lock.RLock()
 	defer ps.lock.RUnlock()
@@ -604,7 +540,6 @@ func (ps *peerSet) Peer(id string) *peer {
 	return ps.peers[id]
 }
 
-                                                         
 func (ps *peerSet) Len() int {
 	ps.lock.RLock()
 	defer ps.lock.RUnlock()
@@ -612,7 +547,6 @@ func (ps *peerSet) Len() int {
 	return len(ps.peers)
 }
 
-                                                                                 
 func (ps *peerSet) BestPeer() *peer {
 	ps.lock.RLock()
 	defer ps.lock.RUnlock()
@@ -629,7 +563,6 @@ func (ps *peerSet) BestPeer() *peer {
 	return bestPeer
 }
 
-                                       
 func (ps *peerSet) AllPeers() []*peer {
 	ps.lock.RLock()
 	defer ps.lock.RUnlock()
@@ -643,8 +576,6 @@ func (ps *peerSet) AllPeers() []*peer {
 	return list
 }
 
-                               
-                                                           
 func (ps *peerSet) Close() {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()

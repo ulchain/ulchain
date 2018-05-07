@@ -1,27 +1,11 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                    
 package common
 
 import "encoding/hex"
 
 func ToHex(b []byte) string {
 	hex := Bytes2Hex(b)
-	                                         
+
 	if len(hex) == 0 {
 		hex = "0"
 	}
@@ -40,9 +24,6 @@ func FromHex(s string) []byte {
 	return Hex2Bytes(s)
 }
 
-             
-  
-                                              
 func CopyBytes(b []byte) (copiedBytes []byte) {
 	if b == nil {
 		return nil

@@ -1,6 +1,3 @@
-                                                      
-                                                     
-                                                 
 
 // +build !amd64,!386,!ppc64le appengine
 

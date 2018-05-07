@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package build
 
@@ -28,16 +13,11 @@ import (
 )
 
 type Archive interface {
-	                                                                   
-	                                            
+
 	Directory(name string) error
 
-	                                                                            
-	                                                                            
-	          
 	Header(os.FileInfo) (io.Writer, error)
 
-	                                                            
 	Close() error
 }
 
@@ -52,7 +32,6 @@ func NewArchive(file *os.File) (Archive, string) {
 	}
 }
 
-                                                  
 func AddFile(a Archive, file string) error {
 	fd, err := os.Open(file)
 	if err != nil {
@@ -73,7 +52,6 @@ func AddFile(a Archive, file string) error {
 	return nil
 }
 
-                                                              
 func WriteArchive(name string, files []string) (err error) {
 	archfd, err := os.Create(name)
 	if err != nil {
@@ -82,7 +60,7 @@ func WriteArchive(name string, files []string) (err error) {
 
 	defer func() {
 		archfd.Close()
-		                                              
+
 		if err != nil {
 			os.Remove(name)
 		}

@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                                   
 package epvstats
 
 import (
@@ -45,20 +29,16 @@ import (
 )
 
 const (
-	                                                                                
-	                   
+
 	historyUpdateRange = 50
 
-	                                                             
-	                                                     
 	txChanSize = 4096
-	                                                                        
+
 	chainHeadChanSize = 10
 )
 
 type txPool interface {
-	                                                             
-	                                                   
+
 	SubscribeTxPreEvent(chan<- core.TxPreEvent) event.Subscription
 }
 
@@ -66,31 +46,28 @@ type blockChain interface {
 	SubscribeChainHeadEvent(ch chan<- core.ChainHeadEvent) event.Subscription
 }
 
-                                                                             
-                                              
 type Service struct {
-	server *p2p.Server                                                           
-	epv    *epv.EPVchain                                                        
-	les    *les.LightEPVchain                                                     
-	engine consensus.Engine                                                        
+	server *p2p.Server        
+	epv    *epv.EPVchain      
+	les    *les.LightEPVchain 
+	engine consensus.Engine   
 
-	node string                                                      
-	pass string                                                       
-	host string                                            
+	node string 
+	pass string 
+	host string 
 
-	pongCh chan struct{}                                                
-	histCh chan []uint64                                                           
+	pongCh chan struct{} 
+	histCh chan []uint64 
 }
 
-                                                              
 func New(url string, epvServ *epv.EPVchain, lesServ *les.LightEPVchain) (*Service, error) {
-	                                    
+
 	re := regexp.MustCompile("([^:@]*)(:([^@]*))?@(.+)")
 	parts := re.FindStringSubmatch(url)
 	if len(parts) != 5 {
 		return nil, fmt.Errorf("invalid netstats url: \"%s\", should be nodename:secret@host:port", url)
 	}
-	                                        
+
 	var engine consensus.Engine
 	if epvServ != nil {
 		engine = epvServ.Engine()
@@ -109,15 +86,10 @@ func New(url string, epvServ *epv.EPVchain, lesServ *les.LightEPVchain) (*Servic
 	}, nil
 }
 
-                                                                              
-                                                                           
 func (s *Service) Protocols() []p2p.Protocol { return nil }
 
-                                                                                
-                                                                    
 func (s *Service) APIs() []rpc.API { return nil }
 
-                                                                                  
 func (s *Service) Start(server *p2p.Server) error {
 	s.server = server
 	go s.loop()
@@ -126,16 +98,13 @@ func (s *Service) Start(server *p2p.Server) error {
 	return nil
 }
 
-                                                                                 
 func (s *Service) Stop() error {
 	log.Info("Stats daemon stopped")
 	return nil
 }
 
-                                                                              
-                     
 func (s *Service) loop() {
-	                                                  
+
 	var blockchain blockChain
 	var txpool txPool
 	if s.epv != nil {
@@ -154,7 +123,6 @@ func (s *Service) loop() {
 	txSub := txpool.SubscribeTxPreEvent(txEventCh)
 	defer txSub.Unsubscribe()
 
-	                                                                             
 	var (
 		quitCh = make(chan struct{})
 		headCh = make(chan *types.Block, 1)
@@ -166,14 +134,13 @@ func (s *Service) loop() {
 	HandleLoop:
 		for {
 			select {
-			                                                        
+
 			case head := <-chainHeadCh:
 				select {
 				case headCh <- head.Block:
 				default:
 				}
 
-			                                                             
 			case <-txEventCh:
 				if time.Duration(mclock.Now()-lastTx) < time.Second {
 					continue
@@ -185,7 +152,6 @@ func (s *Service) loop() {
 				default:
 				}
 
-			               
 			case <-txSub.Err():
 				break HandleLoop
 			case <-headSub.Err():
@@ -194,16 +160,16 @@ func (s *Service) loop() {
 		}
 		close(quitCh)
 	}()
-	                                   
+
 	for {
-		                                                                   
+
 		path := fmt.Sprintf("%s/api", s.host)
 		urls := []string{path}
 
-		if !strings.Contains(path, "://") {                                                                                     
+		if !strings.Contains(path, "://") { 
 			urls = []string{"wss://" + path, "ws://" + path}
 		}
-		                                                                      
+
 		var (
 			conf *websocket.Config
 			conn *websocket.Conn
@@ -223,7 +189,7 @@ func (s *Service) loop() {
 			time.Sleep(10 * time.Second)
 			continue
 		}
-		                                          
+
 		if err = s.login(conn); err != nil {
 			log.Warn("Stats login failed", "err", err)
 			conn.Close()
@@ -232,13 +198,12 @@ func (s *Service) loop() {
 		}
 		go s.readLoop(conn)
 
-		                                                                  
 		if err = s.report(conn); err != nil {
 			log.Warn("Initial stats report failed", "err", err)
 			conn.Close()
 			continue
 		}
-		                                                          
+
 		fullReport := time.NewTicker(15 * time.Second)
 
 		for err == nil {
@@ -268,21 +233,17 @@ func (s *Service) loop() {
 				}
 			}
 		}
-		                                     
+
 		conn.Close()
 	}
 }
 
-                                                                               
-                                                                               
-                                                                                
-                   
 func (s *Service) readLoop(conn *websocket.Conn) {
-	                                                
+
 	defer conn.Close()
 
 	for {
-		                                                                 
+
 		var msg map[string][]interface{}
 		if err := websocket.JSON.Receive(conn, &msg); err != nil {
 			log.Warn("Failed to decode stats server message", "err", err)
@@ -298,33 +259,33 @@ func (s *Service) readLoop(conn *websocket.Conn) {
 			log.Warn("Invalid stats server message type", "type", msg["emit"][0])
 			return
 		}
-		                                                                       
+
 		if len(msg["emit"]) == 2 && command == "node-pong" {
 			select {
 			case s.pongCh <- struct{}{}:
-				                                     
+
 				continue
 			default:
-				                           
+
 				log.Warn("Stats server pinger seems to have died")
 				return
 			}
 		}
-		                                                                      
+
 		if len(msg["emit"]) == 2 && command == "history" {
-			                                                      
+
 			request, ok := msg["emit"][1].(map[string]interface{})
 			if !ok {
 				log.Warn("Invalid stats history request", "msg", msg["emit"][1])
 				s.histCh <- nil
-				continue                                                                  
+				continue 
 			}
 			list, ok := request["list"].([]interface{})
 			if !ok {
 				log.Warn("Invalid stats history block list", "list", request["list"])
 				return
 			}
-			                                                   
+
 			numbers := make([]uint64, len(list))
 			for i, num := range list {
 				n, ok := num.(float64)
@@ -340,13 +301,11 @@ func (s *Service) readLoop(conn *websocket.Conn) {
 			default:
 			}
 		}
-		                                    
+
 		log.Info("Unknown stats message", "msg", msg)
 	}
 }
 
-                                                                               
-                          
 type nodeInfo struct {
 	Name     string `json:"name"`
 	Node     string `json:"node"`
@@ -360,16 +319,14 @@ type nodeInfo struct {
 	History  bool   `json:"canUpdateHistory"`
 }
 
-                                                                              
 type authMsg struct {
 	Id     string   `json:"id"`
 	Info   nodeInfo `json:"info"`
 	Secret string   `json:"secret"`
 }
 
-                                                            
 func (s *Service) login(conn *websocket.Conn) error {
-	                                              
+
 	infos := s.server.NodeInfo()
 
 	var network, protocol string
@@ -402,7 +359,7 @@ func (s *Service) login(conn *websocket.Conn) error {
 	if err := websocket.JSON.Send(conn, login); err != nil {
 		return err
 	}
-	                                                    
+
 	var ack map[string][]string
 	if err := websocket.JSON.Receive(conn, &ack); err != nil || len(ack["emit"]) != 1 || ack["emit"][0] != "ready" {
 		return errors.New("unauthorized")
@@ -410,9 +367,6 @@ func (s *Service) login(conn *websocket.Conn) error {
 	return nil
 }
 
-                                                                               
-                                                                            
-                                                                      
 func (s *Service) report(conn *websocket.Conn) error {
 	if err := s.reportLatency(conn); err != nil {
 		return err
@@ -429,10 +383,8 @@ func (s *Service) report(conn *websocket.Conn) error {
 	return nil
 }
 
-                                                                              
-                                  
 func (s *Service) reportLatency(conn *websocket.Conn) error {
-	                                               
+
 	start := time.Now()
 
 	ping := map[string][]interface{}{
@@ -444,17 +396,16 @@ func (s *Service) reportLatency(conn *websocket.Conn) error {
 	if err := websocket.JSON.Send(conn, ping); err != nil {
 		return err
 	}
-	                                           
+
 	select {
 	case <-s.pongCh:
-		                                     
+
 	case <-time.After(5 * time.Second):
-		                      
+
 		return errors.New("ping timed out")
 	}
 	latency := strconv.Itoa(int((time.Since(start) / time.Duration(2)).Nanoseconds() / 1000000))
 
-	                                 
 	log.Trace("Sending measured latency to epvstats", "latency", latency)
 
 	stats := map[string][]interface{}{
@@ -466,7 +417,6 @@ func (s *Service) reportLatency(conn *websocket.Conn) error {
 	return websocket.JSON.Send(conn, stats)
 }
 
-                                                                   
 type blockStats struct {
 	Number     *big.Int       `json:"number"`
 	Hash       common.Hash    `json:"hash"`
@@ -483,13 +433,10 @@ type blockStats struct {
 	Uncles     uncleStats     `json:"uncles"`
 }
 
-                                                                      
 type txStats struct {
 	Hash common.Hash `json:"hash"`
 }
 
-                                                                            
-                                                   
 type uncleStats []*types.Header
 
 func (s uncleStats) MarshalJSON() ([]byte, error) {
@@ -499,12 +446,10 @@ func (s uncleStats) MarshalJSON() ([]byte, error) {
 	return []byte("[]"), nil
 }
 
-                                                                                  
 func (s *Service) reportBlock(conn *websocket.Conn, block *types.Block) error {
-	                                                          
+
 	details := s.assembleBlockStats(block)
 
-	                                                      
 	log.Trace("Sending new block to epvstats", "number", details.Number, "hash", details.Hash)
 
 	stats := map[string]interface{}{
@@ -517,10 +462,8 @@ func (s *Service) reportBlock(conn *websocket.Conn, block *types.Block) error {
 	return websocket.JSON.Send(conn, report)
 }
 
-                                                                              
-                                                                                 
 func (s *Service) assembleBlockStats(block *types.Block) *blockStats {
-	                                                   
+
 	var (
 		header *types.Header
 		td     *big.Int
@@ -528,7 +471,7 @@ func (s *Service) assembleBlockStats(block *types.Block) *blockStats {
 		uncles []*types.Header
 	)
 	if s.epv != nil {
-		                                                   
+
 		if block == nil {
 			block = s.epv.BlockChain().CurrentBlock()
 		}
@@ -541,7 +484,7 @@ func (s *Service) assembleBlockStats(block *types.Block) *blockStats {
 		}
 		uncles = block.Uncles()
 	} else {
-		                                                                         
+
 		if block != nil {
 			header = block.Header()
 		} else {
@@ -550,7 +493,7 @@ func (s *Service) assembleBlockStats(block *types.Block) *blockStats {
 		td = s.les.BlockChain().GetTd(header.Hash(), header.Number.Uint64())
 		txs = []txStats{}
 	}
-	                                      
+
 	author, _ := s.engine.Author(header)
 
 	return &blockStats{
@@ -570,16 +513,14 @@ func (s *Service) assembleBlockStats(block *types.Block) *blockStats {
 	}
 }
 
-                                                                                
-                
 func (s *Service) reportHistory(conn *websocket.Conn, list []uint64) error {
-	                                             
+
 	indexes := make([]uint64, 0, historyUpdateRange)
 	if len(list) > 0 {
-		                                                           
+
 		indexes = append(indexes, list...)
 	} else {
-		                                               
+
 		var head int64
 		if s.epv != nil {
 			head = s.epv.BlockChain().CurrentHeader().Number.Int64()
@@ -594,10 +535,10 @@ func (s *Service) reportHistory(conn *websocket.Conn, list []uint64) error {
 			indexes = append(indexes, i)
 		}
 	}
-	                                       
+
 	history := make([]*blockStats, len(indexes))
 	for i, number := range indexes {
-		                                              
+
 		var block *types.Block
 		if s.epv != nil {
 			block = s.epv.BlockChain().GetBlockByNumber(number)
@@ -606,16 +547,16 @@ func (s *Service) reportHistory(conn *websocket.Conn, list []uint64) error {
 				block = types.NewBlockWithHeader(header)
 			}
 		}
-		                                                           
+
 		if block != nil {
 			history[len(history)-1-i] = s.assembleBlockStats(block)
 			continue
 		}
-		                                                   
+
 		history = history[len(history)-i:]
 		break
 	}
-	                                                        
+
 	if len(history) > 0 {
 		log.Trace("Sending historical blocks to epvstats", "first", history[0].Number, "last", history[len(history)-1].Number)
 	} else {
@@ -631,22 +572,19 @@ func (s *Service) reportHistory(conn *websocket.Conn, list []uint64) error {
 	return websocket.JSON.Send(conn, report)
 }
 
-                                                                     
 type pendStats struct {
 	Pending int `json:"pending"`
 }
 
-                                                                                 
-                          
 func (s *Service) reportPending(conn *websocket.Conn) error {
-	                                                       
+
 	var pending int
 	if s.epv != nil {
 		pending, _ = s.epv.TxPool().Stats()
 	} else {
 		pending = s.les.TxPool().Stats()
 	}
-	                                                           
+
 	log.Trace("Sending pending transactions to epvstats", "count", pending)
 
 	stats := map[string]interface{}{
@@ -661,7 +599,6 @@ func (s *Service) reportPending(conn *websocket.Conn) error {
 	return websocket.JSON.Send(conn, report)
 }
 
-                                                               
 type nodeStats struct {
 	Active   bool `json:"active"`
 	Syncing  bool `json:"syncing"`
@@ -672,10 +609,8 @@ type nodeStats struct {
 	Uptime   int  `json:"uptime"`
 }
 
-                                                                             
-                                                   
 func (s *Service) reportStats(conn *websocket.Conn) error {
-	                                                                    
+
 	var (
 		mining   bool
 		hashrate int
@@ -695,7 +630,7 @@ func (s *Service) reportStats(conn *websocket.Conn) error {
 		sync := s.les.Downloader().Progress()
 		syncing = s.les.BlockChain().CurrentHeader().Number.Uint64() >= sync.HighestBlock
 	}
-	                                                    
+
 	log.Trace("Sending node details to epvstats")
 
 	stats := map[string]interface{}{

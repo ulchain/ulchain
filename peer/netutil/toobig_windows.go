@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 //+build windows
 
@@ -26,9 +11,6 @@ import (
 
 const _WSAEMSGSIZE = syscall.Errno(10040)
 
-                                                                        
-                                                          
-                                                
 func isPacketTooBig(err error) bool {
 	if opErr, ok := err.(*net.OpError); ok {
 		if scErr, ok := opErr.Err.(*os.SyscallError); ok {

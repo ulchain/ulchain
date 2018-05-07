@@ -1,21 +1,12 @@
-                                                      
-                                                     
-                                                 
 
 package bn256
-
-                                                                          
-                                           
-                                       
 
 import (
 	"math/big"
 )
 
-                                                                                    
-              
 type gfP6 struct {
-	x, y, z *gfP2                            
+	x, y, z *gfP2 
 }
 
 func newGFp6(pool *bnPool) *gfP6 {
@@ -84,11 +75,10 @@ func (e *gfP6) Frobenius(a *gfP6, pool *bnPool) *gfP6 {
 	return e
 }
 
-                                                                        
 func (e *gfP6) FrobeniusP2(a *gfP6) *gfP6 {
-	                                                    
+
 	e.x.MulScalar(a.x, xiTo2PSquaredMinus2Over3)
-	                                             
+
 	e.y.MulScalar(a.y, xiToPSquaredMinus1Over3)
 	e.z.Set(a.z)
 	return e
@@ -116,9 +106,6 @@ func (e *gfP6) Double(a *gfP6) *gfP6 {
 }
 
 func (e *gfP6) Mul(a, b *gfP6, pool *bnPool) *gfP6 {
-	                                                           
-	                               
-	                                      
 
 	v0 := newGFp2(pool)
 	v0.Mul(a.z, b.z, pool)
@@ -185,7 +172,6 @@ func (e *gfP6) MulGFP(a *gfP6, b *big.Int) *gfP6 {
 	return e
 }
 
-                                                    
 func (e *gfP6) MulTau(a *gfP6, pool *bnPool) {
 	tz := newGFp2(pool)
 	tz.MulXi(a.x, pool)
@@ -239,19 +225,7 @@ func (e *gfP6) Square(a *gfP6, pool *bnPool) *gfP6 {
 }
 
 func (e *gfP6) Invert(a *gfP6, pool *bnPool) *gfP6 {
-	                                                                    
-	                                               
 
-	                                                                                 
-	                                      
-	                                                                   
-	                                   
-	                                                                               
-	  
-	                                                               
-	                                               
-	  
-	                                                               
 	t1 := newGFp2(pool)
 
 	A := newGFp2(pool)

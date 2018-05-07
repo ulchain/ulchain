@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package discover
 
@@ -34,7 +19,6 @@ import (
 
 const Version = 4
 
-         
 var (
 	errPacketTooSmall   = errors.New("too small")
 	errBadHash          = errors.New("bad hash")
@@ -46,75 +30,67 @@ var (
 	errClosed           = errors.New("socket closed")
 )
 
-           
 const (
 	respTimeout = 500 * time.Millisecond
 	sendTimeout = 500 * time.Millisecond
 	expiration  = 20 * time.Second
 
-	ntpFailureThreshold = 32                                                              
-	ntpWarningCooldown  = 10 * time.Minute                                                               
-	driftThreshold      = 10 * time.Second                                           
+	ntpFailureThreshold = 32               
+	ntpWarningCooldown  = 10 * time.Minute 
+	driftThreshold      = 10 * time.Second 
 )
 
-                   
 const (
-	pingPacket = iota + 1                      
+	pingPacket = iota + 1 
 	pongPacket
 	findnodePacket
 	neighborsPacket
 )
 
-                         
 type (
 	ping struct {
 		Version    uint
 		From, To   rpcEndpoint
 		Expiration uint64
-		                                                        
+
 		Rest []rlp.RawValue `rlp:"tail"`
 	}
 
-	                             
 	pong struct {
-		                                                    
-		                                                           
-		                                    
+
 		To rpcEndpoint
 
-		ReplyTok   []byte                                              
-		Expiration uint64                                                           
-		                                                        
+		ReplyTok   []byte 
+		Expiration uint64 
+
 		Rest []rlp.RawValue `rlp:"tail"`
 	}
 
-	                                                           
 	findnode struct {
-		Target     NodeID                                           
+		Target     NodeID 
 		Expiration uint64
-		                                                        
+
 		Rest []rlp.RawValue `rlp:"tail"`
 	}
 
-	                    
 	neighbors struct {
 		Nodes      []rpcNode
 		Expiration uint64
-		                                                        
+
 		Rest []rlp.RawValue `rlp:"tail"`
 	}
 
 	rpcNode struct {
-		IP  net.IP                                 
-		UDP uint16                          
-		TCP uint16                     
+		IP  net.IP 
+		UDP uint16 
+		TCP uint16 
 		ID  NodeID
 	}
 
 	rpcEndpoint struct {
-		IP  net.IP                                 
-		UDP uint16                          
-		TCP uint16                     
+		IP  net.IP 
+		UDP uint16 
+		TCP uint16 
 	}
 )
 
@@ -157,7 +133,6 @@ type conn interface {
 	LocalAddr() net.Addr
 }
 
-                                   
 type udp struct {
 	conn        conn
 	netrestrict *netutil.Netlist
@@ -173,31 +148,15 @@ type udp struct {
 	*Table
 }
 
-                                      
-  
-                                                                  
-                                                                    
-                                                 
-  
-                                                                     
-                                                                  
-                                               
 type pending struct {
-	                                        
+
 	from  NodeID
 	ptype byte
 
-	                                      
 	deadline time.Time
 
-	                                                                  
-	                                                              
-	                                                              
-	                                                                  
 	callback func(resp interface{}) (done bool)
 
-	                                                                 
-	                                                            
 	errc chan<- error
 }
 
@@ -205,31 +164,26 @@ type reply struct {
 	from  NodeID
 	ptype byte
 	data  interface{}
-	                                   
-	                                                 
+
 	matched chan<- bool
 }
 
-                                                                             
 type ReadPacket struct {
 	Data []byte
 	Addr *net.UDPAddr
 }
 
-                                       
 type Config struct {
-	                                                              
+
 	PrivateKey *ecdsa.PrivateKey
 
-	                               
-	AnnounceAddr *net.UDPAddr                                           
-	NodeDBPath   string                                                                              
-	NetRestrict  *netutil.Netlist                      
-	Bootnodes    []*Node                                     
-	Unhandled    chan<- ReadPacket                                              
+	AnnounceAddr *net.UDPAddr      
+	NodeDBPath   string            
+	NetRestrict  *netutil.Netlist  
+	Bootnodes    []*Node           
+	Unhandled    chan<- ReadPacket 
 }
 
-                                                                       
 func ListenUDP(c conn, cfg Config) (*Table, error) {
 	tab, _, err := newUDP(c, cfg)
 	if err != nil {
@@ -252,7 +206,7 @@ func newUDP(c conn, cfg Config) (*Table, *udp, error) {
 	if cfg.AnnounceAddr != nil {
 		realaddr = cfg.AnnounceAddr
 	}
-	                          
+
 	udp.ourEndpoint = makeEndpoint(realaddr, uint16(realaddr.Port))
 	tab, err := newTable(udp, PubkeyID(&cfg.PrivateKey.PublicKey), realaddr, cfg.NodeDBPath, cfg.Bootnodes)
 	if err != nil {
@@ -268,15 +222,14 @@ func newUDP(c conn, cfg Config) (*Table, *udp, error) {
 func (t *udp) close() {
 	close(t.closing)
 	t.conn.Close()
-	                                   
+
 }
 
-                                                                     
 func (t *udp) ping(toid NodeID, toaddr *net.UDPAddr) error {
 	req := &ping{
 		Version:    Version,
 		From:       t.ourEndpoint,
-		To:         makeEndpoint(toaddr, 0),                                          
+		To:         makeEndpoint(toaddr, 0), 
 		Expiration: uint64(time.Now().Add(expiration).Unix()),
 	}
 	packet, hash, err := encodePacket(t.priv, pingPacket, req)
@@ -294,8 +247,6 @@ func (t *udp) waitping(from NodeID) error {
 	return <-t.pending(from, pingPacket, func(interface{}) bool { return true })
 }
 
-                                                                      
-                                       
 func (t *udp) findnode(toid NodeID, toaddr *net.UDPAddr, target NodeID) ([]*Node, error) {
 	nodes := make([]*Node, 0, bucketSize)
 	nreceived := 0
@@ -320,14 +271,12 @@ func (t *udp) findnode(toid NodeID, toaddr *net.UDPAddr, target NodeID) ([]*Node
 	return nodes, err
 }
 
-                                                            
-                                                                    
 func (t *udp) pending(id NodeID, ptype byte, callback func(interface{}) bool) <-chan error {
 	ch := make(chan error, 1)
 	p := &pending{from: id, ptype: ptype, callback: callback, errc: ch}
 	select {
 	case t.addpending <- p:
-		                      
+
 	case <-t.closing:
 		ch <- errClosed
 	}
@@ -338,31 +287,29 @@ func (t *udp) handleReply(from NodeID, ptype byte, req packet) bool {
 	matched := make(chan bool, 1)
 	select {
 	case t.gotreply <- reply{from, ptype, req, matched}:
-		                      
+
 		return <-matched
 	case <-t.closing:
 		return false
 	}
 }
 
-                                                    
-                                                 
 func (t *udp) loop() {
 	var (
 		plist        = list.New()
 		timeout      = time.NewTimer(0)
-		nextTimeout  *pending                                             
-		contTimeouts = 0                                                       
+		nextTimeout  *pending 
+		contTimeouts = 0      
 		ntpWarnTime  = time.Unix(0, 0)
 	)
-	<-timeout.C                        
+	<-timeout.C 
 	defer timeout.Stop()
 
 	resetTimeout := func() {
 		if plist.Front() == nil || nextTimeout == plist.Front().Value {
 			return
 		}
-		                                                                       
+
 		now := time.Now()
 		for el := plist.Front(); el != nil; el = el.Next() {
 			nextTimeout = el.Value.(*pending)
@@ -370,9 +317,7 @@ func (t *udp) loop() {
 				timeout.Reset(dist)
 				return
 			}
-			                                                          
-			                                                     
-			                                             
+
 			nextTimeout.errc <- errClockWarp
 			plist.Remove(el)
 		}
@@ -400,15 +345,12 @@ func (t *udp) loop() {
 				p := el.Value.(*pending)
 				if p.from == r.from && p.ptype == r.ptype {
 					matched = true
-					                                               
-					                                               
-					                                                 
-					                 
+
 					if p.callback(r.data) {
 						p.errc <- nil
 						plist.Remove(el)
 					}
-					                                                              
+
 					contTimeouts = 0
 				}
 			}
@@ -417,7 +359,6 @@ func (t *udp) loop() {
 		case now := <-timeout.C:
 			nextTimeout = nil
 
-			                                                             
 			for el := plist.Front(); el != nil; el = el.Next() {
 				p := el.Value.(*pending)
 				if now.After(p.deadline) || now.Equal(p.deadline) {
@@ -426,7 +367,7 @@ func (t *udp) loop() {
 					contTimeouts++
 				}
 			}
-			                                                                    
+
 			if contTimeouts > ntpFailureThreshold {
 				if time.Since(ntpWarnTime) >= ntpWarningCooldown {
 					ntpWarnTime = time.Now()
@@ -441,15 +382,12 @@ func (t *udp) loop() {
 const (
 	macSize  = 256 / 8
 	sigSize  = 520 / 8
-	headSize = macSize + sigSize                              
+	headSize = macSize + sigSize 
 )
 
 var (
 	headSpace = make([]byte, headSize)
 
-	                                                        
-	                                                                
-	                                                            
 	maxNeighbors int
 )
 
@@ -460,7 +398,7 @@ func init() {
 		p.Nodes = append(p.Nodes, maxSizeNode)
 		size, _, err := rlp.EncodeToReader(p)
 		if err != nil {
-			                                                             
+
 			panic("cannot encode: " + err.Error())
 		}
 		if headSize+size+1 >= 1280 {
@@ -499,32 +437,27 @@ func encodePacket(priv *ecdsa.PrivateKey, ptype byte, req interface{}) (packet, 
 		return nil, nil, err
 	}
 	copy(packet[macSize:], sig)
-	                                                            
-	                                                                 
-	              
+
 	hash = crypto.Keccak256(packet[macSize:])
 	copy(packet, hash)
 	return packet, hash, nil
 }
 
-                                                                       
 func (t *udp) readLoop(unhandled chan<- ReadPacket) {
 	defer t.conn.Close()
 	if unhandled != nil {
 		defer close(unhandled)
 	}
-	                                                                 
-	                                                                   
-	                                             
+
 	buf := make([]byte, 1280)
 	for {
 		nbytes, from, err := t.conn.ReadFromUDP(buf)
 		if netutil.IsTemporaryError(err) {
-			                                
+
 			log.Debug("Temporary UDP read error", "err", err)
 			continue
 		} else if err != nil {
-			                                           
+
 			log.Debug("UDP read error", "err", err)
 			return
 		}
@@ -589,7 +522,7 @@ func (req *ping) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac []byte) er
 		Expiration: uint64(time.Now().Add(expiration).Unix()),
 	})
 	if !t.handleReply(fromID, pingPacket, req) {
-		                                                         
+
 		go t.bond(true, fromID, from, req.From.TCP)
 	}
 	return nil
@@ -614,13 +547,7 @@ func (req *findnode) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac []byte
 		return errExpired
 	}
 	if !t.db.hasBond(fromID) {
-		                                                             
-		                                                              
-		                                                         
-		                                                            
-		                                                             
-		                                                         
-		                                                               
+
 		return errUnknownNode
 	}
 	target := crypto.Keccak256Hash(req.Target[:])
@@ -630,8 +557,7 @@ func (req *findnode) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac []byte
 
 	p := neighbors{Expiration: uint64(time.Now().Add(expiration).Unix())}
 	var sent bool
-	                                                                
-	                                     
+
 	for _, n := range closest {
 		if netutil.CheckRelayIP(from.IP, n.IP) == nil {
 			p.Nodes = append(p.Nodes, nodeToRPC(n))

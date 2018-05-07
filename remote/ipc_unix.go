@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 // +build darwin dragonfly freebsd linux nacl netbsd openbsd solaris
 
@@ -25,9 +10,8 @@ import (
 	"path/filepath"
 )
 
-                                                             
 func ipcListen(endpoint string) (net.Listener, error) {
-	                                                              
+
 	if err := os.MkdirAll(filepath.Dir(endpoint), 0751); err != nil {
 		return nil, err
 	}
@@ -40,7 +24,6 @@ func ipcListen(endpoint string) (net.Listener, error) {
 	return l, nil
 }
 
-                                                                        
 func newIPCConnection(ctx context.Context, endpoint string) (net.Conn, error) {
 	return dialContext(ctx, "unix", endpoint)
 }

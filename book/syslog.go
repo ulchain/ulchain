@@ -7,15 +7,11 @@ import (
 	"strings"
 )
 
-                                                                          
-                                           
 func SyslogHandler(priority syslog.Priority, tag string, fmtr Format) (Handler, error) {
 	wr, err := syslog.New(priority, tag)
 	return sharedSyslog(fmtr, wr, err)
 }
 
-                                                                                  
-                         
 func SyslogNetHandler(net, addr string, priority syslog.Priority, tag string, fmtr Format) (Handler, error) {
 	wr, err := syslog.Dial(net, addr, priority, tag)
 	return sharedSyslog(fmtr, wr, err)
@@ -39,7 +35,7 @@ func sharedSyslog(fmtr Format, sysWr *syslog.Writer, err error) (Handler, error)
 		case LvlDebug:
 			syslogFn = sysWr.Debug
 		case LvlTrace:
-			syslogFn = func(m string) error { return nil }                                     
+			syslogFn = func(m string) error { return nil } 
 		}
 
 		s := strings.TrimSpace(string(fmtr.Format(r)))

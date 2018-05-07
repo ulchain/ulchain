@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package jsre
 
@@ -23,8 +8,6 @@ import (
 	"github.com/robertkrimen/otto"
 )
 
-                                                                                     
-                                                                                        
 func (jsre *JSRE) CompleteKeywords(line string) []string {
 	var results []string
 	jsre.Do(func(vm *otto.Otto) {
@@ -56,8 +39,6 @@ func getCompletions(vm *otto.Otto, line string) (results []string) {
 		}
 	})
 
-	                                                                  
-	                                             
 	if len(results) == 1 && results[0] == line {
 		obj, _ := vm.Object(line)
 		if obj != nil {

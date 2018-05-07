@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
 package hexutil
 
 import (
@@ -42,7 +26,6 @@ type decError struct{ msg string }
 
 func (err decError) Error() string { return err.msg }
 
-                                              
 func Decode(input string) ([]byte, error) {
 	if len(input) == 0 {
 		return nil, ErrEmptyString
@@ -57,7 +40,6 @@ func Decode(input string) ([]byte, error) {
 	return b, err
 }
 
-                                                                               
 func MustDecode(input string) []byte {
 	dec, err := Decode(input)
 	if err != nil {
@@ -66,7 +48,6 @@ func MustDecode(input string) []byte {
 	return dec
 }
 
-                                                   
 func Encode(b []byte) string {
 	enc := make([]byte, len(b)*2+2)
 	copy(enc, "0x")
@@ -74,7 +55,6 @@ func Encode(b []byte) string {
 	return string(enc)
 }
 
-                                                                  
 func DecodeUint64(input string) (uint64, error) {
 	raw, err := checkNumber(input)
 	if err != nil {
@@ -87,8 +67,6 @@ func DecodeUint64(input string) (uint64, error) {
 	return dec, err
 }
 
-                                                                      
-                               
 func MustDecodeUint64(input string) uint64 {
 	dec, err := DecodeUint64(input)
 	if err != nil {
@@ -97,7 +75,6 @@ func MustDecodeUint64(input string) uint64 {
 	return dec
 }
 
-                                                         
 func EncodeUint64(i uint64) string {
 	enc := make([]byte, 2, 10)
 	copy(enc, "0x")
@@ -107,8 +84,7 @@ func EncodeUint64(i uint64) string {
 var bigWordNibbles int
 
 func init() {
-	                                                                              
-	                                                                                  
+
 	b, _ := new(big.Int).SetString("FFFFFFFFFF", 16)
 	switch len(b.Bits()) {
 	case 1:
@@ -120,8 +96,6 @@ func init() {
 	}
 }
 
-                                                               
-                                                 
 func DecodeBig(input string) (*big.Int, error) {
 	raw, err := checkNumber(input)
 	if err != nil {
@@ -151,8 +125,6 @@ func DecodeBig(input string) (*big.Int, error) {
 	return dec, nil
 }
 
-                                                                   
-                               
 func MustDecodeBig(input string) *big.Int {
 	dec, err := DecodeBig(input)
 	if err != nil {
@@ -161,8 +133,6 @@ func MustDecodeBig(input string) *big.Int {
 	return dec
 }
 
-                                                           
-                                      
 func EncodeBig(bigint *big.Int) string {
 	nbits := bigint.BitLen()
 	if nbits == 0 {

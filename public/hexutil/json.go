@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package hexutil
 
@@ -32,11 +17,8 @@ var (
 	uint64T = reflect.TypeOf(Uint64(0))
 )
 
-                                                             
-                                    
 type Bytes []byte
 
-                                                
 func (b Bytes) MarshalText() ([]byte, error) {
 	result := make([]byte, len(b)*2+2)
 	copy(result, `0x`)
@@ -44,7 +26,6 @@ func (b Bytes) MarshalText() ([]byte, error) {
 	return result, nil
 }
 
-                                             
 func (b *Bytes) UnmarshalJSON(input []byte) error {
 	if !isString(input) {
 		return errNonString(bytesT)
@@ -52,7 +33,6 @@ func (b *Bytes) UnmarshalJSON(input []byte) error {
 	return wrapTypeError(b.UnmarshalText(input[1:len(input)-1]), bytesT)
 }
 
-                                                     
 func (b *Bytes) UnmarshalText(input []byte) error {
 	raw, err := checkText(input, true)
 	if err != nil {
@@ -67,14 +47,10 @@ func (b *Bytes) UnmarshalText(input []byte) error {
 	return err
 }
 
-                                        
 func (b Bytes) String() string {
 	return Encode(b)
 }
 
-                                                                                     
-                                                                                        
-                                             
 func UnmarshalFixedJSON(typ reflect.Type, input, out []byte) error {
 	if !isString(input) {
 		return errNonString(typ)
@@ -82,9 +58,6 @@ func UnmarshalFixedJSON(typ reflect.Type, input, out []byte) error {
 	return wrapTypeError(UnmarshalFixedText(typ.String(), input[1:len(input)-1], out), typ)
 }
 
-                                                                                     
-                                                                                        
-                                             
 func UnmarshalFixedText(typname string, input, out []byte) error {
 	raw, err := checkText(input, true)
 	if err != nil {
@@ -93,7 +66,7 @@ func UnmarshalFixedText(typname string, input, out []byte) error {
 	if len(raw)/2 != len(out) {
 		return fmt.Errorf("hex string has length %d, want %d for %s", len(raw), len(out)*2, typname)
 	}
-	                                          
+
 	for _, b := range raw {
 		if decodeNibble(b) == badNibble {
 			return ErrSyntax
@@ -103,9 +76,6 @@ func UnmarshalFixedText(typname string, input, out []byte) error {
 	return nil
 }
 
-                                                                                          
-                                                                                        
-                                                           
 func UnmarshalFixedUnprefixedText(typname string, input, out []byte) error {
 	raw, err := checkText(input, false)
 	if err != nil {
@@ -114,7 +84,7 @@ func UnmarshalFixedUnprefixedText(typname string, input, out []byte) error {
 	if len(raw)/2 != len(out) {
 		return fmt.Errorf("hex string has length %d, want %d for %s", len(raw), len(out)*2, typname)
 	}
-	                                          
+
 	for _, b := range raw {
 		if decodeNibble(b) == badNibble {
 			return ErrSyntax
@@ -124,20 +94,12 @@ func UnmarshalFixedUnprefixedText(typname string, input, out []byte) error {
 	return nil
 }
 
-                                                           
-                                    
-  
-                                                                                    
-                                                                                    
-                           
 type Big big.Int
 
-                                                
 func (b Big) MarshalText() ([]byte, error) {
 	return []byte(EncodeBig((*big.Int)(&b))), nil
 }
 
-                                             
 func (b *Big) UnmarshalJSON(input []byte) error {
 	if !isString(input) {
 		return errNonString(bigT)
@@ -145,7 +107,6 @@ func (b *Big) UnmarshalJSON(input []byte) error {
 	return wrapTypeError(b.UnmarshalText(input[1:len(input)-1]), bigT)
 }
 
-                                                    
 func (b *Big) UnmarshalText(input []byte) error {
 	raw, err := checkNumberText(input)
 	if err != nil {
@@ -177,21 +138,16 @@ func (b *Big) UnmarshalText(input []byte) error {
 	return nil
 }
 
-                                 
 func (b *Big) ToInt() *big.Int {
 	return (*big.Int)(b)
 }
 
-                                        
 func (b *Big) String() string {
 	return EncodeBig(b.ToInt())
 }
 
-                                                              
-                                    
 type Uint64 uint64
 
-                                                 
 func (b Uint64) MarshalText() ([]byte, error) {
 	buf := make([]byte, 2, 10)
 	copy(buf, `0x`)
@@ -199,7 +155,6 @@ func (b Uint64) MarshalText() ([]byte, error) {
 	return buf, nil
 }
 
-                                             
 func (b *Uint64) UnmarshalJSON(input []byte) error {
 	if !isString(input) {
 		return errNonString(uint64T)
@@ -207,7 +162,6 @@ func (b *Uint64) UnmarshalJSON(input []byte) error {
 	return wrapTypeError(b.UnmarshalText(input[1:len(input)-1]), uint64T)
 }
 
-                                                    
 func (b *Uint64) UnmarshalText(input []byte) error {
 	raw, err := checkNumberText(input)
 	if err != nil {
@@ -229,21 +183,16 @@ func (b *Uint64) UnmarshalText(input []byte) error {
 	return nil
 }
 
-                                        
 func (b Uint64) String() string {
 	return EncodeUint64(uint64(b))
 }
 
-                                                            
-                                    
 type Uint uint
 
-                                                 
 func (b Uint) MarshalText() ([]byte, error) {
 	return Uint64(b).MarshalText()
 }
 
-                                             
 func (b *Uint) UnmarshalJSON(input []byte) error {
 	if !isString(input) {
 		return errNonString(uintT)
@@ -251,7 +200,6 @@ func (b *Uint) UnmarshalJSON(input []byte) error {
 	return wrapTypeError(b.UnmarshalText(input[1:len(input)-1]), uintT)
 }
 
-                                                     
 func (b *Uint) UnmarshalText(input []byte) error {
 	var u64 Uint64
 	err := u64.UnmarshalText(input)
@@ -264,7 +212,6 @@ func (b *Uint) UnmarshalText(input []byte) error {
 	return nil
 }
 
-                                        
 func (b Uint) String() string {
 	return EncodeUint64(uint64(b))
 }
@@ -279,7 +226,7 @@ func bytesHave0xPrefix(input []byte) bool {
 
 func checkText(input []byte, wantPrefix bool) ([]byte, error) {
 	if len(input) == 0 {
-		return nil, nil                             
+		return nil, nil 
 	}
 	if bytesHave0xPrefix(input) {
 		input = input[2:]
@@ -294,7 +241,7 @@ func checkText(input []byte, wantPrefix bool) ([]byte, error) {
 
 func checkNumberText(input []byte) (raw []byte, err error) {
 	if len(input) == 0 {
-		return nil, nil                             
+		return nil, nil 
 	}
 	if !bytesHave0xPrefix(input) {
 		return nil, ErrMissingPrefix

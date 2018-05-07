@@ -1,4 +1,3 @@
-// Copyright (c) 2016 Jasper Lievisse Adriaanse <j@jasper.la>.
 
 // +build openbsd
 
@@ -15,8 +14,6 @@ package gosigar
 #include <unistd.h>
 */
 import "C"
-
-//import "github.com/davecgh/go-spew/spew"
 
 import (
 	"runtime"
@@ -209,14 +206,13 @@ func (self *Uptime) Get() error {
 	mib := [2]int32{C.CTL_KERN, C.KERN_BOOTTIME}
 
 	n := uintptr(0)
-	// First we determine how much memory we'll need to pass later on (via `n`)
+
 	_, _, errno := syscall.Syscall6(syscall.SYS___SYSCTL, uintptr(unsafe.Pointer(&mib[0])), 2, 0, uintptr(unsafe.Pointer(&n)), 0, 0)
 
 	if errno != 0 || n == 0 {
 		return nil
 	}
 
-	// Now perform the actual sysctl(3) call, storing the result in tv
 	_, _, errno = syscall.Syscall6(syscall.SYS___SYSCTL, uintptr(unsafe.Pointer(&mib[0])), 2, uintptr(unsafe.Pointer(&tv)), uintptr(unsafe.Pointer(&n)), 0, 0)
 
 	if errno != 0 || n == 0 {
@@ -234,7 +230,7 @@ func (self *Mem) Get() error {
 	var uvmexp Uvmexp
 	mib := [2]int32{C.CTL_VM, C.VM_UVMEXP}
 	n = uintptr(0)
-	// First we determine how much memory we'll need to pass later on (via `n`)
+
 	_, _, errno := syscall.Syscall6(syscall.SYS___SYSCTL, uintptr(unsafe.Pointer(&mib[0])), 2, 0, uintptr(unsafe.Pointer(&n)), 0, 0)
 	if errno != 0 || n == 0 {
 		return nil
@@ -270,7 +266,6 @@ func (self *Mem) Get() error {
 func (self *Swap) Get() error {
 	nswap := C.swapctl(C.SWAP_NSWAP, unsafe.Pointer(uintptr(0)), 0)
 
-	// If there are no swap devices, nothing to do here.
 	if nswap == 0 {
 		return nil
 	}
@@ -299,7 +294,7 @@ func (self *Cpu) Get() error {
 
 	mib := [2]int32{C.CTL_KERN, C.KERN_CPTIME}
 	n := uintptr(0)
-	// First we determine how much memory we'll need to pass later on (via `n`)
+
 	_, _, errno := syscall.Syscall6(syscall.SYS___SYSCTL, uintptr(unsafe.Pointer(&mib[0])), 2, 0, uintptr(unsafe.Pointer(&n)), 0, 0)
 	if errno != 0 || n == 0 {
 		return nil
@@ -324,14 +319,13 @@ func (self *CpuList) Get() error {
 	var ncpu int
 
 	n := uintptr(0)
-	// First we determine how much memory we'll need to pass later on (via `n`)
+
 	_, _, errno := syscall.Syscall6(syscall.SYS___SYSCTL, uintptr(unsafe.Pointer(&mib[0])), 2, 0, uintptr(unsafe.Pointer(&n)), 0, 0)
 
 	if errno != 0 || n == 0 {
 		return nil
 	}
 
-	// Now perform the actual sysctl(3) call, storing the result in ncpu
 	_, _, errno = syscall.Syscall6(syscall.SYS___SYSCTL, uintptr(unsafe.Pointer(&mib[0])), 2, uintptr(unsafe.Pointer(&ncpu)), uintptr(unsafe.Pointer(&n)), 0, 0)
 
 	if errno != 0 || n == 0 {
@@ -392,8 +386,6 @@ func fillCpu(cpu *Cpu, load [C.CPUSTATES]C.long) {
 func sysctlCptime(ncpu int, curcpu int, load *[C.CPUSTATES]C.long) error {
 	var mib []int32
 
-	// Use the correct mib based on the number of CPUs and fill out the
-	// current CPU number in case of SMP. (0 indexed cf. self.List)
 	if ncpu == 0 {
 		mib = []int32{C.CTL_KERN, C.KERN_CPTIME}
 	} else {
@@ -403,7 +395,7 @@ func sysctlCptime(ncpu int, curcpu int, load *[C.CPUSTATES]C.long) error {
 	len := len(mib)
 
 	n := uintptr(0)
-	// First we determine how much memory we'll need to pass later on (via `n`)
+
 	_, _, errno := syscall.Syscall6(syscall.SYS___SYSCTL, uintptr(unsafe.Pointer(&mib[0])), uintptr(len), 0, uintptr(unsafe.Pointer(&n)), 0, 0)
 	if errno != 0 || n == 0 {
 		return nil

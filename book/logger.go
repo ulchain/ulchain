@@ -24,7 +24,6 @@ const (
 	LvlTrace
 )
 
-                                                                     
 func (l Lvl) AlignedString() string {
 	switch l {
 	case LvlTrace:
@@ -44,7 +43,6 @@ func (l Lvl) AlignedString() string {
 	}
 }
 
-                                     
 func (l Lvl) String() string {
 	switch l {
 	case LvlTrace:
@@ -64,8 +62,6 @@ func (l Lvl) String() string {
 	}
 }
 
-                                                  
-                                                                
 func LvlFromString(lvlString string) (Lvl, error) {
 	switch lvlString {
 	case "trace", "trce":
@@ -85,7 +81,6 @@ func LvlFromString(lvlString string) (Lvl, error) {
 	}
 }
 
-                                                      
 type Record struct {
 	Time     time.Time
 	Lvl      Lvl
@@ -101,18 +96,14 @@ type RecordKeyNames struct {
 	Lvl  string
 }
 
-                                               
 type Logger interface {
-	                                                                                 
+
 	New(ctx ...interface{}) Logger
 
-	                                                          
 	GetHandler() Handler
 
-	                                                                           
 	SetHandler(h Handler)
 
-	                                                                
 	Trace(msg string, ctx ...interface{})
 	Debug(msg string, ctx ...interface{})
 	Info(msg string, ctx ...interface{})
@@ -189,18 +180,13 @@ func (l *logger) SetHandler(h Handler) {
 }
 
 func normalize(ctx []interface{}) []interface{} {
-	                                                    
+
 	if len(ctx) == 1 {
 		if ctxMap, ok := ctx[0].(Ctx); ok {
 			ctx = ctxMap.toArray()
 		}
 	}
 
-	                                                                
-	                                                         
-	                                                            
-	                                                          
-	                                       
 	if len(ctx)%2 != 0 {
 		ctx = append(ctx, nil, errorKey, "Normalized odd number of arguments by adding nil")
 	}
@@ -208,22 +194,10 @@ func normalize(ctx []interface{}) []interface{} {
 	return ctx
 }
 
-                                                                           
-                                                                                   
-  
-                                                                      
-                                                                                
-         
-  
-                                                                                
-                                
 type Lazy struct {
 	Fn interface{}
 }
 
-                                                                       
-                                                                                
-                            
 type Ctx map[string]interface{}
 
 func (c Ctx) toArray() []interface{} {

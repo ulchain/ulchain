@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package jsre
 
@@ -40,7 +25,6 @@ var (
 	ErrorColor    = color.New(color.FgHiRed).SprintfFunc()
 )
 
-                                                 
 var boringKeys = map[string]bool{
 	"valueOf":              true,
 	"toString":             true,
@@ -51,12 +35,10 @@ var boringKeys = map[string]bool{
 	"constructor":          true,
 }
 
-                                               
 func prettyPrint(vm *otto.Otto, value otto.Value, w io.Writer) {
 	ppctx{vm: vm, w: w}.printValue(value, 0, false)
 }
 
-                                             
 func prettyError(vm *otto.Otto, err error, w io.Writer) {
 	failure := err.Error()
 	if ottoErr, ok := err.(*otto.Error); ok {
@@ -132,12 +114,12 @@ func (ctx ppctx) printObject(obj *otto.Object, level int, inArray bool) {
 		fmt.Fprint(ctx.w, "]")
 
 	case "Object":
-		                                                     
+
 		if ctx.isBigNumber(obj) {
 			fmt.Fprint(ctx.w, NumberColor("%s", toString(obj)))
 			return
 		}
-		                                                                    
+
 		keys := ctx.fields(obj)
 		if len(keys) == 0 {
 			fmt.Fprint(ctx.w, "{}")
@@ -163,7 +145,7 @@ func (ctx ppctx) printObject(obj *otto.Object, level int, inArray bool) {
 		fmt.Fprintf(ctx.w, "%s}", ctx.indent(level))
 
 	case "Function":
-		                                                           
+
 		if robj, err := obj.Call("toString"); err != nil {
 			fmt.Fprint(ctx.w, FunctionColor("function()"))
 		} else {
@@ -241,13 +223,13 @@ func iterOwnKeys(vm *otto.Otto, obj *otto.Object, f func(string)) {
 }
 
 func (ctx ppctx) isBigNumber(v *otto.Object) bool {
-	                                          
+
 	if v, _ := v.Get("constructor"); v.Object() != nil {
 		if strings.HasPrefix(toString(v.Object()), "function BigNumber") {
 			return true
 		}
 	}
-	                              
+
 	BigNumber, _ := ctx.vm.Object("BigNumber.prototype")
 	if BigNumber == nil {
 		return false

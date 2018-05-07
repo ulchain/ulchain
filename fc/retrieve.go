@@ -1,21 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                                               
-                                 
 package les
 
 import (
@@ -35,8 +18,6 @@ var (
 	hardRequestTimeout = time.Second * 10
 )
 
-                                                                              
-                                                                                
 type retrieveManager struct {
 	dist       *requestDistributor
 	peers      *peerSet
@@ -46,15 +27,12 @@ type retrieveManager struct {
 	sentReqs map[uint64]*sentReq
 }
 
-                                                             
 type validatorFunc func(distPeer, *Msg) error
 
-                                                                        
 type peerSelector interface {
 	adjustResponseTime(*poolEntry, time.Duration, bool)
 }
 
-                                                                   
 type sentReq struct {
 	rm       *retrieveManager
 	req      *distReq
@@ -66,39 +44,32 @@ type sentReq struct {
 	stopped  bool
 	err      error
 
-	lock   sync.RWMutex                                
+	lock   sync.RWMutex 
 	sentTo map[distPeer]sentReqToPeer
 
-	reqQueued    bool                                          
-	reqSent      bool                                             
-	reqSrtoCount int                                                                
+	reqQueued    bool 
+	reqSent      bool 
+	reqSrtoCount int  
 }
 
-                                                                                       
-                                                                                  
-                                                                                    
-                                                    
 type sentReqToPeer struct {
 	delivered bool
 	valid     chan bool
 }
 
-                                                                              
-                                                                     
 type reqPeerEvent struct {
 	event int
 	peer  distPeer
 }
 
 const (
-	rpSent = iota                                                
+	rpSent = iota 
 	rpSoftTimeout
 	rpHardTimeout
 	rpDeliveredValid
 	rpDeliveredInvalid
 )
 
-                                                  
 func newRetrieveManager(peers *peerSet, dist *requestDistributor, serverPool peerSelector) *retrieveManager {
 	return &retrieveManager{
 		peers:      peers,
@@ -108,10 +79,6 @@ func newRetrieveManager(peers *peerSet, dist *requestDistributor, serverPool pee
 	}
 }
 
-                                                                                    
-                                                                                   
-                                                                                    
-             
 func (rm *retrieveManager) retrieve(ctx context.Context, reqID uint64, req *distReq, val validatorFunc, shutdown chan struct{}) error {
 	sentReq := rm.sendReq(reqID, req, val)
 	select {
@@ -124,8 +91,6 @@ func (rm *retrieveManager) retrieve(ctx context.Context, reqID uint64, req *dist
 	return sentReq.getError()
 }
 
-                                                                              
-                                                              
 func (rm *retrieveManager) sendReq(reqID uint64, req *distReq, val validatorFunc) *sentReq {
 	r := &sentReq{
 		rm:       rm,
@@ -139,7 +104,7 @@ func (rm *retrieveManager) sendReq(reqID uint64, req *distReq, val validatorFunc
 
 	canSend := req.canSend
 	req.canSend = func(p distPeer) bool {
-		                                                                                       
+
 		r.lock.RLock()
 		_, sent := r.sentTo[p]
 		r.lock.RUnlock()
@@ -148,7 +113,7 @@ func (rm *retrieveManager) sendReq(reqID uint64, req *distReq, val validatorFunc
 
 	request := req.request
 	req.request = func(p distPeer) func() {
-		                                                                        
+
 		r.lock.Lock()
 		r.sentTo[p] = sentReqToPeer{false, make(chan bool, 1)}
 		r.lock.Unlock()
@@ -162,7 +127,6 @@ func (rm *retrieveManager) sendReq(reqID uint64, req *distReq, val validatorFunc
 	return r
 }
 
-                                                                                              
 func (rm *retrieveManager) deliver(peer distPeer, msg *Msg) error {
 	rm.lock.RLock()
 	req, ok := rm.sentReqs[msg.ReqID]
@@ -174,10 +138,8 @@ func (rm *retrieveManager) deliver(peer distPeer, msg *Msg) error {
 	return errResp(ErrUnexpectedResponse, "reqID = %v", msg.ReqID)
 }
 
-                                                                   
 type reqStateFn func() reqStateFn
 
-                                                         
 func (r *sentReq) retrieveLoop() {
 	go r.tryRequest()
 	r.reqQueued = true
@@ -192,8 +154,6 @@ func (r *sentReq) retrieveLoop() {
 	r.rm.lock.Unlock()
 }
 
-                                                                                             
-                                      
 func (r *sentReq) stateRequesting() reqStateFn {
 	select {
 	case ev := <-r.eventsCh:
@@ -201,18 +161,18 @@ func (r *sentReq) stateRequesting() reqStateFn {
 		switch ev.event {
 		case rpSent:
 			if ev.peer == nil {
-				                                              
+
 				if r.waiting() {
-					                                                                             
+
 					return r.stateNoMorePeers
 				}
-				                                                               
+
 				r.stop(ErrNoPeers)
-				                                                                          
+
 				return nil
 			}
 		case rpSoftTimeout:
-			                                                
+
 			go r.tryRequest()
 			r.reqQueued = true
 			return r.stateRequesting
@@ -226,9 +186,6 @@ func (r *sentReq) stateRequesting() reqStateFn {
 	}
 }
 
-                                                                                          
-                                                                                      
-               
 func (r *sentReq) stateNoMorePeers() reqStateFn {
 	select {
 	case <-time.After(retryQueue):
@@ -247,8 +204,6 @@ func (r *sentReq) stateNoMorePeers() reqStateFn {
 	}
 }
 
-                                                                            
-                                    
 func (r *sentReq) stateStopped() reqStateFn {
 	for r.waiting() {
 		r.update(<-r.eventsCh)
@@ -256,7 +211,6 @@ func (r *sentReq) stateStopped() reqStateFn {
 	return nil
 }
 
-                                                                                          
 func (r *sentReq) update(ev reqPeerEvent) {
 	switch ev.event {
 	case rpSent:
@@ -272,15 +226,10 @@ func (r *sentReq) update(ev reqPeerEvent) {
 	}
 }
 
-                                                                                
-           
 func (r *sentReq) waiting() bool {
 	return r.reqQueued || r.reqSent || r.reqSrtoCount > 0
 }
 
-                                                                                
-                                                                                      
-                                           
 func (r *sentReq) tryRequest() {
 	sent := r.rm.dist.queue(r.req)
 	var p distPeer
@@ -310,7 +259,7 @@ func (r *sentReq) tryRequest() {
 	}
 
 	defer func() {
-		                                                                        
+
 		pp, ok := p.(*peer)
 		if ok && r.rm.serverPool != nil {
 			respTime := time.Duration(mclock.Now() - reqSent)
@@ -354,7 +303,6 @@ func (r *sentReq) tryRequest() {
 	}
 }
 
-                                            
 func (r *sentReq) deliver(peer distPeer, msg *Msg) error {
 	r.lock.Lock()
 	defer r.lock.Unlock()
@@ -372,8 +320,6 @@ func (r *sentReq) deliver(peer distPeer, msg *Msg) error {
 	return nil
 }
 
-                                                                                
-              
 func (r *sentReq) stop(err error) {
 	r.lock.Lock()
 	if !r.stopped {
@@ -384,13 +330,10 @@ func (r *sentReq) stop(err error) {
 	r.lock.Unlock()
 }
 
-                                                                                  
-                                              
 func (r *sentReq) getError() error {
 	return r.err
 }
 
-                                             
 func genReqID() uint64 {
 	var rnd [8]byte
 	rand.Read(rnd[:])

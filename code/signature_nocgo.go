@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 // +build nacl js nocgo
 
@@ -28,7 +13,6 @@ import (
 	"github.com/btcsuite/btcd/btcec"
 )
 
-                                                                                  
 func Ecrecover(hash, sig []byte) ([]byte, error) {
 	pub, err := SigToPub(hash, sig)
 	if err != nil {
@@ -38,9 +22,8 @@ func Ecrecover(hash, sig []byte) ([]byte, error) {
 	return bytes, err
 }
 
-                                                                    
 func SigToPub(hash, sig []byte) (*ecdsa.PublicKey, error) {
-	                                                                       
+
 	btcsig := make([]byte, 65)
 	btcsig[0] = sig[64] + 27
 	copy(btcsig[1:], sig)
@@ -49,14 +32,6 @@ func SigToPub(hash, sig []byte) (*ecdsa.PublicKey, error) {
 	return (*ecdsa.PublicKey)(pub), err
 }
 
-                                      
-  
-                                                                         
-                                                                           
-                                                                        
-                                                                  
-  
-                                                                           
 func Sign(hash []byte, prv *ecdsa.PrivateKey) ([]byte, error) {
 	if len(hash) != 32 {
 		return nil, fmt.Errorf("hash is required to be exactly 32 bytes (%d)", len(hash))
@@ -68,16 +43,13 @@ func Sign(hash []byte, prv *ecdsa.PrivateKey) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	                                                                        
+
 	v := sig[0] - 27
 	copy(sig, sig[1:])
 	sig[64] = v
 	return sig, nil
 }
 
-                                                                                
-                                                                                       
-                                                         
 func VerifySignature(pubkey, hash, signature []byte) bool {
 	if len(signature) != 64 {
 		return false
@@ -87,14 +59,13 @@ func VerifySignature(pubkey, hash, signature []byte) bool {
 	if err != nil {
 		return false
 	}
-	                                                                               
+
 	if sig.S.Cmp(secp256k1_halfN) > 0 {
 		return false
 	}
 	return sig.Verify(hash, key)
 }
 
-                                                                         
 func DecompressPubkey(pubkey []byte) (*ecdsa.PublicKey, error) {
 	if len(pubkey) != 33 {
 		return nil, errors.New("invalid compressed public key length")
@@ -106,12 +77,10 @@ func DecompressPubkey(pubkey []byte) (*ecdsa.PublicKey, error) {
 	return key.ToECDSA(), nil
 }
 
-                                                                        
 func CompressPubkey(pubkey *ecdsa.PublicKey) []byte {
 	return (*btcec.PublicKey)(pubkey).SerializeCompressed()
 }
 
-                                                   
 func S256() elliptic.Curve {
 	return btcec.S256()
 }

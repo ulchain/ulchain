@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                           
 package secp256k1
 
 /*
@@ -45,7 +29,7 @@ import (
 var context *C.secp256k1_context
 
 func init() {
-	                                
+
 	context = C.secp256k1_context_create_sign_verify()
 	C.secp256k1_context_set_illegal_callback(context, C.callbackFunc(C.secp256k1GoPanicIllegal), nil)
 	C.secp256k1_context_set_error_callback(context, C.callbackFunc(C.secp256k1GoPanicError), nil)
@@ -61,12 +45,6 @@ var (
 	ErrRecoverFailed       = errors.New("recovery failed")
 )
 
-                                              
-                                                                                   
-  
-                                                                   
-                                                                           
-                                                                 
 func Sign(msg []byte, seckey []byte) ([]byte, error) {
 	if len(msg) != 32 {
 		return nil, ErrInvalidMsgLen
@@ -94,14 +72,10 @@ func Sign(msg []byte, seckey []byte) ([]byte, error) {
 		recid   C.int
 	)
 	C.secp256k1_ecdsa_recoverable_signature_serialize_compact(context, sigdata, &recid, &sigstruct)
-	sig[64] = byte(recid)                                      
+	sig[64] = byte(recid) 
 	return sig, nil
 }
 
-                                                          
-                                                            
-                                                               
-                                   
 func RecoverPubkey(msg []byte, sig []byte) ([]byte, error) {
 	if len(msg) != 32 {
 		return nil, ErrInvalidMsgLen
@@ -121,8 +95,6 @@ func RecoverPubkey(msg []byte, sig []byte) ([]byte, error) {
 	return pubkey, nil
 }
 
-                                                                               
-                                              
 func VerifySignature(pubkey, msg, signature []byte) bool {
 	if len(msg) != 32 || len(signature) != 64 || len(pubkey) == 0 {
 		return false
@@ -133,8 +105,6 @@ func VerifySignature(pubkey, msg, signature []byte) bool {
 	return C.secp256k1_ext_ecdsa_verify(context, sigdata, msgdata, keydata, C.size_t(len(pubkey))) != 0
 }
 
-                                                                         
-                                                             
 func DecompressPubkey(pubkey []byte) (x, y *big.Int) {
 	if len(pubkey) != 33 {
 		return nil, nil
@@ -152,7 +122,6 @@ func DecompressPubkey(pubkey []byte) (x, y *big.Int) {
 	return new(big.Int).SetBytes(out[1:33]), new(big.Int).SetBytes(out[33:])
 }
 
-                                                                    
 func CompressPubkey(x, y *big.Int) []byte {
 	var (
 		pubkey     = S256().Marshal(x, y)

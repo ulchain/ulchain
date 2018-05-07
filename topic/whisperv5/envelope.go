@@ -1,20 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
-
-                                                  
 
 package whisperv5
 
@@ -33,8 +16,6 @@ import (
 	"github.com/epvchain/go-epvchain/process"
 )
 
-                                                                               
-                                                                
 type Envelope struct {
 	Version  []byte
 	Expiry   uint32
@@ -44,24 +25,20 @@ type Envelope struct {
 	Data     []byte
 	EnvNonce uint64
 
-	pow  float64                                                                       
-	hash common.Hash                                                              
-	                                                           
+	pow  float64     
+	hash common.Hash 
+
 }
 
-                                                                            
 func (e *Envelope) size() int {
 	return 20 + len(e.Version) + len(e.AESNonce) + len(e.Data)
 }
 
-                                                                               
 func (e *Envelope) rlpWithoutNonce() []byte {
 	res, _ := rlp.EncodeToBytes([]interface{}{e.Version, e.Expiry, e.TTL, e.Topic, e.AESNonce, e.Data})
 	return res
 }
 
-                                                                           
-                                                    
 func NewEnvelope(ttl uint32, topic TopicType, aesNonce []byte, msg *sentMessage) *Envelope {
 	env := Envelope{
 		Version:  make([]byte, 1),
@@ -94,12 +71,10 @@ func (e *Envelope) Ver() uint64 {
 	return bytesToUintLittleEndian(e.Version)
 }
 
-                                                                               
-                               
 func (e *Envelope) Seal(options *MessageParams) error {
 	var target, bestBit int
 	if options.PoW == 0 {
-		                                                                                                   
+
 		e.Expiry += options.WorkTime
 	} else {
 		target = e.powToFirstBit(options.PoW)
@@ -164,7 +139,6 @@ func (e *Envelope) powToFirstBit(pow float64) int {
 	return int(bits)
 }
 
-                                                                              
 func (e *Envelope) Hash() common.Hash {
 	if (e.hash == common.Hash{}) {
 		encoded, _ := rlp.EncodeToBytes(e)
@@ -173,17 +147,12 @@ func (e *Envelope) Hash() common.Hash {
 	return e.hash
 }
 
-                                                         
 func (e *Envelope) DecodeRLP(s *rlp.Stream) error {
 	raw, err := s.Raw()
 	if err != nil {
 		return err
 	}
-	                                                                 
-	                                                              
-	                                                        
-	                                                       
-	                                       
+
 	type rlpenv Envelope
 	if err := rlp.DecodeBytes(raw, (*rlpenv)(e)); err != nil {
 		return err
@@ -192,21 +161,19 @@ func (e *Envelope) DecodeRLP(s *rlp.Stream) error {
 	return nil
 }
 
-                                                                                            
 func (e *Envelope) OpenAsymmetric(key *ecdsa.PrivateKey) (*ReceivedMessage, error) {
 	message := &ReceivedMessage{Raw: e.Data}
 	err := message.decryptAsymmetric(key)
 	switch err {
 	case nil:
 		return message, nil
-	case ecies.ErrInvalidPublicKey:                              
+	case ecies.ErrInvalidPublicKey: 
 		return nil, err
 	default:
 		return nil, fmt.Errorf("unable to open envelope, decrypt failed: %v", err)
 	}
 }
 
-                                                                                           
 func (e *Envelope) OpenSymmetric(key []byte) (msg *ReceivedMessage, err error) {
 	msg = &ReceivedMessage{Raw: e.Data}
 	err = msg.decryptSymmetric(key, e.AESNonce)
@@ -216,7 +183,6 @@ func (e *Envelope) OpenSymmetric(key []byte) (msg *ReceivedMessage, err error) {
 	return msg, err
 }
 
-                                                                                          
 func (e *Envelope) Open(watcher *Filter) (msg *ReceivedMessage) {
 	if e.isAsymmetric() {
 		msg, _ = e.OpenAsymmetric(watcher.KeyAsym)

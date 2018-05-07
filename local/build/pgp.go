@@ -1,21 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
-
-                                                                                
-                                                                     
 
 package build
 
@@ -27,13 +9,8 @@ import (
 	"golang.org/x/crypto/openpgp"
 )
 
-                                                                               
-                                                              
-  
-                                                                              
-                                            
 func PGPSignFile(input string, output string, pgpkey string) error {
-	                                                                          
+
 	keys, err := openpgp.ReadArmoredKeyRing(bytes.NewBufferString(pgpkey))
 	if err != nil {
 		return err
@@ -41,7 +18,7 @@ func PGPSignFile(input string, output string, pgpkey string) error {
 	if len(keys) != 1 {
 		return fmt.Errorf("key count mismatch: have %d, want %d", len(keys), 1)
 	}
-	                                                  
+
 	in, err := os.Open(input)
 	if err != nil {
 		return err
@@ -54,6 +31,5 @@ func PGPSignFile(input string, output string, pgpkey string) error {
 	}
 	defer out.Close()
 
-	                                    
 	return openpgp.ArmoredDetachSign(out, keys[0], in, nil)
 }

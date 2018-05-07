@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package whisperv5
 
@@ -27,13 +12,13 @@ import (
 )
 
 type Filter struct {
-	Src        *ecdsa.PublicKey                          
-	KeyAsym    *ecdsa.PrivateKey                            
-	KeySym     []byte                                            
-	Topics     [][]byte                                           
-	PoW        float64                                                            
-	AllowP2P   bool                                                                                            
-	SymKeyHash common.Hash                                                                         
+	Src        *ecdsa.PublicKey  
+	KeyAsym    *ecdsa.PrivateKey 
+	KeySym     []byte            
+	Topics     [][]byte          
+	PoW        float64           
+	AllowP2P   bool              
+	SymKeyHash common.Hash       
 
 	Messages map[common.Hash]*ReceivedMessage
 	mutex    sync.RWMutex
@@ -99,7 +84,7 @@ func (fs *Filters) NotifyWatchers(env *Envelope, p2pMessage bool) {
 	fs.mutex.RLock()
 	defer fs.mutex.RUnlock()
 
-	i := -1                              
+	i := -1 
 	for _, watcher := range fs.watchers {
 		i++
 		if p2pMessage && !watcher.AllowP2P {
@@ -171,7 +156,7 @@ func (f *Filter) Retrieve() (all []*ReceivedMessage) {
 		all = append(all, msg)
 	}
 
-	f.Messages = make(map[common.Hash]*ReceivedMessage)                       
+	f.Messages = make(map[common.Hash]*ReceivedMessage) 
 	return all
 }
 
@@ -203,7 +188,7 @@ func (f *Filter) MatchEnvelope(envelope *Envelope) bool {
 
 func (f *Filter) MatchTopic(topic TopicType) bool {
 	if len(f.Topics) == 0 {
-		                    
+
 		return true
 	}
 
@@ -238,6 +223,6 @@ func IsPubKeyEqual(a, b *ecdsa.PublicKey) bool {
 	} else if !ValidatePublicKey(b) {
 		return false
 	}
-	                                                        
+
 	return a.X.Cmp(b.X) == 0 && a.Y.Cmp(b.Y) == 0
 }

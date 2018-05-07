@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package node
 
@@ -39,25 +24,19 @@ func convertFileLockError(err error) error {
 	return err
 }
 
-                                                                                
-                                                                           
 type DuplicateServiceError struct {
 	Kind reflect.Type
 }
 
-                                                                           
 func (e *DuplicateServiceError) Error() string {
 	return fmt.Sprintf("duplicate service: %v", e.Kind)
 }
 
-                                                                             
-                      
 type StopError struct {
 	Server   error
 	Services map[reflect.Type]error
 }
 
-                                                              
 func (e *StopError) Error() string {
 	return fmt.Sprintf("server: %v, services: %v", e.Server, e.Services)
 }

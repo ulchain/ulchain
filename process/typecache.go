@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package rlp
 
@@ -33,22 +18,18 @@ type typeinfo struct {
 	writer
 }
 
-                         
 type tags struct {
-	                                                                   
+
 	nilOK bool
-	                                                                  
-	                                                                 
-	                 
+
 	tail bool
-	                          
+
 	ignored bool
 }
 
 type typekey struct {
 	reflect.Type
-	                                                    
-	                                      
+
 	tags
 }
 
@@ -63,7 +44,7 @@ func cachedTypeInfo(typ reflect.Type, tags tags) (*typeinfo, error) {
 	if info != nil {
 		return info, nil
 	}
-	                                                         
+
 	typeCacheMutex.Lock()
 	defer typeCacheMutex.Unlock()
 	return cachedTypeInfo1(typ, tags)
@@ -73,16 +54,14 @@ func cachedTypeInfo1(typ reflect.Type, tags tags) (*typeinfo, error) {
 	key := typekey{typ, tags}
 	info := typeCache[key]
 	if info != nil {
-		                                             
+
 		return info, nil
 	}
-	                                                       
-	                                                       
-	                                                     
+
 	typeCache[key] = new(typeinfo)
 	info, err := genTypeInfo(typ, tags)
 	if err != nil {
-		                                                
+
 		delete(typeCache, key)
 		return nil, err
 	}
@@ -97,7 +76,7 @@ type field struct {
 
 func structFields(typ reflect.Type) (fields []field, err error) {
 	for i := 0; i < typ.NumField(); i++ {
-		if f := typ.Field(i); f.PkgPath == "" {            
+		if f := typ.Field(i); f.PkgPath == "" { 
 			tags, err := parseStructTag(typ, i)
 			if err != nil {
 				return nil, err

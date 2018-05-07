@@ -1,20 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
-
-                                                                                                                                                                                                                                               
 
 package keystore
 
@@ -41,20 +24,12 @@ import (
 const (
 	keyHeaderKDF = "scrypt"
 
-	                                                                                 
-	                                                                     
 	StandardScryptN = 1 << 18
 
-	                                                                                 
-	                                                                     
 	StandardScryptP = 1
 
-	                                                                            
-	                                                                        
 	LightScryptN = 1 << 12
 
-	                                                                            
-	                                                                        
 	LightScryptP = 6
 
 	scryptR     = 8
@@ -68,7 +43,7 @@ type keyStorePassphrase struct {
 }
 
 func (ks keyStorePassphrase) GetKey(addr common.Address, filename, auth string) (*Key, error) {
-	                                                          
+
 	keyjson, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
@@ -77,14 +52,13 @@ func (ks keyStorePassphrase) GetKey(addr common.Address, filename, auth string) 
 	if err != nil {
 		return nil, err
 	}
-	                                                                          
+
 	if key.Address != addr {
 		return nil, fmt.Errorf("key content mismatch: have account %x, want %x", key.Address, addr)
 	}
 	return key, nil
 }
 
-                                                                                   
 func StoreKey(dir, auth string, scryptN, scryptP int) (common.Address, error) {
 	_, a, err := storeNewKey(&keyStorePassphrase{dir, scryptN, scryptP}, crand.Reader, auth)
 	return a.Address, err
@@ -106,8 +80,6 @@ func (ks keyStorePassphrase) JoinPath(filename string) string {
 	}
 }
 
-                                                                              
-                                       
 func EncryptKey(key *Key, auth string, scryptN, scryptP int) ([]byte, error) {
 	authArray := []byte(auth)
 	salt := randentropy.GetEntropyCSPRNG(32)
@@ -118,7 +90,7 @@ func EncryptKey(key *Key, auth string, scryptN, scryptP int) ([]byte, error) {
 	encryptKey := derivedKey[:16]
 	keyBytes := math.PaddedBigBytes(key.PrivateKey.D, 32)
 
-	iv := randentropy.GetEntropyCSPRNG(aes.BlockSize)      
+	iv := randentropy.GetEntropyCSPRNG(aes.BlockSize) 
 	cipherText, err := aesCTRXOR(encryptKey, keyBytes, iv)
 	if err != nil {
 		return nil, err
@@ -153,14 +125,13 @@ func EncryptKey(key *Key, auth string, scryptN, scryptP int) ([]byte, error) {
 	return json.Marshal(encryptedKeyJSONV3)
 }
 
-                                                                                
 func DecryptKey(keyjson []byte, auth string) (*Key, error) {
-	                                                            
+
 	m := make(map[string]interface{})
 	if err := json.Unmarshal(keyjson, &m); err != nil {
 		return nil, err
 	}
-	                                                           
+
 	var (
 		keyBytes, keyId []byte
 		err             error
@@ -178,7 +149,7 @@ func DecryptKey(keyjson []byte, auth string) (*Key, error) {
 		}
 		keyBytes, keyId, err = decryptKeyV3(k, auth)
 	}
-	                                                  
+
 	if err != nil {
 		return nil, err
 	}
@@ -294,9 +265,6 @@ func getKDFKey(cryptoJSON cryptoJSON, auth string) ([]byte, error) {
 	return nil, fmt.Errorf("Unsupported KDF: %s", cryptoJSON.KDF)
 }
 
-                                                                
-                                                                    
-             
 func ensureInt(x interface{}) int {
 	res, ok := x.(int)
 	if !ok {

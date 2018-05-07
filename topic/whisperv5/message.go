@@ -1,20 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
-
-                                                 
 
 package whisperv5
 
@@ -33,7 +16,6 @@ import (
 	"github.com/epvchain/go-epvchain/book"
 )
 
-                                                                                
 type MessageParams struct {
 	TTL      uint32
 	Src      *ecdsa.PrivateKey
@@ -46,15 +28,10 @@ type MessageParams struct {
 	Padding  []byte
 }
 
-                                                                         
-                                                                      
-                                                    
 type sentMessage struct {
 	Raw []byte
 }
 
-                                                                      
-                    
 type ReceivedMessage struct {
 	Raw []byte
 
@@ -62,15 +39,15 @@ type ReceivedMessage struct {
 	Padding   []byte
 	Signature []byte
 
-	PoW   float64                                                           
-	Sent  uint32                                                               
-	TTL   uint32                                                          
-	Src   *ecdsa.PublicKey                                                           
-	Dst   *ecdsa.PublicKey                                                           
+	PoW   float64          
+	Sent  uint32           
+	TTL   uint32           
+	Src   *ecdsa.PublicKey 
+	Dst   *ecdsa.PublicKey 
 	Topic TopicType
 
-	SymKeyHash      common.Hash                                                           
-	EnvelopeHash    common.Hash                                               
+	SymKeyHash      common.Hash 
+	EnvelopeHash    common.Hash 
 	EnvelopeVersion uint64
 }
 
@@ -86,11 +63,10 @@ func (msg *ReceivedMessage) isAsymmetricEncryption() bool {
 	return msg.Dst != nil
 }
 
-                                                                                  
 func NewSentMessage(params *MessageParams) (*sentMessage, error) {
 	msg := sentMessage{}
 	msg.Raw = make([]byte, 1, len(params.Payload)+len(params.Padding)+signatureLength+padSizeLimit)
-	msg.Raw[0] = 0                             
+	msg.Raw[0] = 0 
 	err := msg.appendPadding(params)
 	if err != nil {
 		return nil, err
@@ -99,17 +75,15 @@ func NewSentMessage(params *MessageParams) (*sentMessage, error) {
 	return &msg, nil
 }
 
-                                                                                                                  
 func getSizeOfLength(b []byte) (sz int, err error) {
-	sz = intSize(len(b))                        
-	sz = intSize(len(b) + sz)                    
+	sz = intSize(len(b))      
+	sz = intSize(len(b) + sz) 
 	if sz > 3 {
 		err = errors.New("oversized padding parameter")
 	}
 	return sz, err
 }
 
-                                                                                     
 func intSize(i int) (s int) {
 	for s = 1; i >= 256; s++ {
 		i /= 256
@@ -117,8 +91,6 @@ func intSize(i int) (s int) {
 	return s
 }
 
-                                                                                  
-                                                                                   
 func (msg *sentMessage) appendPadding(params *MessageParams) error {
 	rawSize := len(params.Payload) + 1
 	if params.Src != nil {
@@ -138,13 +110,11 @@ func (msg *sentMessage) appendPadding(params *MessageParams) error {
 		buf = buf[:padLengthSize]
 		msg.Raw = append(msg.Raw, buf...)
 		msg.Raw = append(msg.Raw, params.Padding...)
-		msg.Raw[0] |= byte(padLengthSize)                                               
+		msg.Raw[0] |= byte(padLengthSize) 
 	} else if odd != 0 {
 		totalPadSize := padSizeLimit - odd
 		if totalPadSize > 255 {
-			                                                      
-			                                                             
-			                                                               
+
 			panic("please fix the padding algorithm before releasing new version")
 		}
 		buf := make([]byte, totalPadSize)
@@ -157,16 +127,14 @@ func (msg *sentMessage) appendPadding(params *MessageParams) error {
 		}
 		buf[0] = byte(totalPadSize)
 		msg.Raw = append(msg.Raw, buf...)
-		msg.Raw[0] |= byte(0x1)                                               
+		msg.Raw[0] |= byte(0x1) 
 	}
 	return nil
 }
 
-                                                                        
-                              
 func (msg *sentMessage) sign(key *ecdsa.PrivateKey) error {
 	if isMessageSigned(msg.Raw[0]) {
-		                                                 
+
 		log.Error("failed to sign the message: already signed")
 		return nil
 	}
@@ -175,14 +143,13 @@ func (msg *sentMessage) sign(key *ecdsa.PrivateKey) error {
 	hash := crypto.Keccak256(msg.Raw)
 	signature, err := crypto.Sign(hash, key)
 	if err != nil {
-		msg.Raw[0] &= ^signatureFlag                  
+		msg.Raw[0] &= ^signatureFlag 
 		return err
 	}
 	msg.Raw = append(msg.Raw, signature...)
 	return nil
 }
 
-                                                          
 func (msg *sentMessage) encryptAsymmetric(key *ecdsa.PublicKey) error {
 	if !ValidatePublicKey(key) {
 		return errors.New("invalid public key provided for asymmetric encryption")
@@ -194,8 +161,6 @@ func (msg *sentMessage) encryptAsymmetric(key *ecdsa.PublicKey) error {
 	return err
 }
 
-                                                                           
-                                                                   
 func (msg *sentMessage) encryptSymmetric(key []byte) (nonce []byte, err error) {
 	if !validateSymmetricKey(key) {
 		return nil, errors.New("invalid key provided for symmetric encryption")
@@ -210,7 +175,6 @@ func (msg *sentMessage) encryptSymmetric(key []byte) (nonce []byte, err error) {
 		return nil, err
 	}
 
-	                                                          
 	nonce = make([]byte, aesgcm.NonceSize())
 	_, err = crand.Read(nonce)
 	if err != nil {
@@ -223,7 +187,6 @@ func (msg *sentMessage) encryptSymmetric(key []byte) (nonce []byte, err error) {
 	return nonce, nil
 }
 
-                                                                          
 func (msg *sentMessage) Wrap(options *MessageParams) (envelope *Envelope, err error) {
 	if options.TTL == 0 {
 		options.TTL = DefaultTTL
@@ -252,8 +215,6 @@ func (msg *sentMessage) Wrap(options *MessageParams) (envelope *Envelope, err er
 	return envelope, nil
 }
 
-                                                                           
-                                                                   
 func (msg *ReceivedMessage) decryptSymmetric(key []byte, nonce []byte) error {
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -275,7 +236,6 @@ func (msg *ReceivedMessage) decryptSymmetric(key []byte, nonce []byte) error {
 	return nil
 }
 
-                                                                      
 func (msg *ReceivedMessage) decryptAsymmetric(key *ecdsa.PrivateKey) error {
 	decrypted, err := ecies.ImportECDSA(key).Decrypt(crand.Reader, msg.Raw, nil, nil)
 	if err == nil {
@@ -284,7 +244,6 @@ func (msg *ReceivedMessage) decryptAsymmetric(key *ecdsa.PrivateKey) error {
 	return err
 }
 
-                                                                          
 func (msg *ReceivedMessage) Validate() bool {
 	end := len(msg.Raw)
 	if end < 1 {
@@ -312,14 +271,10 @@ func (msg *ReceivedMessage) Validate() bool {
 	return true
 }
 
-                                                        
-                                                               
-                                                              
-                                 
 func (msg *ReceivedMessage) extractPadding(end int) (int, bool) {
 	paddingSize := 0
-	sz := int(msg.Raw[0] & paddingMask)                                                                                 
-	                                       
+	sz := int(msg.Raw[0] & paddingMask) 
+
 	if sz != 0 {
 		paddingSize = int(bytesToUintLittleEndian(msg.Raw[1 : 1+sz]))
 		if paddingSize < sz || paddingSize+1 > end {
@@ -330,9 +285,8 @@ func (msg *ReceivedMessage) extractPadding(end int) (int, bool) {
 	return paddingSize, true
 }
 
-                                                          
 func (msg *ReceivedMessage) SigToPubKey() *ecdsa.PublicKey {
-	defer func() { recover() }()                                
+	defer func() { recover() }() 
 
 	pub, err := crypto.SigToPub(msg.hash(), msg.Signature)
 	if err != nil {
@@ -342,7 +296,6 @@ func (msg *ReceivedMessage) SigToPubKey() *ecdsa.PublicKey {
 	return pub
 }
 
-                                                                               
 func (msg *ReceivedMessage) hash() []byte {
 	if isMessageSigned(msg.Raw[0]) {
 		sz := len(msg.Raw) - signatureLength

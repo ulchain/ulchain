@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package keystore
 
@@ -40,20 +25,19 @@ const (
 )
 
 type Key struct {
-	Id uuid.UUID                                                              
-	                                                
+	Id uuid.UUID 
+
 	Address common.Address
-	                                                                 
-	                                                
+
 	PrivateKey *ecdsa.PrivateKey
 }
 
 type keyStore interface {
-	                                        
+
 	GetKey(addr common.Address, filename string, auth string) (*Key, error)
-	                               
+
 	StoreKey(filename string, k *Key, auth string) error
-	                                                                       
+
 	JoinPath(filename string) string
 }
 
@@ -137,9 +121,6 @@ func newKeyFromECDSA(privateKeyECDSA *ecdsa.PrivateKey) *Key {
 	return key
 }
 
-                                                                                       
-                                                                                         
-                                   
 func NewKeyForDirectICAP(rand io.Reader) *Key {
 	randBytes := make([]byte, 64)
 	_, err := rand.Read(randBytes)
@@ -180,14 +161,12 @@ func storeNewKey(ks keyStore, rand io.Reader, auth string) (*Key, accounts.Accou
 }
 
 func writeKeyFile(file string, content []byte) error {
-	                                                             
-	                                 
+
 	const dirPerm = 0700
 	if err := os.MkdirAll(filepath.Dir(file), dirPerm); err != nil {
 		return err
 	}
-	                                                     
-	                                                       
+
 	f, err := ioutil.TempFile(filepath.Dir(file), "."+filepath.Base(file)+".tmp")
 	if err != nil {
 		return err
@@ -201,8 +180,6 @@ func writeKeyFile(file string, content []byte) error {
 	return os.Rename(f.Name(), file)
 }
 
-                                                             
-                                              
 func keyFileName(keyAddr common.Address) string {
 	ts := time.Now().UTC()
 	return fmt.Sprintf("UTC--%s--%s", toISO8601(ts), hex.EncodeToString(keyAddr[:]))

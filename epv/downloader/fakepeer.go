@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package downloader
 
@@ -25,9 +10,6 @@ import (
 	"github.com/epvchain/go-epvchain/data"
 )
 
-                                                                                
-                                                                                 
-                                                
 type FakePeer struct {
 	id string
 	db epvdb.Database
@@ -35,20 +17,15 @@ type FakePeer struct {
 	dl *Downloader
 }
 
-                                                                              
 func NewFakePeer(id string, db epvdb.Database, hc *core.HeaderChain, dl *Downloader) *FakePeer {
 	return &FakePeer{id: id, db: db, hc: hc, dl: dl}
 }
 
-                                                                              
-                            
 func (p *FakePeer) Head() (common.Hash, *big.Int) {
 	header := p.hc.CurrentHeader()
 	return header.Hash(), header.Number
 }
 
-                                                                                
-                                                                 
 func (p *FakePeer) RequestHeadersByHash(hash common.Hash, amount int, skip int, reverse bool) error {
 	var (
 		headers []*types.Header
@@ -91,8 +68,6 @@ func (p *FakePeer) RequestHeadersByHash(hash common.Hash, amount int, skip int, 
 	return nil
 }
 
-                                                                                  
-                                                                   
 func (p *FakePeer) RequestHeadersByNumber(number uint64, amount int, skip int, reverse bool) error {
 	var (
 		headers []*types.Header
@@ -118,8 +93,6 @@ func (p *FakePeer) RequestHeadersByNumber(number uint64, amount int, skip int, r
 	return nil
 }
 
-                                                                              
-                                               
 func (p *FakePeer) RequestBodies(hashes []common.Hash) error {
 	var (
 		txs    [][]*types.Transaction
@@ -135,8 +108,6 @@ func (p *FakePeer) RequestBodies(hashes []common.Hash) error {
 	return nil
 }
 
-                                                                               
-                                                        
 func (p *FakePeer) RequestReceipts(hashes []common.Hash) error {
 	var receipts [][]*types.Receipt
 	for _, hash := range hashes {
@@ -146,8 +117,6 @@ func (p *FakePeer) RequestReceipts(hashes []common.Hash) error {
 	return nil
 }
 
-                                                                              
-                                                    
 func (p *FakePeer) RequestNodeData(hashes []common.Hash) error {
 	var data [][]byte
 	for _, hash := range hashes {

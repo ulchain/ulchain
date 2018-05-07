@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package light
 
@@ -145,8 +130,6 @@ func (t *odrTrie) Prove(key []byte, fromLevel uint, proofDb epvdb.Putter) error 
 	return errors.New("not implemented, needs client/server interface split")
 }
 
-                                                                               
-                                            
 func (t *odrTrie) do(key []byte, fn func() error) error {
 	for {
 		var err error
@@ -174,7 +157,7 @@ type nodeIterator struct {
 
 func newNodeIterator(t *odrTrie, startkey []byte) trie.NodeIterator {
 	it := &nodeIterator{t: t}
-	                                                            
+
 	if t.trie == nil {
 		it.do(func() error {
 			t, err := trie.New(t.id.Root, trie.NewDatabase(t.db.backend.Database()))
@@ -200,7 +183,6 @@ func (it *nodeIterator) Next(descend bool) bool {
 	return ok
 }
 
-                                                                  
 func (it *nodeIterator) do(fn func() error) {
 	var lasthash common.Hash
 	for {
@@ -230,10 +212,10 @@ func (it *nodeIterator) Error() error {
 
 func nibblesToKey(nib []byte) []byte {
 	if len(nib) > 0 && nib[len(nib)-1] == 0x10 {
-		nib = nib[:len(nib)-1]                   
+		nib = nib[:len(nib)-1] 
 	}
 	if len(nib)&1 == 1 {
-		nib = append(nib, 0)             
+		nib = append(nib, 0) 
 	}
 	key := make([]byte, len(nib)/2)
 	for bi, ni := 0, 0; ni < len(nib); bi, ni = bi+1, ni+2 {

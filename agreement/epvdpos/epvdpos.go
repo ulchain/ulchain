@@ -466,7 +466,7 @@ func (c *DPos) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan
 			}
 		}
 	}
-	delay := time.Unix(header.Time.Int64(), 0).Sub(time.Now())                    
+	delay := time.Unix(header.Time.Int64(), 0).Sub(time.Now()) 
 	if header.Difficulty.Cmp(diffNoTurn) == 0 {
 		wiggle := time.Duration(len(arch.Signers)/2+1) * wiggleTime
 		delay += time.Duration(rand.Int63n(int64(wiggle)))

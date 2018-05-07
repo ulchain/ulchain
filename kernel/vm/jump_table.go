@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package vm
 
@@ -25,7 +10,7 @@ import (
 
 type (
 	executionFunc       func(pc *uint64, env *EVM, contract *Contract, memory *Memory, stack *Stack) ([]byte, error)
-	gasFunc             func(params.GasTable, *EVM, *Contract, *Stack, *Memory, uint64) (uint64, error)                                                           
+	gasFunc             func(params.GasTable, *EVM, *Contract, *Stack, *Memory, uint64) (uint64, error) 
 	stackValidationFunc func(*Stack) error
 	memorySizeFunc      func(*Stack) *big.Int
 )
@@ -33,21 +18,21 @@ type (
 var errGasUintOverflow = errors.New("gas uint64 overflow")
 
 type operation struct {
-	                               
+
 	execute executionFunc
-	                                                                         
+
 	gasCost gasFunc
-	                                                             
+
 	validateStack stackValidationFunc
-	                                                                
+
 	memorySize memorySizeFunc
 
-	halts   bool                                                                 
-	jumps   bool                                                              
-	writes  bool                                                       
-	valid   bool                                                                 
-	reverts bool                                                                     
-	returns bool                                                                  
+	halts   bool 
+	jumps   bool 
+	writes  bool 
+	valid   bool 
+	reverts bool 
+	returns bool 
 }
 
 var (
@@ -56,10 +41,8 @@ var (
 	byzantiumInstructionSet = NewByzantiumInstructionSet()
 )
 
-                                                                 
-                          
 func NewByzantiumInstructionSet() [256]operation {
-	                                                                
+
 	instructionSet := NewHomesteadInstructionSet()
 	instructionSet[STATICCALL] = operation{
 		execute:       opStaticCall,
@@ -94,8 +77,6 @@ func NewByzantiumInstructionSet() [256]operation {
 	return instructionSet
 }
 
-                                                                
-                                                                
 func NewHomesteadInstructionSet() [256]operation {
 	instructionSet := NewFrontierInstructionSet()
 	instructionSet[DELEGATECALL] = operation{
@@ -109,8 +90,6 @@ func NewHomesteadInstructionSet() [256]operation {
 	return instructionSet
 }
 
-                                                              
-                                                  
 func NewFrontierInstructionSet() [256]operation {
 	return [256]operation{
 		STOP: {

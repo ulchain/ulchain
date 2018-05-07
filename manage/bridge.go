@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package console
 
@@ -29,15 +14,12 @@ import (
 	"github.com/robertkrimen/otto"
 )
 
-                                                                                
-                                                                         
 type bridge struct {
-	client   *rpc.Client                                                    
-	prompter UserPrompter                                                     
-	printer  io.Writer                                                        
+	client   *rpc.Client  
+	prompter UserPrompter 
+	printer  io.Writer    
 }
 
-                                                                   
 func newBridge(client *rpc.Client, prompter UserPrompter, printer io.Writer) *bridge {
 	return &bridge{
 		client:   client,
@@ -46,9 +28,6 @@ func newBridge(client *rpc.Client, prompter UserPrompter, printer io.Writer) *br
 	}
 }
 
-                                                                                
-                                                                                  
-                                                                                  
 func (b *bridge) NewAccount(call otto.FunctionCall) (response otto.Value) {
 	var (
 		password string
@@ -56,7 +35,7 @@ func (b *bridge) NewAccount(call otto.FunctionCall) (response otto.Value) {
 		err      error
 	)
 	switch {
-	                                                    
+
 	case len(call.ArgumentList) == 0:
 		if password, err = b.prompter.PromptPassword("Passphrase: "); err != nil {
 			throwJSException(err.Error())
@@ -68,15 +47,13 @@ func (b *bridge) NewAccount(call otto.FunctionCall) (response otto.Value) {
 			throwJSException("passphrases don't match!")
 		}
 
-	                                                   
 	case len(call.ArgumentList) == 1 && call.Argument(0).IsString():
 		password, _ = call.Argument(0).ToString()
 
-	                                 
 	default:
 		throwJSException("expected 0 or 1 string argument")
 	}
-	                                                 
+
 	ret, err := call.Otto.Call("jepv.newAccount", nil, password)
 	if err != nil {
 		throwJSException(err.Error())
@@ -84,10 +61,8 @@ func (b *bridge) NewAccount(call otto.FunctionCall) (response otto.Value) {
 	return ret
 }
 
-                                                                             
-                                                                          
 func (b *bridge) OpenWallet(call otto.FunctionCall) (response otto.Value) {
-	                                                
+
 	if !call.Argument(0).IsString() {
 		throwJSException("first argument must be the wallet URL to open")
 	}
@@ -99,16 +74,16 @@ func (b *bridge) OpenWallet(call otto.FunctionCall) (response otto.Value) {
 	} else {
 		passwd = call.Argument(1)
 	}
-	                                                     
+
 	val, err := call.Otto.Call("jepv.openWallet", nil, wallet, passwd)
 	if err == nil {
 		return val
 	}
-	                                                           
+
 	if !strings.HasSuffix(err.Error(), usbwallet.ErrTrezorPINNeeded.Error()) {
 		throwJSException(err.Error())
 	}
-	                                                                                       
+
 	fmt.Fprintf(b.printer, "Look at the device for number positions\n\n")
 	fmt.Fprintf(b.printer, "7 | 8 | 9\n")
 	fmt.Fprintf(b.printer, "--+---+--\n")
@@ -127,18 +102,13 @@ func (b *bridge) OpenWallet(call otto.FunctionCall) (response otto.Value) {
 	return val
 }
 
-                                                                               
-                                                                                
-                                                                                
-                
 func (b *bridge) UnlockAccount(call otto.FunctionCall) (response otto.Value) {
-	                                                   
+
 	if !call.Argument(0).IsString() {
 		throwJSException("first argument must be the account to unlock")
 	}
 	account := call.Argument(0)
 
-	                                                                        
 	var passwd otto.Value
 
 	if call.Argument(1).IsUndefined() || call.Argument(1).IsNull() {
@@ -154,7 +124,7 @@ func (b *bridge) UnlockAccount(call otto.FunctionCall) (response otto.Value) {
 		}
 		passwd = call.Argument(1)
 	}
-	                                                                        
+
 	duration := otto.NullValue()
 	if call.Argument(2).IsDefined() && !call.Argument(2).IsNull() {
 		if !call.Argument(2).IsNumber() {
@@ -162,7 +132,7 @@ func (b *bridge) UnlockAccount(call otto.FunctionCall) (response otto.Value) {
 		}
 		duration = call.Argument(2)
 	}
-	                                             
+
 	val, err := call.Otto.Call("jepv.unlockAccount", nil, account, passwd, duration)
 	if err != nil {
 		throwJSException(err.Error())
@@ -170,9 +140,6 @@ func (b *bridge) UnlockAccount(call otto.FunctionCall) (response otto.Value) {
 	return val
 }
 
-                                                                                         
-                                                                                  
-                                                       
 func (b *bridge) Sign(call otto.FunctionCall) (response otto.Value) {
 	var (
 		message = call.Argument(0)
@@ -187,7 +154,6 @@ func (b *bridge) Sign(call otto.FunctionCall) (response otto.Value) {
 		throwJSException("second argument must be the account to sign with")
 	}
 
-	                                                                                    
 	if passwd.IsUndefined() || passwd.IsNull() {
 		fmt.Fprintf(b.printer, "Give password for account %s\n", account)
 		if input, err := b.prompter.PromptPassword("Passphrase: "); err != nil {
@@ -200,7 +166,6 @@ func (b *bridge) Sign(call otto.FunctionCall) (response otto.Value) {
 		throwJSException("third argument must be the password to unlock the account")
 	}
 
-	                                             
 	val, err := call.Otto.Call("jepv.sign", nil, message, account, passwd)
 	if err != nil {
 		throwJSException(err.Error())
@@ -208,7 +173,6 @@ func (b *bridge) Sign(call otto.FunctionCall) (response otto.Value) {
 	return val
 }
 
-                                                                    
 func (b *bridge) Sleep(call otto.FunctionCall) (response otto.Value) {
 	if call.Argument(0).IsNumber() {
 		sleep, _ := call.Argument(0).ToInteger()
@@ -218,14 +182,12 @@ func (b *bridge) Sleep(call otto.FunctionCall) (response otto.Value) {
 	return throwJSException("usage: sleep(<number of seconds>)")
 }
 
-                                                                                     
-                                      
 func (b *bridge) SleepBlocks(call otto.FunctionCall) (response otto.Value) {
 	var (
 		blocks = int64(0)
-		sleep  = int64(9999999999999999)                
+		sleep  = int64(9999999999999999) 
 	)
-	                                           
+
 	nArgs := len(call.ArgumentList)
 	if nArgs == 0 {
 		throwJSException("usage: sleepBlocks(<n blocks>[, max sleep in seconds])")
@@ -244,8 +206,7 @@ func (b *bridge) SleepBlocks(call otto.FunctionCall) (response otto.Value) {
 			throwJSException("expected number as second argument")
 		}
 	}
-	                                                                       
-	                                                               
+
 	blockNumber := func() int64 {
 		result, err := call.Otto.Run("epv.blockNumber")
 		if err != nil {
@@ -257,7 +218,7 @@ func (b *bridge) SleepBlocks(call otto.FunctionCall) (response otto.Value) {
 		}
 		return block
 	}
-	                                                                        
+
 	targetBlockNr := blockNumber() + blocks
 	deadline := time.Now().Add(time.Duration(sleep) * time.Second)
 
@@ -276,9 +237,8 @@ type jsonrpcCall struct {
 	Params []interface{}
 }
 
-                                                   
 func (b *bridge) Send(call otto.FunctionCall) (response otto.Value) {
-	                                         
+
 	JSON, _ := call.Otto.Object("JSON")
 	reqVal, err := JSON.Call("stringify", call.Argument(0))
 	if err != nil {
@@ -290,7 +250,7 @@ func (b *bridge) Send(call otto.FunctionCall) (response otto.Value) {
 		reqs   []jsonrpcCall
 		batch  bool
 	)
-	dec.UseNumber()                  
+	dec.UseNumber() 
 	if rawReq[0] == '[' {
 		batch = true
 		dec.Decode(&reqs)
@@ -300,7 +260,6 @@ func (b *bridge) Send(call otto.FunctionCall) (response otto.Value) {
 		dec.Decode(&reqs[0])
 	}
 
-	                        
 	resps, _ := call.Otto.Object("new Array()")
 	for _, req := range reqs {
 		resp, _ := call.Otto.Object(`({"jsonrpc":"2.0"})`)
@@ -310,8 +269,7 @@ func (b *bridge) Send(call otto.FunctionCall) (response otto.Value) {
 		switch err := err.(type) {
 		case nil:
 			if result == nil {
-				                                                      
-				                               
+
 				resp.Set("result", otto.NullValue())
 			} else {
 				resultVal, err := JSON.Call("parse", string(result))
@@ -329,8 +287,6 @@ func (b *bridge) Send(call otto.FunctionCall) (response otto.Value) {
 		resps.Call("push", resp)
 	}
 
-	                                                            
-	                                   
 	if batch {
 		response = resps.Value()
 	} else {
@@ -347,8 +303,6 @@ func setError(resp *otto.Object, code int, msg string) {
 	resp.Set("error", map[string]interface{}{"code": code, "message": msg})
 }
 
-                                                                              
-                                                
 func throwJSException(msg interface{}) otto.Value {
 	val, err := otto.ToValue(msg)
 	if err != nil {

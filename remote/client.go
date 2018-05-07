@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package rpc
 
@@ -42,42 +27,27 @@ var (
 )
 
 const (
-	           
+
 	tcpKeepAliveInterval = 30 * time.Second
-	defaultDialTimeout   = 10 * time.Second                                                    
-	defaultWriteTimeout  = 10 * time.Second                                                 
-	subscribeTimeout     = 5 * time.Second                                                     
+	defaultDialTimeout   = 10 * time.Second 
+	defaultWriteTimeout  = 10 * time.Second 
+	subscribeTimeout     = 5 * time.Second  
 )
 
 const (
-	                                                                
-	  
-	                                                                                   
-	                                                                                   
-	                                                                                    
-	                    
-	  
-	                                                                               
-	                                                                               
-	           
+
 	maxClientSubscriptionBuffer = 8000
 )
 
-                                              
 type BatchElem struct {
 	Method string
 	Args   []interface{}
-	                                                                     
-	                                                                            
-	             
+
 	Result interface{}
-	                                                                      
-	                                                                
+
 	Error error
 }
 
-                                                                                    
-                                                         
 type jsonrpcMessage struct {
 	Version string          `json:"jsonrpc"`
 	ID      json.RawMessage `json:"id,omitempty"`
@@ -104,34 +74,29 @@ func (msg *jsonrpcMessage) String() string {
 	return string(b)
 }
 
-                                                   
 type Client struct {
 	idCounter   uint32
 	connectFunc func(ctx context.Context) (net.Conn, error)
 	isHTTP      bool
 
-	                                                              
-	                                                         
-	                                                 
 	writeConn net.Conn
 
-	               
 	close       chan struct{}
-	didQuit     chan struct{}                                             
-	reconnected chan net.Conn                                                                   
-	readErr     chan error                                        
-	readResp    chan []*jsonrpcMessage                                    
-	requestOp   chan *requestOp                                               
-	sendDone    chan error                                                                     
-	respWait    map[string]*requestOp                            
-	subs        map[string]*ClientSubscription                        
+	didQuit     chan struct{}                  
+	reconnected chan net.Conn                  
+	readErr     chan error                     
+	readResp    chan []*jsonrpcMessage         
+	requestOp   chan *requestOp                
+	sendDone    chan error                     
+	respWait    map[string]*requestOp          
+	subs        map[string]*ClientSubscription 
 }
 
 type requestOp struct {
 	ids  []json.RawMessage
 	err  error
-	resp chan *jsonrpcMessage                                     
-	sub  *ClientSubscription                                       
+	resp chan *jsonrpcMessage 
+	sub  *ClientSubscription  
 }
 
 func (op *requestOp) wait(ctx context.Context) (*jsonrpcMessage, error) {
@@ -143,24 +108,10 @@ func (op *requestOp) wait(ctx context.Context) (*jsonrpcMessage, error) {
 	}
 }
 
-                                               
-  
-                                                                                          
-                                                                                    
-                                                                                   
-                                                                               
-  
-                                                                       
-  
-                                                                 
 func Dial(rawurl string) (*Client, error) {
 	return DialContext(context.Background(), rawurl)
 }
 
-                                                        
-  
-                                                                                          
-                                                      
 func DialContext(ctx context.Context, rawurl string) (*Client, error) {
 	u, err := url.Parse(rawurl)
 	if err != nil {
@@ -210,8 +161,6 @@ func (c *Client) nextID() json.RawMessage {
 	return []byte(strconv.FormatUint(uint64(id), 10))
 }
 
-                                                                        
-                                         
 func (c *Client) SupportedModules() (map[string]string, error) {
 	var result map[string]string
 	ctx, cancel := context.WithTimeout(context.Background(), subscribeTimeout)
@@ -220,7 +169,6 @@ func (c *Client) SupportedModules() (map[string]string, error) {
 	return result, err
 }
 
-                                                            
 func (c *Client) Close() {
 	if c.isHTTP {
 		return
@@ -232,21 +180,11 @@ func (c *Client) Close() {
 	}
 }
 
-                                                                             
-                               
-  
-                                                                               
-                                                          
 func (c *Client) Call(result interface{}, method string, args ...interface{}) error {
 	ctx := context.Background()
 	return c.CallContext(ctx, result, method, args...)
 }
 
-                                                                                   
-                                                                                       
-  
-                                                                               
-                                                          
 func (c *Client) CallContext(ctx context.Context, result interface{}, method string, args ...interface{}) error {
 	msg, err := c.newMessage(method, args...)
 	if err != nil {
@@ -263,7 +201,6 @@ func (c *Client) CallContext(ctx context.Context, result interface{}, method str
 		return err
 	}
 
-	                                                                                 
 	switch resp, err := op.wait(ctx); {
 	case err != nil:
 		return err
@@ -276,27 +213,11 @@ func (c *Client) CallContext(ctx context.Context, result interface{}, method str
 	}
 }
 
-                                                                                
-                                        
-  
-                                                                                
-                                                                                
-  
-                                                                           
 func (c *Client) BatchCall(b []BatchElem) error {
 	ctx := context.Background()
 	return c.BatchCallContext(ctx, b)
 }
 
-                                                                                
-                                                                            
-                      
-  
-                                                                                      
-                                                                                     
-                                              
-  
-                                                                           
 func (c *Client) BatchCallContext(ctx context.Context, b []BatchElem) error {
 	msgs := make([]*jsonrpcMessage, len(b))
 	op := &requestOp{
@@ -319,16 +240,13 @@ func (c *Client) BatchCallContext(ctx context.Context, b []BatchElem) error {
 		err = c.send(ctx, op, msgs)
 	}
 
-	                                       
 	for n := 0; n < len(b) && err == nil; n++ {
 		var resp *jsonrpcMessage
 		resp, err = op.wait(ctx)
 		if err != nil {
 			break
 		}
-		                                                   
-		                                                           
-		                                       
+
 		var elem *BatchElem
 		for i := range msgs {
 			if bytes.Equal(msgs[i].ID, resp.ID) {
@@ -349,30 +267,16 @@ func (c *Client) BatchCallContext(ctx context.Context, b []BatchElem) error {
 	return err
 }
 
-                                                                  
 func (c *Client) EPVSubscribe(ctx context.Context, channel interface{}, args ...interface{}) (*ClientSubscription, error) {
 	return c.Subscribe(ctx, "epv", channel, args...)
 }
 
-                                                                  
 func (c *Client) ShhSubscribe(ctx context.Context, channel interface{}, args ...interface{}) (*ClientSubscription, error) {
 	return c.Subscribe(ctx, "shh", channel, args...)
 }
 
-                                                                               
-                                                                            
-                                                                            
-                                                         
-  
-                                                                                        
-                                                           
-  
-                                                                                       
-                                                                                    
-                                                                                         
-                                                                          
 func (c *Client) Subscribe(ctx context.Context, namespace string, channel interface{}, args ...interface{}) (*ClientSubscription, error) {
-	                               
+
 	chanVal := reflect.ValueOf(channel)
 	if chanVal.Kind() != reflect.Chan || chanVal.Type().ChanDir()&reflect.SendDir == 0 {
 		panic("first argument to Subscribe must be a writable channel")
@@ -394,8 +298,6 @@ func (c *Client) Subscribe(ctx context.Context, namespace string, channel interf
 		sub:  newClientSubscription(c, namespace, chanVal),
 	}
 
-	                                 
-	                                                                    
 	if err := c.send(ctx, op, msg); err != nil {
 		return nil, err
 	}
@@ -413,8 +315,6 @@ func (c *Client) newMessage(method string, paramsIn ...interface{}) (*jsonrpcMes
 	return &jsonrpcMessage{Version: "2.0", ID: c.nextID(), Method: method, Params: params}, nil
 }
 
-                                                                              
-                                        
 func (c *Client) send(ctx context.Context, op *requestOp, msg interface{}) error {
 	select {
 	case c.requestOp <- op:
@@ -425,8 +325,7 @@ func (c *Client) send(ctx context.Context, op *requestOp, msg interface{}) error
 		c.sendDone <- err
 		return err
 	case <-ctx.Done():
-		                                                                        
-		                              
+
 		return ctx.Err()
 	case <-c.didQuit:
 		return ErrClientQuit
@@ -438,7 +337,7 @@ func (c *Client) write(ctx context.Context, msg interface{}) error {
 	if !ok {
 		deadline = time.Now().Add(defaultWriteTimeout)
 	}
-	                                                                
+
 	if c.writeConn == nil {
 		if err := c.reconnect(ctx); err != nil {
 			return err
@@ -468,24 +367,21 @@ func (c *Client) reconnect(ctx context.Context) error {
 	}
 }
 
-                                           
-                                                                
-                                                              
 func (c *Client) dispatch(conn net.Conn) {
-	                               
+
 	go c.read(conn)
 
 	var (
-		lastOp        *requestOp                                 
-		requestOpLock = c.requestOp                                   
-		reading       = true                                          
+		lastOp        *requestOp    
+		requestOpLock = c.requestOp 
+		reading       = true        
 	)
 	defer close(c.didQuit)
 	defer func() {
 		c.closeRequestOps(ErrClientQuit)
 		conn.Close()
 		if reading {
-			                                          
+
 			for {
 				select {
 				case <-c.readResp:
@@ -501,7 +397,6 @@ func (c *Client) dispatch(conn net.Conn) {
 		case <-c.close:
 			return
 
-		             
 		case batch := <-c.readResp:
 			for _, msg := range batch {
 				switch {
@@ -519,7 +414,7 @@ func (c *Client) dispatch(conn net.Conn) {
 					log.Debug("", "msg", log.Lazy{Fn: func() string {
 						return fmt.Sprint("<-readResp: dropping weird message", msg)
 					}})
-					                    
+
 				}
 			}
 
@@ -532,7 +427,7 @@ func (c *Client) dispatch(conn net.Conn) {
 		case newconn := <-c.reconnected:
 			log.Debug(fmt.Sprintf("<-reconnected: (reading=%t) %v", reading, conn.RemoteAddr()))
 			if reading {
-				                                                                
+
 				conn.Close()
 				<-c.readErr
 			}
@@ -540,9 +435,8 @@ func (c *Client) dispatch(conn net.Conn) {
 			reading = true
 			conn = newconn
 
-		             
 		case op := <-requestOpLock:
-			                                                                     
+
 			requestOpLock = nil
 			lastOp = op
 			for _, id := range op.ids {
@@ -551,26 +445,23 @@ func (c *Client) dispatch(conn net.Conn) {
 
 		case err := <-c.sendDone:
 			if err != nil {
-				                                                                   
-				                                                                      
-				                                                                    
+
 				for _, id := range lastOp.ids {
 					delete(c.respWait, string(id))
 				}
 			}
-			                             
+
 			requestOpLock = c.requestOp
 			lastOp = nil
 		}
 	}
 }
 
-                                                                      
 func (c *Client) closeRequestOps(err error) {
 	didClose := make(map[*requestOp]bool)
 
 	for id, op := range c.respWait {
-		                                                                  
+
 		delete(c.respWait, id)
 
 		if !didClose[op] {
@@ -610,14 +501,12 @@ func (c *Client) handleResponse(msg *jsonrpcMessage) {
 		return
 	}
 	delete(c.respWait, string(msg.ID))
-	                                                                  
+
 	if op.sub == nil {
 		op.resp <- msg
 		return
 	}
-	                                                                   
-	                                                                        
-	                       
+
 	defer close(op.resp)
 	if msg.Error != nil {
 		op.err = msg.Error
@@ -628,8 +517,6 @@ func (c *Client) handleResponse(msg *jsonrpcMessage) {
 		c.subs[op.sub.subid] = op.sub
 	}
 }
-
-                                            
 
 func (c *Client) read(conn net.Conn) error {
 	var (
@@ -660,9 +547,6 @@ func (c *Client) read(conn net.Conn) error {
 	}
 }
 
-                 
-
-                                                                                   
 type ClientSubscription struct {
 	client    *Client
 	etype     reflect.Type
@@ -671,9 +555,9 @@ type ClientSubscription struct {
 	subid     string
 	in        chan json.RawMessage
 
-	quitOnce sync.Once                                   
-	quit     chan struct{}                                              
-	errOnce  sync.Once                                  
+	quitOnce sync.Once     
+	quit     chan struct{} 
+	errOnce  sync.Once     
 	err      chan error
 }
 
@@ -690,20 +574,10 @@ func newClientSubscription(c *Client, namespace string, channel reflect.Value) *
 	return sub
 }
 
-                                                                                     
-                                                                    
-  
-                                                                         
-                                                                  
-                                                            
-  
-                                                                              
 func (sub *ClientSubscription) Err() <-chan error {
 	return sub.err
 }
 
-                                                                          
-                                          
 func (sub *ClientSubscription) Unsubscribe() {
 	sub.quitWithError(nil, true)
 	sub.errOnce.Do(func() { close(sub.err) })
@@ -711,16 +585,14 @@ func (sub *ClientSubscription) Unsubscribe() {
 
 func (sub *ClientSubscription) quitWithError(err error, unsubscribeServer bool) {
 	sub.quitOnce.Do(func() {
-		                                                                  
-		                                                               
-		                    
+
 		close(sub.quit)
 		if unsubscribeServer {
 			sub.requestUnsubscribe()
 		}
 		if err != nil {
 			if err == ErrClientQuit {
-				err = nil                                     
+				err = nil 
 			}
 			sub.err <- err
 		}
@@ -752,18 +624,18 @@ func (sub *ClientSubscription) forward() (err error, unsubscribeServer bool) {
 		var chosen int
 		var recv reflect.Value
 		if buffer.Len() == 0 {
-			                        
+
 			chosen, recv, _ = reflect.Select(cases[:2])
 		} else {
-			                                                
+
 			cases[2].Send = reflect.ValueOf(buffer.Front().Value)
 			chosen, recv, _ = reflect.Select(cases)
 		}
 
 		switch chosen {
-		case 0:              
+		case 0: 
 			return nil, false
-		case 1:            
+		case 1: 
 			val, err := sub.unmarshal(recv.Interface().(json.RawMessage))
 			if err != nil {
 				return err, true
@@ -772,8 +644,8 @@ func (sub *ClientSubscription) forward() (err error, unsubscribeServer bool) {
 				return ErrSubscriptionQueueOverflow, true
 			}
 			buffer.PushBack(val)
-		case 2:                 
-			cases[2].Send = reflect.Value{}                              
+		case 2: 
+			cases[2].Send = reflect.Value{} 
 			buffer.Remove(buffer.Front())
 		}
 	}

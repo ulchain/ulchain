@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                                      
 package flowcontrol
 
 import (
@@ -93,7 +77,6 @@ func (self *ClientManager) Stop() {
 	self.lock.Lock()
 	defer self.lock.Unlock()
 
-	                                                     
 	self.nodes = make(map[*cmNode]struct{})
 	close(self.resumeQueue)
 }
@@ -124,7 +107,6 @@ func (self *ClientManager) removeNode(node *cmNode) {
 	self.update(time)
 }
 
-                   
 func (self *ClientManager) updateNodes(time mclock.AbsTime) (rce bool) {
 	var sumWeight, rcSum uint64
 	for node := range self.nodes {
@@ -196,7 +178,7 @@ func (self *ClientManager) accept(node *cmNode, time mclock.AbsTime) bool {
 		<-resume
 		self.lock.Lock()
 		if _, ok := self.nodes[node]; !ok {
-			return false                                                               
+			return false 
 		}
 	}
 	self.simReqCnt++

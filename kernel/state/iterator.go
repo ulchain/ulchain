@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package state
 
@@ -25,40 +10,34 @@ import (
 	"github.com/epvchain/go-epvchain/fast"
 )
 
-                                                                            
-                                                               
 type NodeIterator struct {
-	state *StateDB                        
+	state *StateDB 
 
-	stateIt trie.NodeIterator                                              
-	dataIt  trie.NodeIterator                                                      
+	stateIt trie.NodeIterator 
+	dataIt  trie.NodeIterator 
 
-	accountHash common.Hash                                           
-	codeHash    common.Hash                                    
-	code        []byte                                               
+	accountHash common.Hash 
+	codeHash    common.Hash 
+	code        []byte      
 
-	Hash   common.Hash                                                                    
-	Parent common.Hash                                                                     
+	Hash   common.Hash 
+	Parent common.Hash 
 
-	Error error                                                            
+	Error error 
 }
 
-                                                             
 func NewNodeIterator(state *StateDB) *NodeIterator {
 	return &NodeIterator{
 		state: state,
 	}
 }
 
-                                                                            
-                                                                            
-                                                   
 func (it *NodeIterator) Next() bool {
-	                                                       
+
 	if it.Error != nil {
 		return false
 	}
-	                                                                 
+
 	if err := it.step(); err != nil {
 		it.Error = err
 		return false
@@ -66,17 +45,16 @@ func (it *NodeIterator) Next() bool {
 	return it.retrieve()
 }
 
-                                                               
 func (it *NodeIterator) step() error {
-	                                               
+
 	if it.state == nil {
 		return nil
 	}
-	                                                
+
 	if it.stateIt == nil {
 		it.stateIt = it.state.trie.NodeIterator(nil)
 	}
-	                                                                       
+
 	if it.dataIt != nil {
 		if cont := it.dataIt.Next(true); !cont {
 			if it.dataIt.Error() != nil {
@@ -86,12 +64,12 @@ func (it *NodeIterator) step() error {
 		}
 		return nil
 	}
-	                                                 
+
 	if it.code != nil {
 		it.code = nil
 		return nil
 	}
-	                                                                      
+
 	if cont := it.stateIt.Next(true); !cont {
 		if it.stateIt.Error() != nil {
 			return it.stateIt.Error()
@@ -99,11 +77,11 @@ func (it *NodeIterator) step() error {
 		it.state, it.stateIt = nil, nil
 		return nil
 	}
-	                                                           
+
 	if !it.stateIt.Leaf() {
 		return nil
 	}
-	                                                                   
+
 	var account Account
 	if err := rlp.Decode(bytes.NewReader(it.stateIt.LeafBlob()), &account); err != nil {
 		return err
@@ -128,17 +106,14 @@ func (it *NodeIterator) step() error {
 	return nil
 }
 
-                                                                                
-                                                                          
 func (it *NodeIterator) retrieve() bool {
-	                                      
+
 	it.Hash = common.Hash{}
 
-	                                                    
 	if it.state == nil {
 		return false
 	}
-	                                       
+
 	switch {
 	case it.dataIt != nil:
 		it.Hash, it.Parent = it.dataIt.Hash(), it.dataIt.Parent()

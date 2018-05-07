@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 // +build windows
 
@@ -26,16 +11,12 @@ import (
 	"gopkg.in/natefinch/npipe.v2"
 )
 
-                                                                                   
-                                                                                         
 const defaultPipeDialTimeout = 2 * time.Second
 
-                                                            
 func ipcListen(endpoint string) (net.Listener, error) {
 	return npipe.Listen(endpoint)
 }
 
-                                                                                 
 func newIPCConnection(ctx context.Context, endpoint string) (net.Conn, error) {
 	timeout := defaultPipeDialTimeout
 	if deadline, ok := ctx.Deadline(); ok {

@@ -11,16 +11,10 @@ import (
 	"github.com/go-stack/stack"
 )
 
-                                                           
-                                                                       
-                                                                        
-                                                                      
 type Handler interface {
 	Log(r *Record) error
 }
 
-                                                                 
-            
 func FuncHandler(fn func(r *Record) error) Handler {
 	return funcHandler(fn)
 }
@@ -31,13 +25,6 @@ func (h funcHandler) Log(r *Record) error {
 	return h(r)
 }
 
-                                                   
-                                                   
-                                               
-           
-  
-                                                              
-                                                               
 func StreamHandler(wr io.Writer, fmtr Format) Handler {
 	h := FuncHandler(func(r *Record) error {
 		_, err := wr.Write(fmtr.Format(r))
@@ -46,9 +33,6 @@ func StreamHandler(wr io.Writer, fmtr Format) Handler {
 	return LazyHandler(SyncHandler(h))
 }
 
-                                                                
-                                                                    
-                                     
 func SyncHandler(h Handler) Handler {
 	var mu sync.Mutex
 	return FuncHandler(func(r *Record) error {
@@ -58,10 +42,6 @@ func SyncHandler(h Handler) Handler {
 	})
 }
 
-                                                                          
-                                      
-                                                                             
-                                                   
 func FileHandler(path string, fmtr Format) (Handler, error) {
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
@@ -70,8 +50,6 @@ func FileHandler(path string, fmtr Format) (Handler, error) {
 	return closingHandler{f, StreamHandler(f, fmtr)}, nil
 }
 
-                                                                    
-                       
 func NetHandler(network, addr string, fmtr Format) (Handler, error) {
 	conn, err := net.Dial(network, addr)
 	if err != nil {
@@ -81,9 +59,6 @@ func NetHandler(network, addr string, fmtr Format) (Handler, error) {
 	return closingHandler{conn, StreamHandler(conn, fmtr)}, nil
 }
 
-                                                          
-                                                                   
-                               
 type closingHandler struct {
 	io.WriteCloser
 	Handler
@@ -93,8 +68,6 @@ func (h *closingHandler) Close() error {
 	return h.WriteCloser.Close()
 }
 
-                                                                            
-                                                         
 func CallerFileHandler(h Handler) Handler {
 	return FuncHandler(func(r *Record) error {
 		r.Ctx = append(r.Ctx, "caller", fmt.Sprint(r.Call))
@@ -102,8 +75,6 @@ func CallerFileHandler(h Handler) Handler {
 	})
 }
 
-                                                                             
-                             
 func CallerFuncHandler(h Handler) Handler {
 	return FuncHandler(func(r *Record) error {
 		r.Ctx = append(r.Ctx, "fn", formatCall("%+n", r.Call))
@@ -111,16 +82,10 @@ func CallerFuncHandler(h Handler) Handler {
 	})
 }
 
-                                                      
 func formatCall(format string, c stack.Call) string {
 	return fmt.Sprintf(format, c)
 }
 
-                                                                              
-                                                                             
-                                                                              
-                                                                            
-                                                                       
 func CallerStackHandler(format string, h Handler) Handler {
 	return FuncHandler(func(r *Record) error {
 		s := stack.Trace().TrimBelow(r.Call).TrimRuntime()
@@ -131,19 +96,6 @@ func CallerStackHandler(format string, h Handler) Handler {
 	})
 }
 
-                                                                  
-                                                                     
-                                                      
-  
-                                                            
-                                              
-                                    
-                                          
-               
-           
-                      
-            
-  
 func FilterHandler(fn func(r *Record) bool, h Handler) Handler {
 	return FuncHandler(func(r *Record) error {
 		if fn(r) {
@@ -153,13 +105,6 @@ func FilterHandler(fn func(r *Record) bool, h Handler) Handler {
 	})
 }
 
-                                                                
-                                                        
-                                                              
-                        
-  
-                                                                
-  
 func MatchFilterHandler(key string, value interface{}, h Handler) Handler {
 	return FilterHandler(func(r *Record) (pass bool) {
 		switch key {
@@ -180,53 +125,22 @@ func MatchFilterHandler(key string, value interface{}, h Handler) Handler {
 	}, h)
 }
 
-                                                      
-                                                  
-                                                     
-                          
-  
-                                                            
-  
 func LvlFilterHandler(maxLvl Lvl, h Handler) Handler {
 	return FilterHandler(func(r *Record) (pass bool) {
 		return r.Lvl <= maxLvl
 	}, h)
 }
 
-                                                               
-                                                                
-                                                            
-                  
-  
-                        
-                                                                        
-                             
-  
 func MultiHandler(hs ...Handler) Handler {
 	return FuncHandler(func(r *Record) error {
 		for _, h := range hs {
-			                             
+
 			h.Log(r)
 		}
 		return nil
 	})
 }
 
-                                                                
-                                                                  
-                                                                      
-                                                                      
-                                                         
-                                        
-  
-                           
-                                                                 
-                                                                        
-                             
-  
-                                                                               
-                                                                          
-                                                           
 func FailoverHandler(hs ...Handler) Handler {
 	return FuncHandler(func(r *Record) error {
 		var err error
@@ -243,9 +157,6 @@ func FailoverHandler(hs ...Handler) Handler {
 	})
 }
 
-                                                          
-                                                                
-                                                 
 func ChannelHandler(recs chan<- *Record) Handler {
 	return FuncHandler(func(r *Record) error {
 		recs <- r
@@ -253,11 +164,6 @@ func ChannelHandler(recs chan<- *Record) Handler {
 	})
 }
 
-                                                   
-                                                           
-                                                            
-                                                                
-                                                                             
 func BufferedHandler(bufSize int, h Handler) Handler {
 	recs := make(chan *Record, bufSize)
 	go func() {
@@ -268,14 +174,9 @@ func BufferedHandler(bufSize int, h Handler) Handler {
 	return ChannelHandler(recs)
 }
 
-                                                                        
-                                                                    
-                                                                           
-                                    
 func LazyHandler(h Handler) Handler {
 	return FuncHandler(func(r *Record) error {
-		                                                   
-		                                                           
+
 		hadErr := false
 		for i := 1; i < len(r.Ctx); i += 2 {
 			lz, ok := r.Ctx[i].(Lazy)
@@ -329,18 +230,12 @@ func evaluateLazy(lz Lazy) (interface{}, error) {
 	}
 }
 
-                                                                  
-                                                                
-                                
 func DiscardHandler() Handler {
 	return FuncHandler(func(r *Record) error {
 		return nil
 	})
 }
 
-                                                                    
-                                                                      
-                                                                                 
 var Must muster
 
 func must(h Handler, err error) Handler {

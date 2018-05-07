@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                         
 package les
 
 import (
@@ -37,63 +21,42 @@ import (
 )
 
 const (
-	                                                                            
-	                                                  
-	                                                
-	                                                                         
-	                                                              
+
 	shortRetryCnt   = 5
 	shortRetryDelay = time.Second * 5
 	longRetryDelay  = time.Minute * 10
-	                                                                                   
-	                                                                            
+
 	maxNewEntries = 1000
-	                                                                            
-	                                                                           
-	                                                              
+
 	maxKnownEntries = 1000
-	                                              
+
 	targetServerCount = 5
-	                                                   
-	                                                      
+
 	targetKnownSelect = 3
-	                                                                           
+
 	dialTimeout = time.Second * 30
-	                                                                             
-	                                             
+
 	targetConnTime = time.Minute * 10
-	                                                                              
-	                                                                                   
+
 	discoverExpireStart = time.Minute * 20
 	discoverExpireConst = time.Minute * 20
-	                                                                                
-	                                                                 
+
 	failDropLn = 0.1
-	                                                                                
-	                                                                          
-	                                                                              
-	                                                            
+
 	pstatRecentAdjust   = 0.1
 	pstatReturnToMeanTC = time.Hour
-	                                                                                     
-	                                                                 
+
 	addrFailDropLn = math.Ln2
-	                                                                            
-	                                                                          
+
 	responseScoreTC = time.Millisecond * 100
 	delayScoreTC    = time.Second * 5
 	timeoutPow      = 10
-	                                                                               
-	                                                                 
+
 	peerSelectMinWeight = 0.005
-	                                                                           
-	                                                  
+
 	initStatsWeight = 1
 )
 
-                                                                                      
-                                                                                  
-                                                                                     
 type serverPool struct {
 	db     epvdb.Database
 	dbKey  []byte
@@ -119,7 +82,6 @@ type serverPool struct {
 	fastDiscover               bool
 }
 
-                                                  
 func newServerPool(db epvdb.Database, quit chan struct{}, wg *sync.WaitGroup) *serverPool {
 	pool := &serverPool{
 		db:           db,
@@ -156,11 +118,6 @@ func (pool *serverPool) start(server *p2p.Server, topic discv5.Topic) {
 	pool.checkDial()
 }
 
-                                                                                    
-                                                                              
-                                                
-                                                                                        
-                                           
 func (pool *serverPool) connect(p *peer, ip net.IP, port uint16) *poolEntry {
 	pool.lock.Lock()
 	defer pool.lock.Unlock()
@@ -188,7 +145,6 @@ func (pool *serverPool) connect(p *peer, ip net.IP, port uint16) *poolEntry {
 	return entry
 }
 
-                                                           
 func (pool *serverPool) registered(entry *poolEntry) {
 	log.Debug("Registered new entry", "enode", entry.id)
 	pool.lock.Lock()
@@ -204,9 +160,6 @@ func (pool *serverPool) registered(entry *poolEntry) {
 	entry.shortRetry = shortRetryCnt
 }
 
-                                                                                   
-                                                                                   
-                                                                        
 func (pool *serverPool) disconnect(entry *poolEntry) {
 	log.Debug("Disconnected old entry", "enode", entry.id)
 	pool.lock.Lock()
@@ -247,14 +200,12 @@ const (
 	pseResponseTimeout
 )
 
-                                                                                      
 type poolStatAdjust struct {
 	adjustType int
 	entry      *poolEntry
 	time       time.Duration
 }
 
-                                                                         
 func (pool *serverPool) adjustBlockDelay(entry *poolEntry, time time.Duration) {
 	if entry == nil {
 		return
@@ -262,7 +213,6 @@ func (pool *serverPool) adjustBlockDelay(entry *poolEntry, time time.Duration) {
 	pool.adjustStats <- poolStatAdjust{pseBlockDelay, entry, time}
 }
 
-                                                                            
 func (pool *serverPool) adjustResponseTime(entry *poolEntry, time time.Duration, timeout bool) {
 	if entry == nil {
 		return
@@ -274,7 +224,6 @@ func (pool *serverPool) adjustResponseTime(entry *poolEntry, time time.Duration,
 	}
 }
 
-                                                                             
 func (pool *serverPool) eventLoop() {
 	lookupCnt := 0
 	var convTime mclock.AbsTime
@@ -356,7 +305,7 @@ func (pool *serverPool) findOrNewNode(id discover.NodeID, ip net.IP, port uint16
 			shortRetry: shortRetryCnt,
 		}
 		pool.entries[id] = entry
-		                                                                                                
+
 		entry.connectStats.add(1, initStatsWeight)
 		entry.delayStats.add(0, initStatsWeight)
 		entry.responseStats.add(0, initStatsWeight)
@@ -380,7 +329,6 @@ func (pool *serverPool) findOrNewNode(id discover.NodeID, ip net.IP, port uint16
 	return entry
 }
 
-                                                                     
 func (pool *serverPool) loadNodes() {
 	enc, err := pool.db.Get(pool.dbKey)
 	if err != nil {
@@ -404,8 +352,6 @@ func (pool *serverPool) loadNodes() {
 	}
 }
 
-                                                                                
-                                                 
 func (pool *serverPool) saveNodes() {
 	list := make([]*poolEntry, len(pool.knownQueue.queue))
 	for i := range list {
@@ -417,9 +363,6 @@ func (pool *serverPool) saveNodes() {
 	}
 }
 
-                                                                          
-                                                                                  
-                                                                
 func (pool *serverPool) removeEntry(entry *poolEntry) {
 	pool.newSelect.remove((*discoveredEntry)(entry))
 	pool.knownSelect.remove((*knownEntry)(entry))
@@ -427,7 +370,6 @@ func (pool *serverPool) removeEntry(entry *poolEntry) {
 	delete(pool.entries, entry.id)
 }
 
-                                                                               
 func (pool *serverPool) setRetryDial(entry *poolEntry) {
 	delay := longRetryDelay
 	if entry.shortRetry > 0 {
@@ -448,16 +390,12 @@ func (pool *serverPool) setRetryDial(entry *poolEntry) {
 	}()
 }
 
-                                                                                      
-                                                                    
 func (pool *serverPool) updateCheckDial(entry *poolEntry) {
 	pool.newSelect.update((*discoveredEntry)(entry))
 	pool.knownSelect.update((*knownEntry)(entry))
 	pool.checkDial()
 }
 
-                                                                                    
-                                                 
 func (pool *serverPool) checkDial() {
 	fillWithKnownSelects := !pool.fastDiscover
 	for pool.knownSelected < targetKnownSelect {
@@ -476,9 +414,7 @@ func (pool *serverPool) checkDial() {
 		pool.dial((*poolEntry)(entry.(*discoveredEntry)), false)
 	}
 	if fillWithKnownSelects {
-		                                                                          
-		                                                                         
-		                            
+
 		for pool.knownSelected < targetServerCount {
 			entry := pool.knownSelect.choose()
 			if entry == nil {
@@ -489,7 +425,6 @@ func (pool *serverPool) checkDial() {
 	}
 }
 
-                                  
 func (pool *serverPool) dial(entry *poolEntry, knownSelected bool) {
 	if pool.server == nil || entry.state != psNotConnected {
 		return
@@ -517,8 +452,6 @@ func (pool *serverPool) dial(entry *poolEntry, knownSelected bool) {
 	}()
 }
 
-                                                                                    
-                                                 
 func (pool *serverPool) checkDialTimeout(entry *poolEntry) {
 	if entry.state != psDialed {
 		return
@@ -542,7 +475,6 @@ const (
 	psRegistered
 )
 
-                                                                                  
 type poolEntry struct {
 	peer                  *peer
 	id                    discover.NodeID
@@ -594,10 +526,8 @@ func (e *poolEntry) DecodeRLP(s *rlp.Stream) error {
 	return nil
 }
 
-                                     
 type discoveredEntry poolEntry
 
-                                                                         
 func (e *discoveredEntry) Weight() int64 {
 	if e.state != psNotConnected || e.delayedRetry {
 		return 0
@@ -610,10 +540,8 @@ func (e *discoveredEntry) Weight() int64 {
 	}
 }
 
-                                
 type knownEntry poolEntry
 
-                                                              
 func (e *knownEntry) Weight() int64 {
 	if e.state != psNotConnected || !e.known || e.delayedRetry {
 		return 0
@@ -621,15 +549,11 @@ func (e *knownEntry) Weight() int64 {
 	return int64(1000000000 * e.connectStats.recentAvg() * math.Exp(-float64(e.lastConnected.fails)*failDropLn-e.responseStats.recentAvg()/float64(responseScoreTC)-e.delayStats.recentAvg()/float64(delayScoreTC)) * math.Pow(1-e.timeoutStats.recentAvg(), timeoutPow))
 }
 
-                                                                                      
-                                                                                    
-                                                                                 
-                                                                            
 type poolEntryAddress struct {
 	ip       net.IP
 	port     uint16
-	lastSeen mclock.AbsTime                                                            
-	fails    uint                                                                               
+	lastSeen mclock.AbsTime 
+	fails    uint           
 }
 
 func (a *poolEntryAddress) Weight() int64 {
@@ -641,16 +565,11 @@ func (a *poolEntryAddress) strKey() string {
 	return a.ip.String() + ":" + strconv.Itoa(int(a.port))
 }
 
-                                                                                 
-                                                                          
-                                                                            
-                                                     
 type poolStats struct {
 	sum, weight, avg, recent float64
 	lastRecalc               mclock.AbsTime
 }
 
-                                                                                            
 func (s *poolStats) init(sum, weight float64) {
 	s.sum = sum
 	s.weight = weight
@@ -663,7 +582,6 @@ func (s *poolStats) init(sum, weight float64) {
 	s.lastRecalc = mclock.Now()
 }
 
-                                                                        
 func (s *poolStats) recalc() {
 	now := mclock.Now()
 	s.recent = s.avg + (s.recent-s.avg)*math.Exp(-float64(now-s.lastRecalc)/float64(pstatReturnToMeanTC))
@@ -679,14 +597,12 @@ func (s *poolStats) recalc() {
 	s.lastRecalc = now
 }
 
-                                         
 func (s *poolStats) add(value, weight float64) {
 	s.weight += weight
 	s.sum += value * weight
 	s.recalc()
 }
 
-                                                    
 func (s *poolStats) recentAvg() float64 {
 	s.recalc()
 	return s.recent
@@ -707,20 +623,16 @@ func (s *poolStats) DecodeRLP(st *rlp.Stream) error {
 	return nil
 }
 
-                                                                                
-                                                    
 type poolEntryQueue struct {
-	queue                  map[int]*poolEntry                                                         
+	queue                  map[int]*poolEntry 
 	newPtr, oldPtr, maxCnt int
 	removeFromPool         func(*poolEntry)
 }
 
-                                                 
 func newPoolEntryQueue(maxCnt int, removeFromPool func(*poolEntry)) poolEntryQueue {
 	return poolEntryQueue{queue: make(map[int]*poolEntry), maxCnt: maxCnt, removeFromPool: removeFromPool}
 }
 
-                                                                    
 func (q *poolEntryQueue) fetchOldest() *poolEntry {
 	if len(q.queue) == 0 {
 		return nil
@@ -735,15 +647,12 @@ func (q *poolEntryQueue) fetchOldest() *poolEntry {
 	}
 }
 
-                                         
 func (q *poolEntryQueue) remove(entry *poolEntry) {
 	if q.queue[entry.queueIdx] == entry {
 		delete(q.queue, entry.queueIdx)
 	}
 }
 
-                                                                                      
-                                                                                        
 func (q *poolEntryQueue) setLatest(entry *poolEntry) {
 	if q.queue[entry.queueIdx] == entry {
 		delete(q.queue, entry.queueIdx)

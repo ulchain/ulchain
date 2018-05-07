@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package rpc
 
@@ -73,16 +58,14 @@ type jsonNotification struct {
 	Params  jsonSubscription `json:"params"`
 }
 
-                                                                                
-                                                                           
 type jsonCodec struct {
-	closer sync.Once                                      
-	closed chan interface{}                     
-	decMu  sync.Mutex                    
-	d      *json.Decoder                                  
-	encMu  sync.Mutex                    
-	e      *json.Encoder                          
-	rw     io.ReadWriteCloser              
+	closer sync.Once          
+	closed chan interface{}   
+	decMu  sync.Mutex         
+	d      *json.Decoder      
+	encMu  sync.Mutex         
+	e      *json.Encoder      
+	rw     io.ReadWriteCloser 
 }
 
 func (err *jsonError) Error() string {
@@ -96,17 +79,15 @@ func (err *jsonError) ErrorCode() int {
 	return err.Code
 }
 
-                                                                            
 func NewJSONCodec(rwc io.ReadWriteCloser) ServerCodec {
 	d := json.NewDecoder(rwc)
 	d.UseNumber()
 	return &jsonCodec{closed: make(chan interface{}), d: d, e: json.NewEncoder(rwc), rw: rwc}
 }
 
-                                                                       
 func isBatch(msg json.RawMessage) bool {
 	for _, c := range msg {
-		                                                                      
+
 		if c == 0x20 || c == 0x09 || c == 0x0a || c == 0x0d {
 			continue
 		}
@@ -115,9 +96,6 @@ func isBatch(msg json.RawMessage) bool {
 	return false
 }
 
-                                                                                   
-                                                                                
-                                                                       
 func (c *jsonCodec) ReadRequestHeaders() ([]rpcRequest, bool, Error) {
 	c.decMu.Lock()
 	defer c.decMu.Unlock()
@@ -134,8 +112,6 @@ func (c *jsonCodec) ReadRequestHeaders() ([]rpcRequest, bool, Error) {
 	return parseRequest(incomingMsg)
 }
 
-                                                                                     
-                                          
 func checkReqId(reqId json.RawMessage) error {
 	if len(reqId) == 0 {
 		return fmt.Errorf("missing request id")
@@ -150,9 +126,6 @@ func checkReqId(reqId json.RawMessage) error {
 	return fmt.Errorf("invalid request id")
 }
 
-                                                                                     
-                                                                                
-                                   
 func parseRequest(incomingMsg json.RawMessage) ([]rpcRequest, bool, Error) {
 	var in jsonRequest
 	if err := json.Unmarshal(incomingMsg, &in); err != nil {
@@ -163,11 +136,10 @@ func parseRequest(incomingMsg json.RawMessage) ([]rpcRequest, bool, Error) {
 		return nil, false, &invalidMessageError{err.Error()}
 	}
 
-	                                                                                              
 	if strings.HasSuffix(in.Method, subscribeMethodSuffix) {
 		reqs := []rpcRequest{{id: &in.Id, isPubSub: true}}
 		if len(in.Payload) > 0 {
-			                                        
+
 			var subscribeMethod [1]string
 			if err := json.Unmarshal(in.Payload, &subscribeMethod); err != nil {
 				log.Debug(fmt.Sprintf("Unable to parse subscription method: %v\n", err))
@@ -191,7 +163,6 @@ func parseRequest(incomingMsg json.RawMessage) ([]rpcRequest, bool, Error) {
 		return nil, false, &methodNotFoundError{in.Method, ""}
 	}
 
-	                   
 	if len(in.Payload) == 0 {
 		return []rpcRequest{{service: elems[0], method: elems[1], id: &in.Id}}, false, nil
 	}
@@ -199,8 +170,6 @@ func parseRequest(incomingMsg json.RawMessage) ([]rpcRequest, bool, Error) {
 	return []rpcRequest{{service: elems[0], method: elems[1], id: &in.Id, params: in.Payload}}, false, nil
 }
 
-                                                                                                                      
-                                                                             
 func parseBatchRequest(incomingMsg json.RawMessage) ([]rpcRequest, bool, Error) {
 	var in []jsonRequest
 	if err := json.Unmarshal(incomingMsg, &in); err != nil {
@@ -215,11 +184,10 @@ func parseBatchRequest(incomingMsg json.RawMessage) ([]rpcRequest, bool, Error) 
 
 		id := &in[i].Id
 
-		                                                                                                 
 		if strings.HasSuffix(r.Method, subscribeMethodSuffix) {
 			requests[i] = rpcRequest{id: id, isPubSub: true}
 			if len(r.Payload) > 0 {
-				                                        
+
 				var subscribeMethod [1]string
 				if err := json.Unmarshal(r.Payload, &subscribeMethod); err != nil {
 					log.Debug(fmt.Sprintf("Unable to parse subscription method: %v\n", err))
@@ -254,8 +222,6 @@ func parseBatchRequest(incomingMsg json.RawMessage) ([]rpcRequest, bool, Error) 
 	return requests, true, nil
 }
 
-                                                                                         
-                                                                           
 func (c *jsonCodec) ParseRequestArguments(argTypes []reflect.Type, params interface{}) ([]reflect.Value, Error) {
 	if args, ok := params.(json.RawMessage); !ok {
 		return nil, &invalidParamsError{"Invalid params supplied"}
@@ -264,16 +230,13 @@ func (c *jsonCodec) ParseRequestArguments(argTypes []reflect.Type, params interf
 	}
 }
 
-                                                                                        
-                                                                                   
-                                                                          
 func parsePositionalArguments(rawArgs json.RawMessage, types []reflect.Type) ([]reflect.Value, Error) {
-	                                    
+
 	dec := json.NewDecoder(bytes.NewReader(rawArgs))
 	if tok, _ := dec.Token(); tok != json.Delim('[') {
 		return nil, &invalidParamsError{"non-array args"}
 	}
-	             
+
 	args := make([]reflect.Value, 0, len(types))
 	for i := 0; dec.More(); i++ {
 		if i >= len(types) {
@@ -288,11 +251,11 @@ func parsePositionalArguments(rawArgs json.RawMessage, types []reflect.Type) ([]
 		}
 		args = append(args, argval.Elem())
 	}
-	                          
+
 	if _, err := dec.Token(); err != nil {
 		return nil, &invalidParamsError{err.Error()}
 	}
-	                               
+
 	for i := len(args); i < len(types); i++ {
 		if types[i].Kind() != reflect.Ptr {
 			return nil, &invalidParamsError{fmt.Sprintf("missing value for required argument %d", i)}
@@ -302,7 +265,6 @@ func parsePositionalArguments(rawArgs json.RawMessage, types []reflect.Type) ([]
 	return args, nil
 }
 
-                                                                                                
 func (c *jsonCodec) CreateResponse(id interface{}, reply interface{}) interface{} {
 	if isHexNum(reflect.TypeOf(reply)) {
 		return &jsonSuccessResponse{Version: jsonrpcVersion, Id: id, Result: fmt.Sprintf(`%#x`, reply)}
@@ -310,19 +272,15 @@ func (c *jsonCodec) CreateResponse(id interface{}, reply interface{}) interface{
 	return &jsonSuccessResponse{Version: jsonrpcVersion, Id: id, Result: reply}
 }
 
-                                                                                         
 func (c *jsonCodec) CreateErrorResponse(id interface{}, err Error) interface{} {
 	return &jsonErrResponse{Version: jsonrpcVersion, Id: id, Error: jsonError{Code: err.ErrorCode(), Message: err.Error()}}
 }
 
-                                                                                                 
-                                                                                                                      
 func (c *jsonCodec) CreateErrorResponseWithInfo(id interface{}, err Error, info interface{}) interface{} {
 	return &jsonErrResponse{Version: jsonrpcVersion, Id: id,
 		Error: jsonError{Code: err.ErrorCode(), Message: err.Error(), Data: info}}
 }
 
-                                                                                                             
 func (c *jsonCodec) CreateNotification(subid, namespace string, event interface{}) interface{} {
 	if isHexNum(reflect.TypeOf(event)) {
 		return &jsonNotification{Version: jsonrpcVersion, Method: namespace + notificationMethodSuffix,
@@ -333,7 +291,6 @@ func (c *jsonCodec) CreateNotification(subid, namespace string, event interface{
 		Params: jsonSubscription{Subscription: subid, Result: event}}
 }
 
-                          
 func (c *jsonCodec) Write(res interface{}) error {
 	c.encMu.Lock()
 	defer c.encMu.Unlock()
@@ -341,7 +298,6 @@ func (c *jsonCodec) Write(res interface{}) error {
 	return c.e.Encode(res)
 }
 
-                                  
 func (c *jsonCodec) Close() {
 	c.closer.Do(func() {
 		close(c.closed)
@@ -349,7 +305,6 @@ func (c *jsonCodec) Close() {
 	})
 }
 
-                                                                     
 func (c *jsonCodec) Closed() <-chan interface{} {
 	return c.closed
 }

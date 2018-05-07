@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package downloader
 
@@ -25,8 +10,6 @@ import (
 	"github.com/epvchain/go-epvchain/remote"
 )
 
-                                                                                                        
-                                                                                                       
 type PublicDownloaderAPI struct {
 	d                         *Downloader
 	mux                       *event.TypeMux
@@ -34,10 +17,6 @@ type PublicDownloaderAPI struct {
 	uninstallSyncSubscription chan *uninstallSyncSubscriptionRequest
 }
 
-                                                                                                   
-                                                                                                  
-                                                                                            
-                                   
 func NewPublicDownloaderAPI(d *Downloader, m *event.TypeMux) *PublicDownloaderAPI {
 	api := &PublicDownloaderAPI{
 		d:   d,
@@ -51,8 +30,6 @@ func NewPublicDownloaderAPI(d *Downloader, m *event.TypeMux) *PublicDownloaderAP
 	return api
 }
 
-                                                                                       
-                                                                                             
 func (api *PublicDownloaderAPI) eventLoop() {
 	var (
 		sub               = api.mux.Subscribe(StartEvent{}, DoneEvent{}, FailedEvent{})
@@ -81,7 +58,7 @@ func (api *PublicDownloaderAPI) eventLoop() {
 			case DoneEvent, FailedEvent:
 				notification = false
 			}
-			            
+
 			for c := range syncSubscriptions {
 				c <- notification
 			}
@@ -89,7 +66,6 @@ func (api *PublicDownloaderAPI) eventLoop() {
 	}
 }
 
-                                                                                                                      
 func (api *PublicDownloaderAPI) Syncing(ctx context.Context) (*rpc.Subscription, error) {
 	notifier, supported := rpc.NotifierFromContext(ctx)
 	if !supported {
@@ -119,28 +95,22 @@ func (api *PublicDownloaderAPI) Syncing(ctx context.Context) (*rpc.Subscription,
 	return rpcSub, nil
 }
 
-                                                                                             
 type SyncingResult struct {
 	Syncing bool                  `json:"syncing"`
 	Status  epvchain.SyncProgress `json:"status"`
 }
 
-                                                                                             
 type uninstallSyncSubscriptionRequest struct {
 	c           chan interface{}
 	uninstalled chan interface{}
 }
 
-                                                            
 type SyncStatusSubscription struct {
-	api       *PublicDownloaderAPI                                                            
-	c         chan interface{}                                               
-	unsubOnce sync.Once                                                           
+	api       *PublicDownloaderAPI 
+	c         chan interface{}     
+	unsubOnce sync.Once            
 }
 
-                                                                           
-                                                                               
-                             
 func (s *SyncStatusSubscription) Unsubscribe() {
 	s.unsubOnce.Do(func() {
 		req := uninstallSyncSubscriptionRequest{s.c, make(chan interface{})}
@@ -149,7 +119,7 @@ func (s *SyncStatusSubscription) Unsubscribe() {
 		for {
 			select {
 			case <-s.c:
-				                                                      
+
 				continue
 			case <-req.uninstalled:
 				return
@@ -158,8 +128,6 @@ func (s *SyncStatusSubscription) Unsubscribe() {
 	})
 }
 
-                                                                                              
-                                                                         
 func (api *PublicDownloaderAPI) SubscribeSyncStatus(status chan interface{}) *SyncStatusSubscription {
 	api.installSyncSubscription <- status
 	return &SyncStatusSubscription{api: api, c: status}

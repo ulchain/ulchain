@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package filters
 
@@ -35,22 +20,18 @@ import (
 )
 
 var (
-	deadline = 5 * time.Minute                                                                            
+	deadline = 5 * time.Minute 
 )
 
-                                                                             
-                                                   
 type filter struct {
 	typ      Type
-	deadline *time.Timer                                            
+	deadline *time.Timer 
 	hashes   []common.Hash
 	crit     FilterCriteria
 	logs     []*types.Log
-	s        *Subscription                                           
+	s        *Subscription 
 }
 
-                                                                                                                    
-                                                                                       
 type PublicFilterAPI struct {
 	backend   Backend
 	mux       *event.TypeMux
@@ -61,7 +42,6 @@ type PublicFilterAPI struct {
 	filters   map[rpc.ID]*filter
 }
 
-                                                             
 func NewPublicFilterAPI(backend Backend, lightMode bool) *PublicFilterAPI {
 	api := &PublicFilterAPI{
 		backend: backend,
@@ -75,8 +55,6 @@ func NewPublicFilterAPI(backend Backend, lightMode bool) *PublicFilterAPI {
 	return api
 }
 
-                                                                                         
-                                         
 func (api *PublicFilterAPI) timeoutLoop() {
 	ticker := time.NewTicker(5 * time.Minute)
 	for {
@@ -95,12 +73,6 @@ func (api *PublicFilterAPI) timeoutLoop() {
 	}
 }
 
-                                                                                       
-                                           
-  
-                                                                              
-                                                                           
-  
 func (api *PublicFilterAPI) NewPendingTransactionFilter() rpc.ID {
 	var (
 		pendingTxs   = make(chan common.Hash)
@@ -132,8 +104,6 @@ func (api *PublicFilterAPI) NewPendingTransactionFilter() rpc.ID {
 	return pendingTxSub.ID
 }
 
-                                                                                          
-                                                                                              
 func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context) (*rpc.Subscription, error) {
 	notifier, supported := rpc.NotifierFromContext(ctx)
 	if !supported {
@@ -163,9 +133,6 @@ func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context) (*rpc.Su
 	return rpcSub, nil
 }
 
-                                                                                        
-                                                                                 
-  
 func (api *PublicFilterAPI) NewBlockFilter() rpc.ID {
 	var (
 		headers   = make(chan *types.Header)
@@ -197,7 +164,6 @@ func (api *PublicFilterAPI) NewBlockFilter() rpc.ID {
 	return headerSub.ID
 }
 
-                                                                                        
 func (api *PublicFilterAPI) NewHeads(ctx context.Context) (*rpc.Subscription, error) {
 	notifier, supported := rpc.NotifierFromContext(ctx)
 	if !supported {
@@ -227,7 +193,6 @@ func (api *PublicFilterAPI) NewHeads(ctx context.Context) (*rpc.Subscription, er
 	return rpcSub, nil
 }
 
-                                                                                               
 func (api *PublicFilterAPI) Logs(ctx context.Context, crit FilterCriteria) (*rpc.Subscription, error) {
 	notifier, supported := rpc.NotifierFromContext(ctx)
 	if !supported {
@@ -252,10 +217,10 @@ func (api *PublicFilterAPI) Logs(ctx context.Context, crit FilterCriteria) (*rpc
 				for _, log := range logs {
 					notifier.Notify(rpcSub.ID, &log)
 				}
-			case <-rpcSub.Err():                                      
+			case <-rpcSub.Err(): 
 				logsSub.Unsubscribe()
 				return
-			case <-notifier.Closed():                      
+			case <-notifier.Closed(): 
 				logsSub.Unsubscribe()
 				return
 			}
@@ -265,9 +230,6 @@ func (api *PublicFilterAPI) Logs(ctx context.Context, crit FilterCriteria) (*rpc
 	return rpcSub, nil
 }
 
-                                                              
-  
-                                                              
 type FilterCriteria struct {
 	FromBlock *big.Int
 	ToBlock   *big.Int
@@ -275,18 +237,6 @@ type FilterCriteria struct {
 	Topics    [][]common.Hash
 }
 
-                                                                      
-                                                                      
-                                                           
-  
-                                                           
-                                                                    
-                                                                                   
-                                                                               
-                                                   
-  
-                                                        
-  
 func (api *PublicFilterAPI) NewFilter(crit FilterCriteria) (rpc.ID, error) {
 	logs := make(chan []*types.Log)
 	logsSub, err := api.events.SubscribeLogs(epvchain.FilterQuery(crit), logs)
@@ -319,16 +269,15 @@ func (api *PublicFilterAPI) NewFilter(crit FilterCriteria) (rpc.ID, error) {
 	return logsSub.ID, nil
 }
 
-                                                                                     
 func (api *PublicFilterAPI) GetLogs(ctx context.Context, crit FilterCriteria) ([]*types.Log, error) {
-	                                                              
+
 	if crit.FromBlock == nil {
 		crit.FromBlock = big.NewInt(rpc.LatestBlockNumber.Int64())
 	}
 	if crit.ToBlock == nil {
 		crit.ToBlock = big.NewInt(rpc.LatestBlockNumber.Int64())
 	}
-	                                                
+
 	filter := New(api.backend, crit.FromBlock.Int64(), crit.ToBlock.Int64(), crit.Addresses, crit.Topics)
 
 	logs, err := filter.Logs(ctx)
@@ -338,8 +287,6 @@ func (api *PublicFilterAPI) GetLogs(ctx context.Context, crit FilterCriteria) ([
 	return returnLogs(logs), err
 }
 
-                                                               
-  
 func (api *PublicFilterAPI) UninstallFilter(id rpc.ID) bool {
 	api.filtersMu.Lock()
 	f, found := api.filters[id]
@@ -354,9 +301,6 @@ func (api *PublicFilterAPI) UninstallFilter(id rpc.ID) bool {
 	return found
 }
 
-                                                                   
-                                                                       
-  
 func (api *PublicFilterAPI) GetFilterLogs(ctx context.Context, id rpc.ID) ([]*types.Log, error) {
 	api.filtersMu.Lock()
 	f, found := api.filters[id]
@@ -374,7 +318,7 @@ func (api *PublicFilterAPI) GetFilterLogs(ctx context.Context, id rpc.ID) ([]*ty
 	if f.crit.ToBlock != nil {
 		end = f.crit.ToBlock.Int64()
 	}
-	                                                
+
 	filter := New(api.backend, begin, end, f.crit.Addresses, f.crit.Topics)
 
 	logs, err := filter.Logs(ctx)
@@ -384,20 +328,13 @@ func (api *PublicFilterAPI) GetFilterLogs(ctx context.Context, id rpc.ID) ([]*ty
 	return returnLogs(logs), nil
 }
 
-                                                                           
-                                                         
-  
-                                                                         
-                                     
-  
 func (api *PublicFilterAPI) GetFilterChanges(id rpc.ID) (interface{}, error) {
 	api.filtersMu.Lock()
 	defer api.filtersMu.Unlock()
 
 	if f, found := api.filters[id]; found {
 		if !f.deadline.Stop() {
-			                                                              
-			                                      
+
 			<-f.deadline.C
 		}
 		f.deadline.Reset(deadline)
@@ -417,8 +354,6 @@ func (api *PublicFilterAPI) GetFilterChanges(id rpc.ID) (interface{}, error) {
 	return []interface{}{}, fmt.Errorf("filter not found")
 }
 
-                                                                                                  
-                                                
 func returnHashes(hashes []common.Hash) []common.Hash {
 	if hashes == nil {
 		return []common.Hash{}
@@ -426,8 +361,6 @@ func returnHashes(hashes []common.Hash) []common.Hash {
 	return hashes
 }
 
-                                                                                                  
-                                              
 func returnLogs(logs []*types.Log) []*types.Log {
 	if logs == nil {
 		return []*types.Log{}
@@ -435,7 +368,6 @@ func returnLogs(logs []*types.Log) []*types.Log {
 	return logs
 }
 
-                                                   
 func (args *FilterCriteria) UnmarshalJSON(data []byte) error {
 	type input struct {
 		From      *rpc.BlockNumber `json:"fromBlock"`
@@ -460,7 +392,7 @@ func (args *FilterCriteria) UnmarshalJSON(data []byte) error {
 	args.Addresses = []common.Address{}
 
 	if raw.Addresses != nil {
-		                                                                    
+
 		switch rawAddr := raw.Addresses.(type) {
 		case []interface{}:
 			for i, addr := range rawAddr {
@@ -485,17 +417,14 @@ func (args *FilterCriteria) UnmarshalJSON(data []byte) error {
 		}
 	}
 
-	                                                                     
-	                                                                                     
 	if len(raw.Topics) > 0 {
 		args.Topics = make([][]common.Hash, len(raw.Topics))
 		for i, t := range raw.Topics {
 			switch topic := t.(type) {
 			case nil:
-				                                  
 
 			case string:
-				                       
+
 				top, err := decodeTopic(topic)
 				if err != nil {
 					return err
@@ -503,10 +432,10 @@ func (args *FilterCriteria) UnmarshalJSON(data []byte) error {
 				args.Topics[i] = []common.Hash{top}
 
 			case []interface{}:
-				                                          
+
 				for _, rawTopic := range topic {
 					if rawTopic == nil {
-						                            
+
 						args.Topics[i] = nil
 						break
 					}

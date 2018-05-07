@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package nat
 
@@ -100,11 +85,9 @@ func (n *upnp) String() string {
 	return "UPNP " + n.service
 }
 
-                                                     
-                                                              
 func discoverUPnP() Interface {
 	found := make(chan *upnp, 2)
-	        
+
 	go discover(found, internetgateway1.URN_WANConnectionDevice_1, func(dev *goupnp.RootDevice, sc goupnp.ServiceClient) *upnp {
 		switch sc.Service.ServiceType {
 		case internetgateway1.URN_WANIPConnection_1:
@@ -114,7 +97,7 @@ func discoverUPnP() Interface {
 		}
 		return nil
 	})
-	        
+
 	go discover(found, internetgateway2.URN_WANConnectionDevice_2, func(dev *goupnp.RootDevice, sc goupnp.ServiceClient) *upnp {
 		switch sc.Service.ServiceType {
 		case internetgateway2.URN_WANIPConnection_1:
@@ -134,9 +117,6 @@ func discoverUPnP() Interface {
 	return nil
 }
 
-                                                                    
-                                                                      
-                                                        
 func discover(out chan<- *upnp, target string, matcher func(*goupnp.RootDevice, goupnp.ServiceClient) *upnp) {
 	devs, err := goupnp.DiscoverDevices(target)
 	if err != nil {
@@ -152,7 +132,7 @@ func discover(out chan<- *upnp, target string, matcher func(*goupnp.RootDevice, 
 			if found {
 				return
 			}
-			                                   
+
 			sc := goupnp.ServiceClient{
 				SOAPClient: service.NewSOAPClient(),
 				RootDevice: devs[i].Root,
@@ -164,7 +144,7 @@ func discover(out chan<- *upnp, target string, matcher func(*goupnp.RootDevice, 
 			if upnp == nil {
 				return
 			}
-			                                        
+
 			if _, nat, err := upnp.client.GetNATRSIPStatus(); err != nil || !nat {
 				return
 			}

@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                                         
 package epvhash
 
 import (
@@ -43,27 +27,21 @@ import (
 var ErrInvalidDumpMagic = errors.New("invalid dump magic")
 
 var (
-	                                                   
+
 	maxUint256 = new(big.Int).Exp(big.NewInt(2), big.NewInt(256), big.NewInt(0))
 
-	                                                                              
 	sharedEPVhash = New(Config{"", 3, 0, "", 1, 0, ModeNormal})
 
-	                                                                        
 	algorithmRevision = 23
 
-	                                                                  
 	dumpMagic = []uint32{0xbaddcafe, 0xfee1dead}
 )
 
-                                                                              
-                     
 func isLittleEndian() bool {
 	n := uint32(0x01020304)
 	return *(*byte)(unsafe.Pointer(&n)) == 0x04
 }
 
-                                                                        
 func memoryMap(path string) (*os.File, mmap.MMap, []uint32, error) {
 	file, err := os.OpenFile(path, os.O_RDONLY, 0644)
 	if err != nil {
@@ -84,9 +62,8 @@ func memoryMap(path string) (*os.File, mmap.MMap, []uint32, error) {
 	return file, mem, buffer[len(dumpMagic):], err
 }
 
-                                                                       
 func memoryMapFile(file *os.File, write bool) (mmap.MMap, []uint32, error) {
-	                             
+
 	flag := mmap.RDONLY
 	if write {
 		flag = mmap.RDWR
@@ -95,7 +72,7 @@ func memoryMapFile(file *os.File, write bool) (mmap.MMap, []uint32, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	                                                          
+
 	header := *(*reflect.SliceHeader)(unsafe.Pointer(&mem))
 	header.Len /= 4
 	header.Cap /= 4
@@ -103,15 +80,12 @@ func memoryMapFile(file *os.File, write bool) (mmap.MMap, []uint32, error) {
 	return mem, *(*[]uint32)(unsafe.Pointer(&header)), nil
 }
 
-                                                                                 
-                                                                                 
-                  
 func memoryMapAndGenerate(path string, size uint64, generator func(buffer []uint32)) (*os.File, mmap.MMap, []uint32, error) {
-	                                
+
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		return nil, nil, nil, err
 	}
-	                                                       
+
 	temp := path + "." + strconv.Itoa(rand.Int())
 
 	dump, err := os.Create(temp)
@@ -121,7 +95,7 @@ func memoryMapAndGenerate(path string, size uint64, generator func(buffer []uint
 	if err = dump.Truncate(int64(len(dumpMagic))*4 + int64(size)); err != nil {
 		return nil, nil, nil, err
 	}
-	                                                                 
+
 	mem, buffer, err := memoryMapFile(dump, true)
 	if err != nil {
 		dump.Close()
@@ -144,20 +118,16 @@ func memoryMapAndGenerate(path string, size uint64, generator func(buffer []uint
 	return memoryMap(path)
 }
 
-                                                                                   
 type lru struct {
 	what string
 	new  func(epoch uint64) interface{}
 	mu   sync.Mutex
-	                                                              
-	                                                                            
+
 	cache      *simplelru.LRU
 	future     uint64
 	futureItem interface{}
 }
 
-                                                                                  
-                          
 func newlru(what string, maxItems int, new func(epoch uint64) interface{}) *lru {
 	if maxItems <= 0 {
 		maxItems = 1
@@ -168,14 +138,10 @@ func newlru(what string, maxItems int, new func(epoch uint64) interface{}) *lru 
 	return &lru{what: what, new: new, cache: cache}
 }
 
-                                                                                         
-                                                                                           
-                   
 func (lru *lru) get(epoch uint64) (item, future interface{}) {
 	lru.mu.Lock()
 	defer lru.mu.Unlock()
 
-	                                                  
 	item, ok := lru.cache.Get(epoch)
 	if !ok {
 		if lru.future > 0 && lru.future == epoch {
@@ -186,7 +152,7 @@ func (lru *lru) get(epoch uint64) (item, future interface{}) {
 		}
 		lru.cache.Add(epoch, item)
 	}
-	                                                                    
+
 	if epoch < maxEpoch-1 && lru.future < epoch+1 {
 		log.Trace("Requiring new future epvhash "+lru.what, "epoch", epoch+1)
 		future = lru.new(epoch + 1)
@@ -196,22 +162,18 @@ func (lru *lru) get(epoch uint64) (item, future interface{}) {
 	return item, future
 }
 
-                                                                                  
 type cache struct {
-	epoch uint64                                             
-	dump  *os.File                                               
-	mmap  mmap.MMap                                               
-	cache []uint32                                                         
-	once  sync.Once                                            
+	epoch uint64    
+	dump  *os.File  
+	mmap  mmap.MMap 
+	cache []uint32  
+	once  sync.Once 
 }
 
-                                                                                 
-                                          
 func newCache(epoch uint64) interface{} {
 	return &cache{epoch: epoch}
 }
 
-                                                                   
 func (c *cache) generate(dir string, limit int, test bool) {
 	c.once.Do(func() {
 		size := cacheSize(c.epoch*epochLength + 1)
@@ -219,13 +181,13 @@ func (c *cache) generate(dir string, limit int, test bool) {
 		if test {
 			size = 1024
 		}
-		                                                           
+
 		if dir == "" {
 			c.cache = make([]uint32, size/4)
 			generateCache(c.cache, c.epoch, seed)
 			return
 		}
-		                                              
+
 		var endian string
 		if !isLittleEndian() {
 			endian = ".be"
@@ -233,11 +195,8 @@ func (c *cache) generate(dir string, limit int, test bool) {
 		path := filepath.Join(dir, fmt.Sprintf("cache-R%d-%x%s", algorithmRevision, seed[:8], endian))
 		logger := log.New("epoch", c.epoch)
 
-		                                                                               
-		                        
 		runtime.SetFinalizer(c, (*cache).finalizer)
 
-		                                                   
 		var err error
 		c.dump, c.mmap, c.cache, err = memoryMap(path)
 		if err == nil {
@@ -246,7 +205,6 @@ func (c *cache) generate(dir string, limit int, test bool) {
 		}
 		logger.Debug("Failed to load old epvhash cache", "err", err)
 
-		                                                               
 		c.dump, c.mmap, c.cache, err = memoryMapAndGenerate(path, size, func(buffer []uint32) { generateCache(buffer, c.epoch, seed) })
 		if err != nil {
 			logger.Error("Failed to generate mapped epvhash cache", "err", err)
@@ -254,7 +212,7 @@ func (c *cache) generate(dir string, limit int, test bool) {
 			c.cache = make([]uint32, size/4)
 			generateCache(c.cache, c.epoch, seed)
 		}
-		                                                          
+
 		for ep := int(c.epoch) - limit; ep >= 0; ep-- {
 			seed := seedHash(uint64(ep)*epochLength + 1)
 			path := filepath.Join(dir, fmt.Sprintf("cache-R%d-%x%s", algorithmRevision, seed[:8], endian))
@@ -263,7 +221,6 @@ func (c *cache) generate(dir string, limit int, test bool) {
 	})
 }
 
-                                                   
 func (c *cache) finalizer() {
 	if c.mmap != nil {
 		c.mmap.Unmap()
@@ -272,22 +229,18 @@ func (c *cache) finalizer() {
 	}
 }
 
-                                                                                      
 type dataset struct {
-	epoch   uint64                                             
-	dump    *os.File                                               
-	mmap    mmap.MMap                                               
-	dataset []uint32                                  
-	once    sync.Once                                            
+	epoch   uint64    
+	dump    *os.File  
+	mmap    mmap.MMap 
+	dataset []uint32  
+	once    sync.Once 
 }
 
-                                                                               
-                                          
 func newDataset(epoch uint64) interface{} {
 	return &dataset{epoch: epoch}
 }
 
-                                                                     
 func (d *dataset) generate(dir string, limit int, test bool) {
 	d.once.Do(func() {
 		csize := cacheSize(d.epoch*epochLength + 1)
@@ -297,7 +250,7 @@ func (d *dataset) generate(dir string, limit int, test bool) {
 			csize = 1024
 			dsize = 32 * 1024
 		}
-		                                                          
+
 		if dir == "" {
 			cache := make([]uint32, csize/4)
 			generateCache(cache, d.epoch, seed)
@@ -305,7 +258,7 @@ func (d *dataset) generate(dir string, limit int, test bool) {
 			d.dataset = make([]uint32, dsize/4)
 			generateDataset(d.dataset, d.epoch, cache)
 		}
-		                                              
+
 		var endian string
 		if !isLittleEndian() {
 			endian = ".be"
@@ -313,11 +266,8 @@ func (d *dataset) generate(dir string, limit int, test bool) {
 		path := filepath.Join(dir, fmt.Sprintf("full-R%d-%x%s", algorithmRevision, seed[:8], endian))
 		logger := log.New("epoch", d.epoch)
 
-		                                                                               
-		                        
 		runtime.SetFinalizer(d, (*dataset).finalizer)
 
-		                                                   
 		var err error
 		d.dump, d.mmap, d.dataset, err = memoryMap(path)
 		if err == nil {
@@ -326,7 +276,6 @@ func (d *dataset) generate(dir string, limit int, test bool) {
 		}
 		logger.Debug("Failed to load old epvhash dataset", "err", err)
 
-		                                                                   
 		cache := make([]uint32, csize/4)
 		generateCache(cache, d.epoch, seed)
 
@@ -337,7 +286,7 @@ func (d *dataset) generate(dir string, limit int, test bool) {
 			d.dataset = make([]uint32, dsize/2)
 			generateDataset(d.dataset, d.epoch, cache)
 		}
-		                                                          
+
 		for ep := int(d.epoch) - limit; ep >= 0; ep-- {
 			seed := seedHash(uint64(ep)*epochLength + 1)
 			path := filepath.Join(dir, fmt.Sprintf("full-R%d-%x%s", algorithmRevision, seed[:8], endian))
@@ -346,7 +295,6 @@ func (d *dataset) generate(dir string, limit int, test bool) {
 	})
 }
 
-                                                           
 func (d *dataset) finalizer() {
 	if d.mmap != nil {
 		d.mmap.Unmap()
@@ -355,19 +303,16 @@ func (d *dataset) finalizer() {
 	}
 }
 
-                                                                            
 func MakeCache(block uint64, dir string) {
 	c := cache{epoch: block / epochLength}
 	c.generate(dir, math.MaxInt32, false)
 }
 
-                                                                                
 func MakeDataset(block uint64, dir string) {
 	d := dataset{epoch: block / epochLength}
 	d.generate(dir, math.MaxInt32, false)
 }
 
-                                                                                
 type Mode uint
 
 const (
@@ -378,7 +323,6 @@ const (
 	ModeFullFake
 )
 
-                                                          
 type Config struct {
 	CacheDir       string
 	CachesInMem    int
@@ -389,29 +333,24 @@ type Config struct {
 	PowMode        Mode
 }
 
-                                                                                
-             
 type EPVhash struct {
 	config Config
 
-	caches   *lru                                                    
-	datasets *lru                                                      
+	caches   *lru 
+	datasets *lru 
 
-	                        
-	rand     *rand.Rand                                               
-	threads  int                                                    
-	update   chan struct{}                                                    
-	hashrate metrics.Meter                                       
+	rand     *rand.Rand    
+	threads  int           
+	update   chan struct{} 
+	hashrate metrics.Meter 
 
-	                                         
-	shared    *EPVhash                                                         
-	fakeFail  uint64                                                               
-	fakeDelay time.Duration                                                        
+	shared    *EPVhash       
+	fakeFail  uint64        
+	fakeDelay time.Duration 
 
-	lock sync.Mutex                                                                    
+	lock sync.Mutex 
 }
 
-                                               
 func New(config Config) *EPVhash {
 	if config.CachesInMem <= 0 {
 		log.Warn("One epvhash cache must always be in memory", "requested", config.CachesInMem)
@@ -432,15 +371,10 @@ func New(config Config) *EPVhash {
 	}
 }
 
-                                                                             
-            
 func NewTester() *EPVhash {
 	return New(Config{CachesInMem: 1, PowMode: ModeTest})
 }
 
-                                                                                  
-                                                                               
-                   
 func NewFaker() *EPVhash {
 	return &EPVhash{
 		config: Config{
@@ -449,9 +383,6 @@ func NewFaker() *EPVhash {
 	}
 }
 
-                                                                               
-                                                                               
-                                                         
 func NewFakeFailer(fail uint64) *EPVhash {
 	return &EPVhash{
 		config: Config{
@@ -461,9 +392,6 @@ func NewFakeFailer(fail uint64) *EPVhash {
 	}
 }
 
-                                                                                
-                                                                             
-                                                              
 func NewFakeDelayer(delay time.Duration) *EPVhash {
 	return &EPVhash{
 		config: Config{
@@ -473,8 +401,6 @@ func NewFakeDelayer(delay time.Duration) *EPVhash {
 	}
 }
 
-                                                                                
-                                                                                
 func NewFullFaker() *EPVhash {
 	return &EPVhash{
 		config: Config{
@@ -483,24 +409,17 @@ func NewFullFaker() *EPVhash {
 	}
 }
 
-                                                                                   
-                       
 func NewShared() *EPVhash {
 	return &EPVhash{shared: sharedEPVhash}
 }
 
-                                                                              
-                                                                            
-                                                                   
 func (epvhash *EPVhash) cache(block uint64) *cache {
 	epoch := block / epochLength
 	currentI, futureI := epvhash.caches.get(epoch)
 	current := currentI.(*cache)
 
-	                              
 	current.generate(epvhash.config.CacheDir, epvhash.config.CachesOnDisk, epvhash.config.PowMode == ModeTest)
 
-	                                                                     
 	if futureI != nil {
 		future := futureI.(*cache)
 		go future.generate(epvhash.config.CacheDir, epvhash.config.CachesOnDisk, epvhash.config.PowMode == ModeTest)
@@ -508,18 +427,13 @@ func (epvhash *EPVhash) cache(block uint64) *cache {
 	return current
 }
 
-                                                                            
-                                                                            
-                                                                   
 func (epvhash *EPVhash) dataset(block uint64) *dataset {
 	epoch := block / epochLength
 	currentI, futureI := epvhash.datasets.get(epoch)
 	current := currentI.(*dataset)
 
-	                              
 	current.generate(epvhash.config.DatasetDir, epvhash.config.DatasetsOnDisk, epvhash.config.PowMode == ModeTest)
 
-	                                                                       
 	if futureI != nil {
 		future := futureI.(*dataset)
 		go future.generate(epvhash.config.DatasetDir, epvhash.config.DatasetsOnDisk, epvhash.config.PowMode == ModeTest)
@@ -528,8 +442,6 @@ func (epvhash *EPVhash) dataset(block uint64) *dataset {
 	return current
 }
 
-                                                                               
-                                           
 func (epvhash *EPVhash) Threads() int {
 	epvhash.lock.Lock()
 	defer epvhash.lock.Unlock()
@@ -537,21 +449,15 @@ func (epvhash *EPVhash) Threads() int {
 	return epvhash.threads
 }
 
-                                                                             
-                                                                            
-                                                                           
-                                                                            
-                   
 func (epvhash *EPVhash) SetThreads(threads int) {
 	epvhash.lock.Lock()
 	defer epvhash.lock.Unlock()
 
-	                                                                      
 	if epvhash.shared != nil {
 		epvhash.shared.SetThreads(threads)
 		return
 	}
-	                                                                      
+
 	epvhash.threads = threads
 	select {
 	case epvhash.update <- struct{}{}:
@@ -559,20 +465,14 @@ func (epvhash *EPVhash) SetThreads(threads int) {
 	}
 }
 
-                                                                                 
-                                   
 func (epvhash *EPVhash) Hashrate() float64 {
 	return epvhash.hashrate.Rate1()
 }
 
-                                                                                  
-                 
 func (epvhash *EPVhash) APIs(chain consensus.ChainReader) []rpc.API {
 	return nil
 }
 
-                                                                                 
-           
 func SeedHash(block uint64) []byte {
 	return seedHash(block)
 }

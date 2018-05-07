@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package light
 
@@ -42,9 +27,6 @@ var (
 	blockCacheLimit = 256
 )
 
-                                                                             
-                                                                          
-                                                                    
 type LightChain struct {
 	hc            *core.HeaderChain
 	chainDb       epvdb.Database
@@ -58,22 +40,19 @@ type LightChain struct {
 	mu      sync.RWMutex
 	chainmu sync.RWMutex
 
-	bodyCache    *lru.Cache                                          
-	bodyRLPCache *lru.Cache                                                                
-	blockCache   *lru.Cache                                           
+	bodyCache    *lru.Cache 
+	bodyRLPCache *lru.Cache 
+	blockCache   *lru.Cache 
 
 	quit    chan struct{}
-	running int32                                      
-	                                          
-	procInterrupt int32                                           
+	running int32 
+
+	procInterrupt int32 
 	wg            sync.WaitGroup
 
 	engine consensus.Engine
 }
 
-                                                                          
-                                                                        
-             
 func NewLightChain(odr OdrBackend, config *params.ChainConfig, engine consensus.Engine) (*LightChain, error) {
 	bodyCache, _ := lru.New(bodyCacheLimit)
 	bodyRLPCache, _ := lru.New(bodyCacheLimit)
@@ -103,7 +82,7 @@ func NewLightChain(odr OdrBackend, config *params.ChainConfig, engine consensus.
 	if err := bc.loadLastState(); err != nil {
 		return nil, err
 	}
-	                                                                                                                   
+
 	for hash := range core.BadHashes {
 		if header := bc.GetHeaderByHash(hash); header != nil {
 			log.Error("Found bad hash, rewinding chain", "number", header.Number, "hash", header.ParentHash)
@@ -114,7 +93,6 @@ func NewLightChain(odr OdrBackend, config *params.ChainConfig, engine consensus.
 	return bc, nil
 }
 
-                                                                   
 func (self *LightChain) addTrustedCheckpoint(cp trustedCheckpoint) {
 	if self.odr.ChtIndexer() != nil {
 		StoreChtRoot(self.chainDb, cp.sectionIdx, cp.sectionHead, cp.chtRoot)
@@ -134,16 +112,13 @@ func (self *LightChain) getProcInterrupt() bool {
 	return atomic.LoadInt32(&self.procInterrupt) == 1
 }
 
-                                           
 func (self *LightChain) Odr() OdrBackend {
 	return self.odr
 }
 
-                                                                                
-                                                
 func (self *LightChain) loadLastState() error {
 	if head := core.GetHeadHeaderHash(self.chainDb); head == (common.Hash{}) {
-		                                               
+
 		self.Reset()
 	} else {
 		if header := self.GetHeaderByHash(head); header != nil {
@@ -151,7 +126,6 @@ func (self *LightChain) loadLastState() error {
 		}
 	}
 
-	                                
 	header := self.hc.CurrentHeader()
 	headerTd := self.GetTd(header.Hash(), header.Number.Uint64())
 	log.Info("Loaded most recent local header", "number", header.Number, "hash", header.Hash(), "td", headerTd)
@@ -159,8 +133,6 @@ func (self *LightChain) loadLastState() error {
 	return nil
 }
 
-                                                                          
-                                            
 func (bc *LightChain) SetHead(head uint64) {
 	bc.mu.Lock()
 	defer bc.mu.Unlock()
@@ -169,7 +141,6 @@ func (bc *LightChain) SetHead(head uint64) {
 	bc.loadLastState()
 }
 
-                                                            
 func (self *LightChain) GasLimit() uint64 {
 	self.mu.RLock()
 	defer self.mu.RUnlock()
@@ -177,21 +148,17 @@ func (self *LightChain) GasLimit() uint64 {
 	return self.hc.CurrentHeader().GasLimit
 }
 
-                                                                         
 func (bc *LightChain) Reset() {
 	bc.ResetWithGenesisBlock(bc.genesisBlock)
 }
 
-                                                                          
-                           
 func (bc *LightChain) ResetWithGenesisBlock(genesis *types.Block) {
-	                                                   
+
 	bc.SetHead(0)
 
 	bc.mu.Lock()
 	defer bc.mu.Unlock()
 
-	                                                       
 	if err := core.WriteTd(bc.chainDb, genesis.Hash(), genesis.NumberU64(), genesis.Difficulty()); err != nil {
 		log.Crit("Failed to write genesis block TD", "err", err)
 	}
@@ -203,25 +170,18 @@ func (bc *LightChain) ResetWithGenesisBlock(genesis *types.Block) {
 	bc.hc.SetCurrentHeader(bc.genesisBlock.Header())
 }
 
-            
-
-                                                       
 func (bc *LightChain) Engine() consensus.Engine { return bc.engine }
 
-                                    
 func (bc *LightChain) Genesis() *types.Block {
 	return bc.genesisBlock
 }
 
-                                                                     
 func (bc *LightChain) State() (*state.StateDB, error) {
 	return nil, errors.New("not implemented, needs client/server interface split")
 }
 
-                                                                             
-                                               
 func (self *LightChain) GetBody(ctx context.Context, hash common.Hash) (*types.Body, error) {
-	                                                                       
+
 	if cached, ok := self.bodyCache.Get(hash); ok {
 		body := cached.(*types.Body)
 		return body, nil
@@ -230,15 +190,13 @@ func (self *LightChain) GetBody(ctx context.Context, hash common.Hash) (*types.B
 	if err != nil {
 		return nil, err
 	}
-	                                                
+
 	self.bodyCache.Add(hash, body)
 	return body, nil
 }
 
-                                                                         
-                                            
 func (self *LightChain) GetBodyRLP(ctx context.Context, hash common.Hash) (rlp.RawValue, error) {
-	                                                                       
+
 	if cached, ok := self.bodyRLPCache.Get(hash); ok {
 		return cached.(rlp.RawValue), nil
 	}
@@ -246,22 +204,18 @@ func (self *LightChain) GetBodyRLP(ctx context.Context, hash common.Hash) (rlp.R
 	if err != nil {
 		return nil, err
 	}
-	                                                
+
 	self.bodyRLPCache.Add(hash, body)
 	return body, nil
 }
 
-                                                                              
-                 
 func (bc *LightChain) HasBlock(hash common.Hash, number uint64) bool {
 	blk, _ := bc.GetBlock(NoOdr, hash, number)
 	return blk != nil
 }
 
-                                                                                  
-                       
 func (self *LightChain) GetBlock(ctx context.Context, hash common.Hash, number uint64) (*types.Block, error) {
-	                                                                        
+
 	if block, ok := self.blockCache.Get(hash); ok {
 		return block.(*types.Block), nil
 	}
@@ -269,19 +223,15 @@ func (self *LightChain) GetBlock(ctx context.Context, hash common.Hash, number u
 	if err != nil {
 		return nil, err
 	}
-	                                                 
+
 	self.blockCache.Add(block.Hash(), block)
 	return block, nil
 }
 
-                                                                             
-                       
 func (self *LightChain) GetBlockByHash(ctx context.Context, hash common.Hash) (*types.Block, error) {
 	return self.GetBlock(ctx, hash, self.hc.GetBlockNumber(hash))
 }
 
-                                                                         
-                                                          
 func (self *LightChain) GetBlockByNumber(ctx context.Context, number uint64) (*types.Block, error) {
 	hash, err := GetCanonicalHash(ctx, self.odr, number)
 	if hash == (common.Hash{}) || err != nil {
@@ -290,8 +240,6 @@ func (self *LightChain) GetBlockByNumber(ctx context.Context, number uint64) (*t
 	return self.GetBlock(ctx, hash, number)
 }
 
-                                                                              
-                                              
 func (bc *LightChain) Stop() {
 	if !atomic.CompareAndSwapInt32(&bc.running, 0, 1) {
 		return
@@ -303,8 +251,6 @@ func (bc *LightChain) Stop() {
 	log.Info("Blockchain manager stopped")
 }
 
-                                                                                
-                              
 func (self *LightChain) Rollback(chain []common.Hash) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -318,8 +264,6 @@ func (self *LightChain) Rollback(chain []common.Hash) {
 	}
 }
 
-                                                                              
-                                  
 func (self *LightChain) postChainEvents(events []interface{}) {
 	for _, event := range events {
 		switch ev := event.(type) {
@@ -334,28 +278,16 @@ func (self *LightChain) postChainEvents(events []interface{}) {
 	}
 }
 
-                                                                              
-                                                                                
-                                                                                  
-  
-                                                                           
-                                                                              
-                                                                              
-                                                                      
-  
-                                                                               
-                               
 func (self *LightChain) InsertHeaderChain(chain []*types.Header, checkFreq int) (int, error) {
 	start := time.Now()
 	if i, err := self.hc.ValidateHeaderChain(chain, checkFreq); err != nil {
 		return i, err
 	}
 
-	                                                          
 	self.chainmu.Lock()
 	defer func() {
 		self.chainmu.Unlock()
-		time.Sleep(time.Millisecond * 10)                                                                                 
+		time.Sleep(time.Millisecond * 10) 
 	}()
 
 	self.wg.Add(1)
@@ -384,8 +316,6 @@ func (self *LightChain) InsertHeaderChain(chain []*types.Header, checkFreq int) 
 	return i, err
 }
 
-                                                                              
-                                                             
 func (self *LightChain) CurrentHeader() *types.Header {
 	self.mu.RLock()
 	defer self.mu.RUnlock()
@@ -393,50 +323,34 @@ func (self *LightChain) CurrentHeader() *types.Header {
 	return self.hc.CurrentHeader()
 }
 
-                                                                             
-                                                    
 func (self *LightChain) GetTd(hash common.Hash, number uint64) *big.Int {
 	return self.hc.GetTd(hash, number)
 }
 
-                                                                                   
-                                         
 func (self *LightChain) GetTdByHash(hash common.Hash) *big.Int {
 	return self.hc.GetTdByHash(hash)
 }
 
-                                                                           
-                       
 func (self *LightChain) GetHeader(hash common.Hash, number uint64) *types.Header {
 	return self.hc.GetHeader(hash, number)
 }
 
-                                                                                    
-         
 func (self *LightChain) GetHeaderByHash(hash common.Hash) *types.Header {
 	return self.hc.GetHeaderByHash(hash)
 }
 
-                                                                                
-                 
 func (bc *LightChain) HasHeader(hash common.Hash, number uint64) bool {
 	return bc.hc.HasHeader(hash, number)
 }
 
-                                                                                
-                                            
 func (self *LightChain) GetBlockHashesFromHash(hash common.Hash, max uint64) []common.Hash {
 	return self.hc.GetBlockHashesFromHash(hash, max)
 }
 
-                                                                          
-                                                  
 func (self *LightChain) GetHeaderByNumber(number uint64) *types.Header {
 	return self.hc.GetHeaderByNumber(number)
 }
 
-                                                                             
-                                                             
 func (self *LightChain) GetHeaderByNumberOdr(ctx context.Context, number uint64) (*types.Header, error) {
 	if header := self.hc.GetHeaderByNumber(number); header != nil {
 		return header, nil
@@ -444,7 +358,6 @@ func (self *LightChain) GetHeaderByNumberOdr(ctx context.Context, number uint64)
 	return GetHeaderByNumber(ctx, self.odr, number)
 }
 
-                                                           
 func (self *LightChain) Config() *params.ChainConfig { return self.hc.Config() }
 
 func (self *LightChain) SyncCht(ctx context.Context) bool {
@@ -468,40 +381,30 @@ func (self *LightChain) SyncCht(ctx context.Context) bool {
 	return false
 }
 
-                                                                                       
-                                                                                     
 func (self *LightChain) LockChain() {
 	self.chainmu.RLock()
 }
 
-                                      
 func (self *LightChain) UnlockChain() {
 	self.chainmu.RUnlock()
 }
 
-                                                              
 func (self *LightChain) SubscribeChainEvent(ch chan<- core.ChainEvent) event.Subscription {
 	return self.scope.Track(self.chainFeed.Subscribe(ch))
 }
 
-                                                                      
 func (self *LightChain) SubscribeChainHeadEvent(ch chan<- core.ChainHeadEvent) event.Subscription {
 	return self.scope.Track(self.chainHeadFeed.Subscribe(ch))
 }
 
-                                                                      
 func (self *LightChain) SubscribeChainSideEvent(ch chan<- core.ChainSideEvent) event.Subscription {
 	return self.scope.Track(self.chainSideFeed.Subscribe(ch))
 }
 
-                                                                 
-                                                                         
 func (self *LightChain) SubscribeLogsEvent(ch chan<- []*types.Log) event.Subscription {
 	return self.scope.Track(new(event.Feed).Subscribe(ch))
 }
 
-                                                                        
-                                                                                   
 func (self *LightChain) SubscribeRemovedLogsEvent(ch chan<- core.RemovedLogsEvent) event.Subscription {
 	return self.scope.Track(new(event.Feed).Subscribe(ch))
 }

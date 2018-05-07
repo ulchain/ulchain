@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package nat
 
@@ -25,8 +10,6 @@ import (
 	"github.com/jackpal/go-nat-pmp"
 )
 
-                                                                            
-                        
 type pmp struct {
 	gw net.IP
 	c  *natpmp.Client
@@ -48,22 +31,19 @@ func (n *pmp) AddMapping(protocol string, extport, intport int, name string, lif
 	if lifetime <= 0 {
 		return fmt.Errorf("lifetime must not be <= 0")
 	}
-	                                                       
-	                                              
+
 	_, err := n.c.AddPortMapping(strings.ToLower(protocol), intport, extport, int(lifetime/time.Second))
 	return err
 }
 
 func (n *pmp) DeleteMapping(protocol string, extport, intport int) (err error) {
-	                                                                 
-	                                                               
-	                
+
 	_, err = n.c.AddPortMapping(strings.ToLower(protocol), intport, 0, 0)
 	return err
 }
 
 func discoverPMP() Interface {
-	                                                         
+
 	gws := potentialGateways()
 	found := make(chan *pmp, len(gws))
 	for i := range gws {
@@ -77,9 +57,7 @@ func discoverPMP() Interface {
 			}
 		}()
 	}
-	                                      
-	                                                       
-	                                            
+
 	timeout := time.NewTimer(1 * time.Second)
 	defer timeout.Stop()
 	for range gws {
@@ -96,14 +74,12 @@ func discoverPMP() Interface {
 }
 
 var (
-	                
+
 	_, lan10, _  = net.ParseCIDR("10.0.0.0/8")
 	_, lan176, _ = net.ParseCIDR("172.16.0.0/12")
 	_, lan192, _ = net.ParseCIDR("192.168.0.0/16")
 )
 
-                                                                  
-                                              
 func potentialGateways() (gws []net.IP) {
 	ifaces, err := net.Interfaces()
 	if err != nil {

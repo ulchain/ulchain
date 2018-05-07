@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package accounts
 
@@ -24,36 +9,32 @@ import (
 	"github.com/epvchain/go-epvchain/notice"
 )
 
-                                                                              
-                                     
 type Manager struct {
-	backends map[reflect.Type][]Backend                                          
-	updaters []event.Subscription                                                      
-	updates  chan WalletEvent                                                          
-	wallets  []Wallet                                                                       
+	backends map[reflect.Type][]Backend 
+	updaters []event.Subscription       
+	updates  chan WalletEvent           
+	wallets  []Wallet                   
 
-	feed event.Feed                                                
+	feed event.Feed 
 
 	quit chan chan error
 	lock sync.RWMutex
 }
 
-                                                                               
-                      
 func NewManager(backends ...Backend) *Manager {
-	                                                                         
+
 	var wallets []Wallet
 	for _, backend := range backends {
 		wallets = merge(wallets, backend.Wallets()...)
 	}
-	                                                      
+
 	updates := make(chan WalletEvent, 4*len(backends))
 
 	subs := make([]event.Subscription, len(backends))
 	for i, backend := range backends {
 		subs[i] = backend.Subscribe(updates)
 	}
-	                                          
+
 	am := &Manager{
 		backends: make(map[reflect.Type][]Backend),
 		updaters: subs,
@@ -70,17 +51,14 @@ func NewManager(backends ...Backend) *Manager {
 	return am
 }
 
-                                                                          
 func (am *Manager) Close() error {
 	errc := make(chan error)
 	am.quit <- errc
 	return <-errc
 }
 
-                                                                                
-                                     
 func (am *Manager) update() {
-	                                                      
+
 	defer func() {
 		am.lock.Lock()
 		for _, sub := range am.updaters {
@@ -90,11 +68,10 @@ func (am *Manager) update() {
 		am.lock.Unlock()
 	}()
 
-	                         
 	for {
 		select {
 		case event := <-am.updates:
-			                                           
+
 			am.lock.Lock()
 			switch event.Kind {
 			case WalletArrived:
@@ -104,23 +81,20 @@ func (am *Manager) update() {
 			}
 			am.lock.Unlock()
 
-			                                    
 			am.feed.Send(event)
 
 		case errc := <-am.quit:
-			                              
+
 			errc <- nil
 			return
 		}
 	}
 }
 
-                                                                                  
 func (am *Manager) Backends(kind reflect.Type) []Backend {
 	return am.backends[kind]
 }
 
-                                                                             
 func (am *Manager) Wallets() []Wallet {
 	am.lock.RLock()
 	defer am.lock.RUnlock()
@@ -130,7 +104,6 @@ func (am *Manager) Wallets() []Wallet {
 	return cpy
 }
 
-                                                                
 func (am *Manager) Wallet(url string) (Wallet, error) {
 	am.lock.RLock()
 	defer am.lock.RUnlock()
@@ -147,9 +120,6 @@ func (am *Manager) Wallet(url string) (Wallet, error) {
 	return nil, ErrUnknownWallet
 }
 
-                                                                                
-                                                                                 
-                                             
 func (am *Manager) Find(account Account) (Wallet, error) {
 	am.lock.RLock()
 	defer am.lock.RUnlock()
@@ -162,16 +132,10 @@ func (am *Manager) Find(account Account) (Wallet, error) {
 	return nil, ErrUnknownAccount
 }
 
-                                                                            
-                                                                                 
 func (am *Manager) Subscribe(sink chan<- WalletEvent) event.Subscription {
 	return am.feed.Subscribe(sink)
 }
 
-                                                                              
-                                                                             
-  
-                                                             
 func merge(slice []Wallet, wallets ...Wallet) []Wallet {
 	for _, wallet := range wallets {
 		n := sort.Search(len(slice), func(i int) bool { return slice[i].URL().Cmp(wallet.URL()) >= 0 })
@@ -184,13 +148,11 @@ func merge(slice []Wallet, wallets ...Wallet) []Wallet {
 	return slice
 }
 
-                                                                                 
-                                        
 func drop(slice []Wallet, wallets ...Wallet) []Wallet {
 	for _, wallet := range wallets {
 		n := sort.Search(len(slice), func(i int) bool { return slice[i].URL().Cmp(wallet.URL()) >= 0 })
 		if n == len(slice) {
-			                                              
+
 			continue
 		}
 		slice = append(slice[:n], slice[n+1:]...)

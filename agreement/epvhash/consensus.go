@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package epvhash
 
@@ -34,18 +19,13 @@ import (
 	set "gopkg.in/fatih/set.v0"
 )
 
-                                            
 var (
-	FrontierBlockReward    *big.Int = big.NewInt(5e+18)                                                       
-	ByzantiumBlockReward   *big.Int = big.NewInt(3e+18)                                                                             
-	maxUncles                       = 2                                                                      
-	allowedFutureBlockTime          = 15 * time.Second                                                                                           
+	FrontierBlockReward    *big.Int = big.NewInt(5e+18) 
+	ByzantiumBlockReward   *big.Int = big.NewInt(3e+18) 
+	maxUncles                       = 2                 
+	allowedFutureBlockTime          = 15 * time.Second  
 )
 
-                                                                            
-                                                                               
-                                                                                
-                                          
 var (
 	errLargeBlockTime    = errors.New("timestamp too big")
 	errZeroBlockTime     = errors.New("timestamp equals parent's")
@@ -59,20 +39,16 @@ var (
 	errInvalidPoW        = errors.New("invalid proof-of-work")
 )
 
-                                                                             
-                                              
 func (epvhash *EPVhash) Author(header *types.Header) (common.Address, error) {
 	return header.Coinbase, nil
 }
 
-                                                                              
-                                 
 func (epvhash *EPVhash) VerifyHeader(chain consensus.ChainReader, header *types.Header, seal bool) error {
-	                                                                   
+
 	if epvhash.config.PowMode == ModeFullFake {
 		return nil
 	}
-	                                                           
+
 	number := header.Number.Uint64()
 	if chain.GetHeader(header.Hash(), number) != nil {
 		return nil
@@ -81,15 +57,12 @@ func (epvhash *EPVhash) VerifyHeader(chain consensus.ChainReader, header *types.
 	if parent == nil {
 		return consensus.ErrUnknownAncestor
 	}
-	                                                 
+
 	return epvhash.verifyHeader(chain, header, parent, false, seal)
 }
 
-                                                                            
-                                                                              
-                                                         
 func (epvhash *EPVhash) VerifyHeaders(chain consensus.ChainReader, headers []*types.Header, seals []bool) (chan<- struct{}, <-chan error) {
-	                                                                   
+
 	if epvhash.config.PowMode == ModeFullFake || len(headers) == 0 {
 		abort, results := make(chan struct{}), make(chan error, len(headers))
 		for i := 0; i < len(headers); i++ {
@@ -98,13 +71,11 @@ func (epvhash *EPVhash) VerifyHeaders(chain consensus.ChainReader, headers []*ty
 		return abort, results
 	}
 
-	                                           
 	workers := runtime.GOMAXPROCS(0)
 	if len(headers) < workers {
 		workers = len(headers)
 	}
 
-	                                                
 	var (
 		inputs = make(chan int)
 		done   = make(chan int, workers)
@@ -132,7 +103,7 @@ func (epvhash *EPVhash) VerifyHeaders(chain consensus.ChainReader, headers []*ty
 			select {
 			case inputs <- in:
 				if in++; in == len(headers) {
-					                                                   
+
 					inputs = nil
 				}
 			case index := <-done:
@@ -161,23 +132,21 @@ func (epvhash *EPVhash) verifyHeaderWorker(chain consensus.ChainReader, headers 
 		return consensus.ErrUnknownAncestor
 	}
 	if chain.GetHeader(headers[index].Hash(), headers[index].Number.Uint64()) != nil {
-		return nil               
+		return nil 
 	}
 	return epvhash.verifyHeader(chain, headers[index], parent, false, seals[index])
 }
 
-                                                                               
-                                              
 func (epvhash *EPVhash) VerifyUncles(chain consensus.ChainReader, block *types.Block) error {
-	                                                                   
+
 	if epvhash.config.PowMode == ModeFullFake {
 		return nil
 	}
-	                                                                
+
 	if len(block.Uncles()) > maxUncles {
 		return errTooManyUncles
 	}
-	                                              
+
 	uncles, ancestors := set.New(), make(map[common.Hash]*types.Header)
 
 	number, parent := block.NumberU64()-1, block.ParentHash()
@@ -195,16 +164,14 @@ func (epvhash *EPVhash) VerifyUncles(chain consensus.ChainReader, block *types.B
 	ancestors[block.Hash()] = block.Header()
 	uncles.Add(block.Hash())
 
-	                                                                  
 	for _, uncle := range block.Uncles() {
-		                                              
+
 		hash := uncle.Hash()
 		if uncles.Has(hash) {
 			return errDuplicateUncle
 		}
 		uncles.Add(hash)
 
-		                                           
 		if ancestors[hash] != nil {
 			return errUncleIsAncestor
 		}
@@ -218,15 +185,12 @@ func (epvhash *EPVhash) VerifyUncles(chain consensus.ChainReader, block *types.B
 	return nil
 }
 
-                                                                              
-                                 
-                                                
 func (epvhash *EPVhash) verifyHeader(chain consensus.ChainReader, header, parent *types.Header, uncle bool, seal bool) error {
-	                                                                      
+
 	if uint64(len(header.Extra)) > params.MaximumExtraDataSize {
 		return fmt.Errorf("extra-data too long: %d > %d", len(header.Extra), params.MaximumExtraDataSize)
 	}
-	                                
+
 	if uncle {
 		if header.Time.Cmp(math.MaxBig256) > 0 {
 			return errLargeBlockTime
@@ -239,23 +203,22 @@ func (epvhash *EPVhash) verifyHeader(chain consensus.ChainReader, header, parent
 	if header.Time.Cmp(parent.Time) <= 0 {
 		return errZeroBlockTime
 	}
-	                                                                                
+
 	expected := epvhash.CalcDifficulty(chain, header.Time.Uint64(), parent)
 
 	if expected.Cmp(header.Difficulty) != 0 {
 		return fmt.Errorf("invalid difficulty: have %v, want %v", header.Difficulty, expected)
 	}
-	                                         
+
 	cap := uint64(0x7fffffffffffffff)
 	if header.GasLimit > cap {
 		return fmt.Errorf("invalid gasLimit: have %v, max %v", header.GasLimit, cap)
 	}
-	                                         
+
 	if header.GasUsed > header.GasLimit {
 		return fmt.Errorf("invalid gasUsed: have %d, gasLimit %d", header.GasUsed, header.GasLimit)
 	}
 
-	                                                          
 	diff := int64(parent.GasLimit) - int64(header.GasLimit)
 	if diff < 0 {
 		diff *= -1
@@ -265,17 +228,17 @@ func (epvhash *EPVhash) verifyHeader(chain consensus.ChainReader, header, parent
 	if uint64(diff) >= limit || header.GasLimit < params.MinGasLimit {
 		return fmt.Errorf("invalid gas limit: have %d, want %d += %d", header.GasLimit, parent.GasLimit, limit)
 	}
-	                                              
+
 	if diff := new(big.Int).Sub(header.Number, parent.Number); diff.Cmp(big.NewInt(1)) != 0 {
 		return consensus.ErrInvalidNumber
 	}
-	                                                     
+
 	if seal {
 		if err := epvhash.VerifySeal(chain, header); err != nil {
 			return err
 		}
 	}
-	                                                                   
+
 	if err := misc.VerifyDAOHeaderExtraData(chain.Config(), header); err != nil {
 		return err
 	}
@@ -285,16 +248,10 @@ func (epvhash *EPVhash) verifyHeader(chain consensus.ChainReader, header, parent
 	return nil
 }
 
-                                                                    
-                                                                   
-                                                
 func (epvhash *EPVhash) CalcDifficulty(chain consensus.ChainReader, time uint64, parent *types.Header) *big.Int {
 	return CalcDifficulty(chain.Config(), time, parent)
 }
 
-                                                                    
-                                                                   
-                                                
 func CalcDifficulty(config *params.ChainConfig, time uint64, parent *types.Header) *big.Int {
 	next := new(big.Int).Add(parent.Number, big1)
 	switch {
@@ -307,7 +264,6 @@ func CalcDifficulty(config *params.ChainConfig, time uint64, parent *types.Heade
 	}
 }
 
-                                                                 
 var (
 	expDiffPeriod = big.NewInt(100000)
 	big1          = big.NewInt(1)
@@ -318,24 +274,14 @@ var (
 	big2999999    = big.NewInt(2999999)
 )
 
-                                                                             
-                                                                             
-                                                                                
 func calcDifficultyByzantium(time uint64, parent *types.Header) *big.Int {
-	                                               
-	             
-	                        
-	                                                                                                                    
-	                                 
 
 	bigTime := new(big.Int).SetUint64(time)
 	bigParentTime := new(big.Int).Set(parent.Time)
 
-	                                                                    
 	x := new(big.Int)
 	y := new(big.Int)
 
-	                                                                               
 	x.Sub(bigTime, bigParentTime)
 	x.Div(x, big9)
 	if parent.UncleHash == types.EmptyUncleHash {
@@ -343,32 +289,27 @@ func calcDifficultyByzantium(time uint64, parent *types.Header) *big.Int {
 	} else {
 		x.Sub(big2, x)
 	}
-	                                                                                         
+
 	if x.Cmp(bigMinus99) < 0 {
 		x.Set(bigMinus99)
 	}
-	                                                                                                                          
+
 	y.Div(parent.Difficulty, params.DifficultyBoundDivisor)
 	x.Mul(y, x)
 	x.Add(parent.Difficulty, x)
 
-	                                                             
 	if x.Cmp(params.MinimumDifficulty) < 0 {
 		x.Set(params.MinimumDifficulty)
 	}
-	                                                      
-	                                              
-	                                                        
+
 	fakeBlockNumber := new(big.Int)
 	if parent.Number.Cmp(big2999999) >= 0 {
-		fakeBlockNumber = fakeBlockNumber.Sub(parent.Number, big2999999)                                                       
+		fakeBlockNumber = fakeBlockNumber.Sub(parent.Number, big2999999) 
 	}
-	                             
+
 	periodCount := fakeBlockNumber
 	periodCount.Div(periodCount, expDiffPeriod)
 
-	                                                             
-	                                    
 	if periodCount.Cmp(big1) > 0 {
 		y.Sub(periodCount, big2)
 		y.Exp(big2, y, nil)
@@ -377,47 +318,33 @@ func calcDifficultyByzantium(time uint64, parent *types.Header) *big.Int {
 	return x
 }
 
-                                                                             
-                                                                             
-                                                                                
 func calcDifficultyHomestead(time uint64, parent *types.Header) *big.Int {
-	                                                             
-	             
-	                        
-	                                                                                          
-	                                 
 
 	bigTime := new(big.Int).SetUint64(time)
 	bigParentTime := new(big.Int).Set(parent.Time)
 
-	                                                                    
 	x := new(big.Int)
 	y := new(big.Int)
 
-	                                                 
 	x.Sub(bigTime, bigParentTime)
 	x.Div(x, big10)
 	x.Sub(big1, x)
 
-	                                                           
 	if x.Cmp(bigMinus99) < 0 {
 		x.Set(bigMinus99)
 	}
-	                                                                                                 
+
 	y.Div(parent.Difficulty, params.DifficultyBoundDivisor)
 	x.Mul(y, x)
 	x.Add(parent.Difficulty, x)
 
-	                                                             
 	if x.Cmp(params.MinimumDifficulty) < 0 {
 		x.Set(params.MinimumDifficulty)
 	}
-	                             
+
 	periodCount := new(big.Int).Add(parent.Number, big1)
 	periodCount.Div(periodCount, expDiffPeriod)
 
-	                                                             
-	                                    
 	if periodCount.Cmp(big1) > 0 {
 		y.Sub(periodCount, big2)
 		y.Exp(big2, y, nil)
@@ -426,9 +353,6 @@ func calcDifficultyHomestead(time uint64, parent *types.Header) *big.Int {
 	return x
 }
 
-                                                                                
-                                                                                
-                                                                        
 func calcDifficultyFrontier(time uint64, parent *types.Header) *big.Int {
 	diff := new(big.Int)
 	adjust := new(big.Int).Div(parent.Difficulty, params.DifficultyBoundDivisor)
@@ -450,7 +374,7 @@ func calcDifficultyFrontier(time uint64, parent *types.Header) *big.Int {
 	periodCount := new(big.Int).Add(parent.Number, big1)
 	periodCount.Div(periodCount, expDiffPeriod)
 	if periodCount.Cmp(big1) > 0 {
-		                                    
+
 		expDiff := periodCount.Sub(periodCount, big2)
 		expDiff.Exp(big2, expDiff, nil)
 		diff.Add(diff, expDiff)
@@ -459,10 +383,8 @@ func calcDifficultyFrontier(time uint64, parent *types.Header) *big.Int {
 	return diff
 }
 
-                                                                                     
-                                   
 func (epvhash *EPVhash) VerifySeal(chain consensus.ChainReader, header *types.Header) error {
-	                                                        
+
 	if epvhash.config.PowMode == ModeFake || epvhash.config.PowMode == ModeFullFake {
 		time.Sleep(epvhash.fakeDelay)
 		if epvhash.fakeFail == header.Number.Uint64() {
@@ -470,30 +392,28 @@ func (epvhash *EPVhash) VerifySeal(chain consensus.ChainReader, header *types.He
 		}
 		return nil
 	}
-	                                                             
+
 	if epvhash.shared != nil {
 		return epvhash.shared.VerifySeal(chain, header)
 	}
-	                                                                                 
+
 	number := header.Number.Uint64()
 	if number/epochLength >= maxEpoch {
-		                                                                          
+
 		return errNonceOutOfRange
 	}
-	                                                       
+
 	if header.Difficulty.Sign() <= 0 {
 		return errInvalidDifficulty
 	}
 
-	                                                                   
 	cache := epvhash.cache(number)
 	size := datasetSize(number)
 	if epvhash.config.PowMode == ModeTest {
 		size = 32 * 1024
 	}
 	digest, result := hashimotoLight(size, cache.cache, header.HashNoNonce().Bytes(), header.Nonce.Uint64())
-	                                                                       
-	                                                                                
+
 	runtime.KeepAlive(cache)
 
 	if !bytes.Equal(header.MixDigest[:], digest) {
@@ -506,8 +426,6 @@ func (epvhash *EPVhash) VerifySeal(chain consensus.ChainReader, header *types.He
 	return nil
 }
 
-                                                                              
-                                                                          
 func (epvhash *EPVhash) Prepare(chain consensus.ChainReader, header *types.Header) error {
 	parent := chain.GetHeader(header.ParentHash, header.Number.Uint64()-1)
 	if parent == nil {
@@ -517,33 +435,26 @@ func (epvhash *EPVhash) Prepare(chain consensus.ChainReader, header *types.Heade
 	return nil
 }
 
-                                                                                  
-                                                    
 func (epvhash *EPVhash) Finalize(chain consensus.ChainReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, uncles []*types.Header, receipts []*types.Receipt) (*types.Block, error) {
-	                                                                         
+
 	accumulateRewards(chain.Config(), state, header, uncles)
 	header.Root = state.IntermediateRoot(chain.Config().IsEIP158(header.Number))
 
-	                                                          
 	return types.NewBlock(header, txs, uncles, receipts), nil
 }
 
-                                                                 
 var (
 	big8  = big.NewInt(8)
 	big32 = big.NewInt(32)
 )
 
-                                                                            
-                                                                               
-                                                                      
 func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header *types.Header, uncles []*types.Header) {
-	                                                             
+
 	blockReward := FrontierBlockReward
 	if config.IsByzantium(header.Number) {
 		blockReward = ByzantiumBlockReward
 	}
-	                                                               
+
 	reward := new(big.Int).Set(blockReward)
 	r := new(big.Int)
 	for _, uncle := range uncles {

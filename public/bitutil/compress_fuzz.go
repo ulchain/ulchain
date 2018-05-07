@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 // +build gofuzz
 
@@ -20,8 +5,6 @@ package bitutil
 
 import "bytes"
 
-                                                                          
-               
 func Fuzz(data []byte) int {
 	if len(data) == 0 {
 		return -1
@@ -32,8 +15,6 @@ func Fuzz(data []byte) int {
 	return fuzzDecode(data[1:])
 }
 
-                                                                                
-                      
 func fuzzEncode(data []byte) int {
 	proc, _ := bitsetDecodeBytes(bitsetEncodeBytes(data), len(data))
 	if !bytes.Equal(data, proc) {
@@ -42,8 +23,6 @@ func fuzzEncode(data []byte) int {
 	return 0
 }
 
-                                                                             
-                        
 func fuzzDecode(data []byte) int {
 	blob, err := bitsetDecodeBytes(data, 1024)
 	if err != nil {

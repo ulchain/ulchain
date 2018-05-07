@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package state
 
@@ -36,7 +21,6 @@ type ManagedState struct {
 	accounts map[common.Address]*account
 }
 
-                                                                                  
 func ManageState(statedb *StateDB) *ManagedState {
 	return &ManagedState{
 		StateDB:  statedb.Copy(),
@@ -44,14 +28,12 @@ func ManageState(statedb *StateDB) *ManagedState {
 	}
 }
 
-                                                       
 func (ms *ManagedState) SetState(statedb *StateDB) {
 	ms.mu.Lock()
 	defer ms.mu.Unlock()
 	ms.StateDB = statedb
 }
 
-                                                                                     
 func (ms *ManagedState) RemoveNonce(addr common.Address, n uint64) {
 	if ms.hasAccount(addr) {
 		ms.mu.Lock()
@@ -66,7 +48,6 @@ func (ms *ManagedState) RemoveNonce(addr common.Address, n uint64) {
 	}
 }
 
-                                                                   
 func (ms *ManagedState) NewNonce(addr common.Address) uint64 {
 	ms.mu.Lock()
 	defer ms.mu.Unlock()
@@ -82,9 +63,6 @@ func (ms *ManagedState) NewNonce(addr common.Address) uint64 {
 	return uint64(len(account.nonces)-1) + account.nstart
 }
 
-                                                                             
-  
-                                                              
 func (ms *ManagedState) GetNonce(addr common.Address) uint64 {
 	ms.mu.Lock()
 	defer ms.mu.Unlock()
@@ -97,7 +75,6 @@ func (ms *ManagedState) GetNonce(addr common.Address) uint64 {
 	}
 }
 
-                                                              
 func (ms *ManagedState) SetNonce(addr common.Address, nonce uint64) {
 	ms.mu.Lock()
 	defer ms.mu.Unlock()
@@ -108,7 +85,6 @@ func (ms *ManagedState) SetNonce(addr common.Address, nonce uint64) {
 	ms.accounts[addr] = newAccount(so)
 }
 
-                                                                 
 func (ms *ManagedState) HasAccount(addr common.Address) bool {
 	ms.mu.RLock()
 	defer ms.mu.RUnlock()
@@ -120,14 +96,12 @@ func (ms *ManagedState) hasAccount(addr common.Address) bool {
 	return ok
 }
 
-                             
 func (ms *ManagedState) getAccount(addr common.Address) *account {
 	if account, ok := ms.accounts[addr]; !ok {
 		so := ms.GetOrNewStateObject(addr)
 		ms.accounts[addr] = newAccount(so)
 	} else {
-		                                                                 
-		                        
+
 		so := ms.StateDB.getStateObject(addr)
 		if so != nil && uint64(len(account.nonces))+account.nstart < so.Nonce() {
 			ms.accounts[addr] = newAccount(so)

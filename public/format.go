@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package common
 
@@ -23,14 +8,10 @@ import (
 	"time"
 )
 
-                                                                                
-                                                                           
 type PrettyDuration time.Duration
 
 var prettyDurationRe = regexp.MustCompile(`\.[0-9]+`)
 
-                                                                                 
-                                    
 func (d PrettyDuration) String() string {
 	label := fmt.Sprintf("%v", time.Duration(d))
 	if match := prettyDurationRe.FindString(label); len(match) > 4 {

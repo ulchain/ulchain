@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package node
 
@@ -26,19 +11,13 @@ import (
 	"github.com/epvchain/go-epvchain/remote"
 )
 
-                                                                               
-                                                                                
-                                                                    
 type ServiceContext struct {
 	config         *Config
-	services       map[reflect.Type]Service                                             
-	EventMux       *event.TypeMux                                                                
-	AccountManager *accounts.Manager                                               
+	services       map[reflect.Type]Service 
+	EventMux       *event.TypeMux           
+	AccountManager *accounts.Manager        
 }
 
-                                                                              
-                                                                             
-                                                           
 func (ctx *ServiceContext) OpenDatabase(name string, cache int, handles int) (epvdb.Database, error) {
 	if ctx.config.DataDir == "" {
 		return epvdb.NewMemDatabase()
@@ -50,14 +29,10 @@ func (ctx *ServiceContext) OpenDatabase(name string, cache int, handles int) (ep
 	return db, nil
 }
 
-                                                                                
-                                                                                   
-                                                                      
 func (ctx *ServiceContext) ResolvePath(path string) string {
 	return ctx.config.resolvePath(path)
 }
 
-                                                                               
 func (ctx *ServiceContext) Service(service interface{}) error {
 	element := reflect.ValueOf(service).Elem()
 	if running, ok := ctx.services[element.Type()]; ok {
@@ -67,32 +42,15 @@ func (ctx *ServiceContext) Service(service interface{}) error {
 	return ErrServiceUnknown
 }
 
-                                                                                
-                                        
 type ServiceConstructor func(ctx *ServiceContext) (Service, error)
 
-                                                                        
-  
-         
-  
-                                                                                        
-                                                                                      
-                
-  
-                                                                             
-                                   
 type Service interface {
-	                                                                     
+
 	Protocols() []p2p.Protocol
 
-	                                                                  
 	APIs() []rpc.API
 
-	                                                                              
-	                                                                              
 	Start(server *p2p.Server) error
 
-	                                                                               
-	                      
 	Stop() error
 }

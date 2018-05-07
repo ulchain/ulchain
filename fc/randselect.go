@@ -1,56 +1,31 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                         
 package les
 
 import (
 	"math/rand"
 )
 
-                                                                                      
-                                                                                   
-                                                                   
 type wrsItem interface {
 	Weight() int64
 }
 
-                                                                                   
 type weightedRandomSelect struct {
 	root *wrsNode
 	idx  map[wrsItem]int
 }
 
-                                                                       
 func newWeightedRandomSelect() *weightedRandomSelect {
 	return &weightedRandomSelect{root: &wrsNode{maxItems: wrsBranches}, idx: make(map[wrsItem]int)}
 }
 
-                                                                                   
-                                                                                             
 func (w *weightedRandomSelect) update(item wrsItem) {
 	w.setWeight(item, item.Weight())
 }
 
-                                      
 func (w *weightedRandomSelect) remove(item wrsItem) {
 	w.setWeight(item, 0)
 }
 
-                                                                           
 func (w *weightedRandomSelect) setWeight(item wrsItem, weight int64) {
 	idx, ok := w.idx[item]
 	if ok {
@@ -61,7 +36,7 @@ func (w *weightedRandomSelect) setWeight(item wrsItem, weight int64) {
 	} else {
 		if weight != 0 {
 			if w.root.itemCnt == w.root.maxItems {
-				                  
+
 				newRoot := &wrsNode{sumWeight: w.root.sumWeight, itemCnt: w.root.itemCnt, level: w.root.level + 1, maxItems: w.root.maxItems * wrsBranches}
 				newRoot.items[0] = w.root
 				newRoot.weights[0] = w.root.sumWeight
@@ -72,10 +47,6 @@ func (w *weightedRandomSelect) setWeight(item wrsItem, weight int64) {
 	}
 }
 
-                                                                                  
-                                                                                   
-                                                                                  
-                                             
 func (w *weightedRandomSelect) choose() wrsItem {
 	for {
 		if w.root.sumWeight == 0 {
@@ -93,9 +64,8 @@ func (w *weightedRandomSelect) choose() wrsItem {
 	}
 }
 
-const wrsBranches = 8                                              
+const wrsBranches = 8 
 
-                                                                                     
 type wrsNode struct {
 	items                    [wrsBranches]interface{}
 	weights                  [wrsBranches]int64
@@ -103,7 +73,6 @@ type wrsNode struct {
 	level, itemCnt, maxItems int
 }
 
-                                                                               
 func (n *wrsNode) insert(item wrsItem, weight int64) int {
 	branch := 0
 	for n.items[branch] != nil && (n.level == 0 || n.items[branch].(*wrsNode).itemCnt == n.items[branch].(*wrsNode).maxItems) {
@@ -131,8 +100,6 @@ func (n *wrsNode) insert(item wrsItem, weight int64) int {
 	}
 }
 
-                                                                                  
-                                                         
 func (n *wrsNode) setWeight(idx int, weight int64) int64 {
 	if n.level == 0 {
 		oldWeight := n.weights[idx]
@@ -156,7 +123,6 @@ func (n *wrsNode) setWeight(idx int, weight int64) int64 {
 	return diff
 }
 
-                                                                                        
 func (n *wrsNode) choose(val int64) (wrsItem, int64) {
 	for i, w := range n.weights {
 		if val < w {

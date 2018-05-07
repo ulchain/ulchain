@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package accounts
 
@@ -23,24 +8,11 @@ import (
 	"strings"
 )
 
-                                                                          
-  
-                                                                               
-                                                                                 
-                                                                                 
-  
-                                                                                
-                                                                                
-                                                                               
-  
-                                                                             
-                     
 type URL struct {
-	Scheme string                                                         
-	Path   string                                                    
+	Scheme string 
+	Path   string 
 }
 
-                                                                              
 func parseURL(url string) (URL, error) {
 	parts := strings.Split(url, "://")
 	if len(parts) != 2 || parts[0] == "" {
@@ -52,7 +24,6 @@ func parseURL(url string) (URL, error) {
 	}, nil
 }
 
-                                            
 func (u URL) String() string {
 	if u.Scheme != "" {
 		return fmt.Sprintf("%s://%s", u.Scheme, u.Path)
@@ -60,7 +31,6 @@ func (u URL) String() string {
 	return u.Path
 }
 
-                                                                
 func (u URL) TerminalString() string {
 	url := u.String()
 	if len(url) > 32 {
@@ -69,17 +39,10 @@ func (u URL) TerminalString() string {
 	return url
 }
 
-                                                        
 func (u URL) MarshalJSON() ([]byte, error) {
 	return json.Marshal(u.String())
 }
 
-                                    
-  
-                 
-                 
-                 
-  
 func (u URL) Cmp(url URL) int {
 	if u.Scheme == url.Scheme {
 		return strings.Compare(u.Path, url.Path)

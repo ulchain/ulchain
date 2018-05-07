@@ -1,21 +1,12 @@
-                                                      
-                                                     
-                                                 
 
 package bn256
-
-                                                                          
-                                           
-                                       
 
 import (
 	"math/big"
 )
 
-                                                                           
-                      
 type gfP2 struct {
-	x, y *big.Int                  
+	x, y *big.Int 
 }
 
 func newGFp2(pool *bnPool) *gfP2 {
@@ -124,8 +115,6 @@ func (c *gfP2) Exp(a *gfP2, power *big.Int, pool *bnPool) *gfP2 {
 	return c
 }
 
-                                                                
-                                      
 func (e *gfP2) Mul(a, b *gfP2, pool *bnPool) *gfP2 {
 	tx := pool.Get().Mul(a.x, b.y)
 	t := pool.Get().Mul(b.x, a.y)
@@ -151,9 +140,8 @@ func (e *gfP2) MulScalar(a *gfP2, b *big.Int) *gfP2 {
 	return e
 }
 
-                                                    
 func (e *gfP2) MulXi(a *gfP2, pool *bnPool) *gfP2 {
-	                               
+
 	tx := pool.Get().Lsh(a.x, 3)
 	tx.Add(tx, a.x)
 	tx.Add(tx, a.y)
@@ -172,8 +160,7 @@ func (e *gfP2) MulXi(a *gfP2, pool *bnPool) *gfP2 {
 }
 
 func (e *gfP2) Square(a *gfP2, pool *bnPool) *gfP2 {
-	                              
-	                                  
+
 	t1 := pool.Get().Sub(a.y, a.x)
 	t2 := pool.Get().Add(a.x, a.y)
 	ty := pool.Get().Mul(t1, t2)
@@ -193,8 +180,7 @@ func (e *gfP2) Square(a *gfP2, pool *bnPool) *gfP2 {
 }
 
 func (e *gfP2) Invert(a *gfP2, pool *bnPool) *gfP2 {
-	                                                                    
-	                                               
+
 	t := pool.Get()
 	t.Mul(a.y, a.y)
 	t2 := pool.Get()

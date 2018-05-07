@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package rpc
 
@@ -21,7 +6,6 @@ import (
 	"net"
 )
 
-                                                                             
 func DialInProc(handler *Server) *Client {
 	initctx := context.Background()
 	c, _ := newClient(initctx, func(context.Context) (net.Conn, error) {

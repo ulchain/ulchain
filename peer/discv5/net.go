@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package discv5
 
@@ -53,44 +38,36 @@ const (
 	printTestImgLogs = false
 )
 
-                                                          
 type Network struct {
-	db          *nodeDB                           
+	db          *nodeDB 
 	conn        transport
 	netrestrict *netutil.Netlist
 
-	closed           chan struct{}                                     
-	closeReq         chan struct{}                               
-	refreshReq       chan []*Node                                                     
-	refreshResp      chan (<-chan struct{})                                                    
-	read             chan ingressPacket                                   
+	closed           chan struct{}          
+	closeReq         chan struct{}          
+	refreshReq       chan []*Node           
+	refreshResp      chan (<-chan struct{}) 
+	read             chan ingressPacket     
 	timeout          chan timeoutEvent
-	queryReq         chan *findnodeQuery                                                   
+	queryReq         chan *findnodeQuery 
 	tableOpReq       chan func()
 	tableOpResp      chan struct{}
 	topicRegisterReq chan topicRegisterReq
 	topicSearchReq   chan topicSearchReq
 
-	                          
 	tab           *Table
 	topictab      *topicTable
 	ticketStore   *ticketStore
 	nursery       []*Node
-	nodes         map[NodeID]*Node                                           
+	nodes         map[NodeID]*Node 
 	timeoutTimers map[timeoutEvent]*time.Timer
 
-	                       
-	                                                       
 	slowRevalidateQueue []*Node
 	fastRevalidateQueue []*Node
 
-	                                
 	sendBuf []*ingressPacket
 }
 
-                                                 
-                                                                
-                                                
 type transport interface {
 	sendPing(remote *Node, remoteAddr *net.UDPAddr, topics []Topic) (hash []byte)
 	sendNeighbours(remote *Node, nodes []*Node)
@@ -108,7 +85,7 @@ type findnodeQuery struct {
 	remote   *Node
 	target   common.Hash
 	reply    chan<- []*Node
-	nresults int                              
+	nresults int 
 }
 
 type topicRegisterReq struct {
@@ -170,7 +147,6 @@ func newNetwork(conn transport, ourPubkey ecdsa.PublicKey, dbPath string, netres
 	return net, nil
 }
 
-                                                                       
 func (net *Network) Close() {
 	net.conn.Close()
 	select {
@@ -180,31 +156,22 @@ func (net *Network) Close() {
 	}
 }
 
-                               
-                                                          
 func (net *Network) Self() *Node {
 	return net.tab.self
 }
 
-                                                                   
-                                                                      
-                                                          
 func (net *Network) ReadRandomNodes(buf []*Node) (n int) {
 	net.reqTableOp(func() { n = net.tab.readRandomNodes(buf) })
 	return n
 }
 
-                                                                   
-                                                                     
-                                      
 func (net *Network) SetFallbackNodes(nodes []*Node) error {
 	nursery := make([]*Node, 0, len(nodes))
 	for _, n := range nodes {
 		if err := n.validateComplete(); err != nil {
 			return fmt.Errorf("bad bootstrap/fallback node %q (%v)", n, err)
 		}
-		                                                         
-		                                   
+
 		cpy := *n
 		cpy.sha = crypto.Keccak256Hash(n.ID[:])
 		nursery = append(nursery, &cpy)
@@ -213,8 +180,6 @@ func (net *Network) SetFallbackNodes(nodes []*Node) error {
 	return nil
 }
 
-                                                          
-                                                 
 func (net *Network) Resolve(targetID NodeID) *Node {
 	result := net.lookup(crypto.Keccak256Hash(targetID[:]), true)
 	for _, n := range result {
@@ -225,13 +190,6 @@ func (net *Network) Resolve(targetID NodeID) *Node {
 	return nil
 }
 
-                                                   
-                                                            
-                                                 
-                                                      
-              
-  
-                                                
 func (net *Network) Lookup(targetID NodeID) []*Node {
 	return net.lookup(crypto.Keccak256Hash(targetID[:]), false)
 }
@@ -244,10 +202,10 @@ func (net *Network) lookup(target common.Hash, stopOnMatch bool) []*Node {
 		result         = nodesByDistance{target: target}
 		pendingQueries = 0
 	)
-	                                           
+
 	result.push(net.tab.self, bucketSize)
 	for {
-		                                                      
+
 		for i := 0; i < len(result.entries) && pendingQueries < alpha; i++ {
 			n := result.entries[i]
 			if !asked[n.ID] {
@@ -257,10 +215,10 @@ func (net *Network) lookup(target common.Hash, stopOnMatch bool) []*Node {
 			}
 		}
 		if pendingQueries == 0 {
-			                                                    
+
 			break
 		}
-		                           
+
 		select {
 		case nodes := <-reply:
 			for _, n := range nodes {
@@ -274,7 +232,7 @@ func (net *Network) lookup(target common.Hash, stopOnMatch bool) []*Node {
 			}
 			pendingQueries--
 		case <-time.After(respTimeout):
-			                                              
+
 			pendingQueries = 0
 			reply = make(chan []*Node, alpha)
 		}
@@ -352,8 +310,6 @@ func (net *Network) reqTableOp(f func()) (called bool) {
 	}
 }
 
-                                   
-
 type topicSearchInfo struct {
 	lookupChn chan<- bool
 	period    time.Duration
@@ -365,10 +321,9 @@ func (net *Network) loop() {
 	var (
 		refreshTimer       = time.NewTicker(autoRefreshInterval)
 		bucketRefreshTimer = time.NewTimer(bucketRefreshInterval)
-		refreshDone        chan struct{}                                              
+		refreshDone        chan struct{} 
 	)
 
-	                                        
 	var (
 		nextTicket        *ticketRef
 		nextRegisterTimer *time.Timer
@@ -394,7 +349,6 @@ func (net *Network) loop() {
 		}
 	}
 
-	                                            
 	var (
 		topicRegisterLookupTarget lookupInfo
 		topicRegisterLookupDone   chan []*Node
@@ -418,9 +372,8 @@ loop:
 			log.Trace("<-net.closeReq")
 			break loop
 
-		                           
 		case pkt := <-net.read:
-			                             
+
 			log.Trace("<-net.read")
 			n := net.internNode(&pkt)
 			prestate := n.state
@@ -432,13 +385,11 @@ loop:
 				return fmt.Sprintf("<<< (%d) %v from %x@%v: %v -> %v (%v)",
 					net.tab.count, pkt.ev, pkt.remoteID[:8], pkt.remoteAddr, prestate, n.state, status)
 			}})
-			                                                                           
 
-		                             
 		case timeout := <-net.timeout:
 			log.Trace("<-net.timeout")
 			if net.timeoutTimers[timeout] == nil {
-				                             
+
 				continue
 			}
 			delete(net.timeoutTimers, timeout)
@@ -452,20 +403,17 @@ loop:
 					net.tab.count, timeout.ev, timeout.node.ID[:8], timeout.node.addr(), prestate, timeout.node.state, status)
 			}})
 
-		            
 		case q := <-net.queryReq:
 			log.Trace("<-net.queryReq")
 			if !q.start(net) {
 				q.remote.deferQuery(q)
 			}
 
-		                              
 		case f := <-net.tableOpReq:
 			log.Trace("<-net.tableOpReq")
 			f()
 			net.tableOpResp <- struct{}{}
 
-		                            
 		case req := <-net.topicRegisterReq:
 			log.Trace("<-net.topicRegisterReq")
 			if !req.add {
@@ -473,10 +421,7 @@ loop:
 				continue
 			}
 			net.ticketStore.addTopic(req.topic, true)
-			                                                                                
-			                                                                            
-			                                
-			                                      
+
 			if topicRegisterLookupTarget.target == (common.Hash{}) {
 				log.Trace("topicRegisterLookupTarget == null")
 				if topicRegisterLookupTick.Stop() {
@@ -514,7 +459,7 @@ loop:
 		case <-nextRegisterTime:
 			log.Trace("<-nextRegisterTime")
 			net.ticketStore.ticketRegistered(*nextTicket)
-			                                                                                                                             
+
 			net.conn.sendTopicRegister(nextTicket.t.node, nextTicket.t.topics, nextTicket.idx, nextTicket.t.pong)
 
 		case req := <-net.topicSearchReq:
@@ -567,7 +512,7 @@ loop:
 			}
 			net.ticketStore.searchLookupDone(res.target, res.nodes, func(n *Node, topic Topic) []byte {
 				if n.state != nil && n.state.canQuery {
-					return net.conn.send(n, topicQueryPacket, topicQuery{Topic: topic})                        
+					return net.conn.send(n, topicQueryPacket, topicQuery{Topic: topic}) 
 				} else {
 					if n.state == unknown {
 						net.ping(n, n.addr())
@@ -578,7 +523,6 @@ loop:
 
 		case <-statsDump.C:
 			log.Trace("<-statsDump.C")
-			                                                                                                                                                                                                                                                                                                                                                                                                       
 
 			tm := mclock.Now()
 			for topic, r := range net.ticketStore.radius {
@@ -596,11 +540,9 @@ loop:
 				}
 			}
 
-		                                              
 		case <-refreshTimer.C:
 			log.Trace("<-refreshTimer.C")
-			                                                       
-			                                                   
+
 			if refreshDone == nil {
 				refreshDone = make(chan struct{})
 				net.refresh(refreshDone)
@@ -645,10 +587,9 @@ loop:
 		net.conn.Close()
 	}
 	if refreshDone != nil {
-		                                  
-		                  
+
 	}
-	                               
+
 	for _, timer := range net.timeoutTimers {
 		timer.Stop()
 	}
@@ -657,9 +598,6 @@ loop:
 	}
 	close(net.closed)
 }
-
-                                                      
-                                                                      
 
 func (net *Network) refresh(done chan<- struct{}) {
 	var seeds []*Node
@@ -688,18 +626,15 @@ func (net *Network) refresh(done chan<- struct{}) {
 		if n.state == unknown {
 			net.transition(n, verifyinit)
 		}
-		                                                    
-		                                                  
+
 		net.tab.add(n)
 	}
-	                                            
+
 	go func() {
 		net.Lookup(net.tab.self.ID)
 		close(done)
 	}()
 }
-
-                  
 
 func (net *Network) internNode(pkt *ingressPacket) *Node {
 	if n := net.nodes[pkt.remoteID]; n != nil {
@@ -733,7 +668,7 @@ func (net *Network) internNodeFromNeighbours(sender *net.UDPAddr, rn rpcNode) (n
 	}
 	n = net.nodes[rn.ID]
 	if n == nil {
-		                                    
+
 		n, err = nodeFromRPC(sender, rn)
 		if net.netrestrict != nil && !net.netrestrict.Contains(n.IP) {
 			return n, errors.New("not contained in netrestrict whitelist")
@@ -746,10 +681,10 @@ func (net *Network) internNodeFromNeighbours(sender *net.UDPAddr, rn rpcNode) (n
 	}
 	if !n.IP.Equal(rn.IP) || n.UDP != rn.UDP || n.TCP != rn.TCP {
 		if n.state == known {
-			                                               
+
 			err = fmt.Errorf("metadata mismatch: got %v, want %v", rn, n)
 		} else {
-			                                                                
+
 			n.IP = rn.IP
 			n.UDP = rn.UDP
 			n.TCP = rn.TCP
@@ -758,22 +693,15 @@ func (net *Network) internNodeFromNeighbours(sender *net.UDPAddr, rn rpcNode) (n
 	return n, err
 }
 
-                                                       
 type nodeNetGuts struct {
-	                                                           
-	                                                                  
-	                                                                  
-	                                                                  
-	           
+
 	sha common.Hash
 
-	                                               
-	                                               
 	state             *nodeState
-	pingEcho          []byte                                          
-	pingTopics        []Topic                                              
-	deferredQueries   []*findnodeQuery                                  
-	pendingNeighbours *findnodeQuery                                      
+	pingEcho          []byte           
+	pingTopics        []Topic          
+	deferredQueries   []*findnodeQuery 
+	pendingNeighbours *findnodeQuery   
 	queryTimeouts     int
 }
 
@@ -792,7 +720,7 @@ func (n *nodeNetGuts) startNextQuery(net *Network) {
 }
 
 func (q *findnodeQuery) start(net *Network) bool {
-	                                                   
+
 	if q.remote == net.tab.self {
 		closest := net.tab.closest(crypto.Keccak256Hash(q.target[:]), bucketSize)
 		q.reply <- closest.entries
@@ -804,26 +732,20 @@ func (q *findnodeQuery) start(net *Network) bool {
 		q.remote.pendingNeighbours = q
 		return true
 	}
-	                                                         
-	                                    
-	                                                                    
+
 	if q.remote.state == unknown {
 		net.transition(q.remote, verifyinit)
 	}
 	return false
 }
 
-                                                
-
 type nodeEvent uint
 
-                                      
+//go:generate stringer -type=nodeEvent
 
 const (
-	invalidEvent nodeEvent = iota                    
+	invalidEvent nodeEvent = iota 
 
-	                      
-	                                                        
 	pingPacket
 	pongPacket
 	findnodePacket
@@ -833,15 +755,10 @@ const (
 	topicQueryPacket
 	topicNodesPacket
 
-	                     
-	                                                      
-	                                                                     
 	pongTimeout nodeEvent = iota + 256
 	pingTimeout
 	neighboursTimeout
 )
-
-                      
 
 type nodeState struct {
 	name     string
@@ -870,7 +787,7 @@ func init() {
 		enter: func(net *Network, n *Node) {
 			net.tab.delete(n)
 			n.pingEcho = nil
-			                        
+
 			for _, q := range n.deferredQueries {
 				q.reply <- nil
 			}
@@ -956,11 +873,10 @@ func init() {
 		enter: func(net *Network, n *Node) {
 			n.queryTimeouts = 0
 			n.startNextQuery(net)
-			                                                                
-			                               
+
 			last := net.tab.add(n)
 			if last != nil && last.state == known {
-				                               
+
 				net.transition(last, contested)
 			}
 		},
@@ -987,7 +903,7 @@ func init() {
 		handle: func(net *Network, n *Node, ev nodeEvent, pkt *ingressPacket) (*nodeState, error) {
 			switch ev {
 			case pongPacket:
-				                       
+
 				err := net.handleKnownPong(n, pkt)
 				return known, err
 			case pongTimeout:
@@ -1020,51 +936,40 @@ func init() {
 	}
 }
 
-                                                              
 func (net *Network) handle(n *Node, ev nodeEvent, pkt *ingressPacket) error {
-	                                                       
+
 	if pkt != nil {
 		if err := net.checkPacket(n, ev, pkt); err != nil {
-			                                
+
 			return err
 		}
-		                                                            
-		                                                                  
-		                                                                
-		                                                               
-		                                                  
+
 		if net.db != nil {
 			net.db.ensureExpirer()
 		}
 	}
 	if n.state == nil {
-		n.state = unknown      
+		n.state = unknown 
 	}
 	next, err := n.state.handle(net, n, ev, pkt)
 	net.transition(n, next)
-	                                    
+
 	return err
 }
 
 func (net *Network) checkPacket(n *Node, ev nodeEvent, pkt *ingressPacket) error {
-	                            
+
 	switch ev {
 	case pingPacket, findnodeHashPacket, neighborsPacket:
-		                                       
-		                           
+
 	case pongPacket:
 		if !bytes.Equal(pkt.data.(*pong).ReplyTok, n.pingEcho) {
-			                                           
+
 			return fmt.Errorf("pong reply token mismatch")
 		}
 		n.pingEcho = nil
 	}
-	                      
-	                                           
-	                                                        
-	                                                                      
-	                                                                            
-	                  
+
 	return nil
 }
 
@@ -1076,7 +981,6 @@ func (net *Network) transition(n *Node, next *nodeState) {
 		}
 	}
 
-	                               
 }
 
 func (net *Network) timedEvent(d time.Duration, n *Node, ev nodeEvent) {
@@ -1098,9 +1002,9 @@ func (net *Network) abortTimedEvent(n *Node, ev nodeEvent) {
 }
 
 func (net *Network) ping(n *Node, addr *net.UDPAddr) {
-	                                                                    
+
 	if n.pingEcho != nil || n.ID == net.tab.self.ID {
-		                          
+
 		return
 	}
 	log.Trace("Pinging remote node", "node", n.ID)
@@ -1116,7 +1020,7 @@ func (net *Network) handlePing(n *Node, pkt *ingressPacket) {
 	t := net.topictab.getTicket(n, ping.Topics)
 
 	pong := &pong{
-		To:         makeEndpoint(n.addr(), n.TCP),                                          
+		To:         makeEndpoint(n.addr(), n.TCP), 
 		ReplyTok:   pkt.hash,
 		Expiration: uint64(time.Now().Add(expiration).Unix()),
 	}
@@ -1130,7 +1034,7 @@ func (net *Network) handleKnownPong(n *Node, pkt *ingressPacket) error {
 	now := mclock.Now()
 	ticket, err := pongToTicket(now, n.pingTopics, n, pkt)
 	if err == nil {
-		                                                                  
+
 		net.ticketStore.addTicket(now, pkt.data.(*pong).ReplyTok, ticket)
 	} else {
 		log.Trace("Failed to convert pong to ticket", "err", err)
@@ -1161,28 +1065,26 @@ func (net *Network) handleQueryEvent(n *Node, ev nodeEvent, pkt *ingressPacket) 
 		}
 		return n.state, nil
 
-	     
-
 	case findnodeHashPacket:
 		results := net.tab.closest(pkt.data.(*findnodeHash).Target, bucketSize).entries
 		net.conn.sendNeighbours(n, results)
 		return n.state, nil
 	case topicRegisterPacket:
-		                                        
+
 		regdata := pkt.data.(*topicRegister)
 		pong, err := net.checkTopicRegister(regdata)
 		if err != nil {
-			                  
+
 			return n.state, fmt.Errorf("bad waiting ticket: %v", err)
 		}
 		net.topictab.useTicket(n, pong.TicketSerial, regdata.Topics, int(regdata.Idx), pong.Expiration, pong.WaitPeriods)
 		return n.state, nil
 	case topicQueryPacket:
-		                          
+
 		topic := pkt.data.(*topicQuery).Topic
 		results := net.topictab.getEntries(topic)
 		if _, ok := net.ticketStore.tickets[topic]; ok {
-			results = append(results, net.tab.self)                                                                                         
+			results = append(results, net.tab.self) 
 		}
 		if len(results) > 10 {
 			results = results[:10]
@@ -1217,8 +1119,7 @@ func (net *Network) checkTopicRegister(data *topicRegister) (*pong, error) {
 	if pongpkt.remoteID != net.tab.self.ID {
 		return nil, errors.New("not signed by us")
 	}
-	                                                 
-	                                             
+
 	if rlpHash(data.Topics) != pongpkt.data.(*pong).TopicHash {
 		return nil, errors.New("topic hash mismatch")
 	}
@@ -1250,17 +1151,15 @@ func (net *Network) handleNeighboursPacket(n *Node, pkt *ingressPacket) error {
 			continue
 		}
 		nodes[i] = nn
-		                                                 
-		                                
-		                                                               
+
 		if nn.state == unknown {
 			net.transition(nn, verifyinit)
 		}
 	}
-	                                   
+
 	n.pendingNeighbours.reply <- nodes
 	n.pendingNeighbours = nil
-	                                                   
+
 	n.startNextQuery(net)
 	return nil
 }

@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package misc
 
@@ -27,34 +12,23 @@ import (
 )
 
 var (
-	                                                                              
-	                   
+
 	ErrBadProDAOExtra = errors.New("bad DAO pro-fork extra-data")
 
-	                                                                              
-	               
 	ErrBadNoDAOExtra = errors.New("bad DAO no-fork extra-data")
 )
 
-                                                                               
-                                             
-  
-                                                  
-                                                                                 
-                                             
-                                                                                 
-                              
 func VerifyDAOHeaderExtraData(config *params.ChainConfig, header *types.Header) error {
-	                                                                       
+
 	if config.DAOForkBlock == nil {
 		return nil
 	}
-	                                                                     
+
 	limit := new(big.Int).Add(config.DAOForkBlock, params.DAOForkExtraRange)
 	if header.Number.Cmp(config.DAOForkBlock) < 0 || header.Number.Cmp(limit) >= 0 {
 		return nil
 	}
-	                                                                                       
+
 	if config.DAOForkSupport {
 		if !bytes.Equal(header.Extra, params.DAOForkBlockExtra) {
 			return ErrBadProDAOExtra
@@ -64,20 +38,16 @@ func VerifyDAOHeaderExtraData(config *params.ChainConfig, header *types.Header) 
 			return ErrBadNoDAOExtra
 		}
 	}
-	                                                   
+
 	return nil
 }
 
-                                                                              
-                                                                               
-            
 func ApplyDAOHardFork(statedb *state.StateDB) {
-	                                                
+
 	if !statedb.Exist(params.DAORefundContract) {
 		statedb.CreateAccount(params.DAORefundContract)
 	}
 
-	                                                                                  
 	for _, addr := range params.DAODrainList() {
 		statedb.AddBalance(params.DAORefundContract, statedb.GetBalance(addr))
 		statedb.SetBalance(addr, new(big.Int))

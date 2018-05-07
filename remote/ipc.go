@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package rpc
 
@@ -24,13 +9,10 @@ import (
 	"github.com/epvchain/go-epvchain/book"
 )
 
-                                                                                     
-                               
 func CreateIPCListener(endpoint string) (net.Listener, error) {
 	return ipcListen(endpoint)
 }
 
-                                                                    
 func (srv *Server) ServeListener(l net.Listener) error {
 	for {
 		conn, err := l.Accept()
@@ -42,12 +24,6 @@ func (srv *Server) ServeListener(l net.Listener) error {
 	}
 }
 
-                                                                                          
-                                                                                 
-                               
-  
-                                                                            
-                                                  
 func DialIPC(ctx context.Context, endpoint string) (*Client, error) {
 	return newClient(ctx, func(ctx context.Context) (net.Conn, error) {
 		return newIPCConnection(ctx, endpoint)

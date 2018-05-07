@@ -1,27 +1,12 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package dashboard
 
-                                           
-                                                                                                       
-                                                                                                                                  
-                                                                                                                           
-                                                                                                                                
-                                   
+//go:generate npm --prefix ./assets install
+//go:generate ./assets/node_modules/.bin/webpack --config ./assets/webpack.config.js --context ./assets
+//go:generate go-bindata -nometadata -o assets.go -prefix assets -nocompress -pkg dashboard assets/dashboard.html assets/bundle.js
+//go:generate sh -c "sed 's#var _bundleJs#//nolint:misspell\\\n&#' assets.go > assets.go.tmp && mv assets.go.tmp assets.go"
+//go:generate sh -c "sed 's#var _dashboardHtml#//nolint:misspell\\\n&#' assets.go > assets.go.tmp && mv assets.go.tmp assets.go"
+//go:generate gofmt -w -s assets.go
 
 import (
 	"fmt"
@@ -44,40 +29,37 @@ import (
 )
 
 const (
-	activeMemorySampleLimit   = 200                                                
-	virtualMemorySampleLimit  = 200                                                 
-	networkIngressSampleLimit = 200                                                  
-	networkEgressSampleLimit  = 200                                                 
-	processCPUSampleLimit     = 200                                              
-	systemCPUSampleLimit      = 200                                             
-	diskReadSampleLimit       = 200                                            
-	diskWriteSampleLimit      = 200                                             
+	activeMemorySampleLimit   = 200 
+	virtualMemorySampleLimit  = 200 
+	networkIngressSampleLimit = 200 
+	networkEgressSampleLimit  = 200 
+	processCPUSampleLimit     = 200 
+	systemCPUSampleLimit      = 200 
+	diskReadSampleLimit       = 200 
+	diskWriteSampleLimit      = 200 
 )
 
-var nextID uint32                      
+var nextID uint32 
 
-                                              
 type Dashboard struct {
 	config *Config
 
 	listener net.Listener
-	conns    map[uint32]*client                                        
+	conns    map[uint32]*client 
 	charts   *HomeMessage
 	commit   string
-	lock     sync.RWMutex                                             
+	lock     sync.RWMutex 
 
-	quit chan chan error                                  
+	quit chan chan error 
 	wg   sync.WaitGroup
 }
 
-                                                                       
 type client struct {
-	conn   *websocket.Conn                                        
-	msg    chan Message                                            
-	logger log.Logger                                                            
+	conn   *websocket.Conn 
+	msg    chan Message    
+	logger log.Logger      
 }
 
-                                                                     
 func New(config *Config, commit string) (*Dashboard, error) {
 	now := time.Now()
 	db := &Dashboard{
@@ -99,7 +81,6 @@ func New(config *Config, commit string) (*Dashboard, error) {
 	return db, nil
 }
 
-                                                                                         
 func emptyChartEntries(t time.Time, limit int, refresh time.Duration) ChartEntries {
 	ce := make(ChartEntries, limit)
 	for i := 0; i < limit; i++ {
@@ -110,19 +91,16 @@ func emptyChartEntries(t time.Time, limit int, refresh time.Duration) ChartEntri
 	return ce
 }
 
-                                                             
 func (db *Dashboard) Protocols() []p2p.Protocol { return nil }
 
-                                                        
 func (db *Dashboard) APIs() []rpc.API { return nil }
 
-                                                                                                                
 func (db *Dashboard) Start(server *p2p.Server) error {
 	log.Info("Starting dashboard")
 
 	db.wg.Add(2)
 	go db.collectData()
-	go db.collectLogs()                                                               
+	go db.collectLogs() 
 
 	http.HandleFunc("/", db.webHandler)
 	http.Handle("/api", websocket.Handler(db.apiHandler))
@@ -138,14 +116,13 @@ func (db *Dashboard) Start(server *p2p.Server) error {
 	return nil
 }
 
-                                                                                                                  
 func (db *Dashboard) Stop() error {
-	                                 
+
 	var errs []error
 	if err := db.listener.Close(); err != nil {
 		errs = append(errs, err)
 	}
-	                        
+
 	errc := make(chan error, 1)
 	for i := 0; i < 2; i++ {
 		db.quit <- errc
@@ -153,7 +130,7 @@ func (db *Dashboard) Stop() error {
 			errs = append(errs, err)
 		}
 	}
-	                         
+
 	db.lock.Lock()
 	for _, c := range db.conns {
 		if err := c.conn.Close(); err != nil {
@@ -162,7 +139,6 @@ func (db *Dashboard) Stop() error {
 	}
 	db.lock.Unlock()
 
-	                                         
 	db.wg.Wait()
 	log.Info("Dashboard stopped")
 
@@ -174,7 +150,6 @@ func (db *Dashboard) Stop() error {
 	return err
 }
 
-                                                                                                  
 func (db *Dashboard) webHandler(w http.ResponseWriter, r *http.Request) {
 	log.Debug("Request", "URL", r.URL)
 
@@ -182,7 +157,7 @@ func (db *Dashboard) webHandler(w http.ResponseWriter, r *http.Request) {
 	if path == "/" {
 		path = "/dashboard.html"
 	}
-	                                            
+
 	if db.config.Assets != "" {
 		blob, err := ioutil.ReadFile(filepath.Join(db.config.Assets, path))
 		if err != nil {
@@ -202,7 +177,6 @@ func (db *Dashboard) webHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(blob)
 }
 
-                                                 
 func (db *Dashboard) apiHandler(conn *websocket.Conn) {
 	id := atomic.AddUint32(&nextID, 1)
 	client := &client{
@@ -212,7 +186,6 @@ func (db *Dashboard) apiHandler(conn *websocket.Conn) {
 	}
 	done := make(chan struct{})
 
-	                                        
 	db.wg.Add(1)
 	go func() {
 		defer db.wg.Done()
@@ -235,7 +208,7 @@ func (db *Dashboard) apiHandler(conn *websocket.Conn) {
 	if len(params.VersionMeta) > 0 {
 		versionMeta = fmt.Sprintf(" (%s)", params.VersionMeta)
 	}
-	                      
+
 	client.msg <- Message{
 		General: &GeneralMessage{
 			Version: fmt.Sprintf("v%d.%d.%d%s", params.VersionMajor, params.VersionMinor, params.VersionPatch, versionMeta),
@@ -252,7 +225,7 @@ func (db *Dashboard) apiHandler(conn *websocket.Conn) {
 			DiskWrite:      db.charts.DiskWrite,
 		},
 	}
-	                                                             
+
 	db.lock.Lock()
 	db.conns[id] = client
 	db.lock.Unlock()
@@ -267,11 +240,10 @@ func (db *Dashboard) apiHandler(conn *websocket.Conn) {
 			close(done)
 			return
 		}
-		                      
+
 	}
 }
 
-                                                                   
 func (db *Dashboard) collectData() {
 	defer db.wg.Done()
 	systemCPUUsage := gosigar.Cpu{}
@@ -378,12 +350,11 @@ func (db *Dashboard) collectData() {
 	}
 }
 
-                                                                    
 func (db *Dashboard) collectLogs() {
 	defer db.wg.Done()
 
 	id := 1
-	                                               
+
 	for {
 		select {
 		case errc := <-db.quit:
@@ -400,7 +371,6 @@ func (db *Dashboard) collectLogs() {
 	}
 }
 
-                                                              
 func (db *Dashboard) sendToAll(msg *Message) {
 	db.lock.Lock()
 	for _, c := range db.conns {

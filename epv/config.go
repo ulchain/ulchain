@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package epv
 
@@ -33,7 +18,6 @@ import (
 	"github.com/epvchain/go-epvchain/content"
 )
 
-                                                                            
 var DefaultConfig = Config{
 	SyncMode: downloader.FastSync,
 	EPVhash: epvhash.Config{
@@ -71,48 +55,38 @@ func init() {
 	}
 }
 
-                                                                                                     
+//go:generate gencodec -type Config -field-override configMarshaling -formats toml -out gen_config.go
 
 type Config struct {
-	                                                                 
-	                                               
+
 	Genesis *core.Genesis `toml:",omitempty"`
 
-	                   
-	NetworkId uint64                                                       
+	NetworkId uint64 
 	SyncMode  downloader.SyncMode
 	NoPruning bool
 
-	                       
-	LightServ  int `toml:",omitempty"`                                                               
-	LightPeers int `toml:",omitempty"`                                      
+	LightServ  int `toml:",omitempty"` 
+	LightPeers int `toml:",omitempty"` 
 
-	                   
 	SkipBcVersionCheck bool `toml:"-"`
 	DatabaseHandles    int  `toml:"-"`
 	DatabaseCache      int
 	TrieCache          int
 	TrieTimeout        time.Duration
 
-	                         
 	EPVCbase    common.Address `toml:",omitempty"`
 	MinerThreads int            `toml:",omitempty"`
 	ExtraData    []byte         `toml:",omitempty"`
 	GasPrice     *big.Int
 
-	                  
 	EPVhash epvhash.Config
 
-	                           
 	TxPool core.TxPoolConfig
 
-	                           
 	GPO gasprice.Config
 
-	                                               
 	EnablePreimageRecording bool
 
-	                        
 	DocRoot string `toml:"-"`
 }
 

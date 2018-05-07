@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package node
 
@@ -36,135 +21,69 @@ import (
 )
 
 const (
-	datadirPrivateKey      = "nodekey"                                                                
-	datadirDefaultKeyStore = "keystore"                                                     
-	datadirStaticNodes     = "static-nodes.json"                                                    
-	datadirTrustedNodes    = "trusted-nodes.json"                                                    
-	datadirNodeDatabase    = "nodes"                                                                
+	datadirPrivateKey      = "nodekey"            
+	datadirDefaultKeyStore = "keystore"           
+	datadirStaticNodes     = "static-nodes.json"  
+	datadirTrustedNodes    = "trusted-nodes.json" 
+	datadirNodeDatabase    = "nodes"              
 )
 
-                                                                                
-                                                                                 
-                           
 type Config struct {
-	                                                                                      
-	                                                                                 
-	                                                                      
+
 	Name string `toml:"-"`
 
-	                                                                                       
 	UserIdent string `toml:",omitempty"`
 
-	                                                                         
-	                                 
 	Version string `toml:"-"`
 
-	                                                                             
-	                                                                               
-	                                                                              
-	                                                                               
-	             
 	DataDir string
 
-	                                            
 	P2P p2p.Config
 
-	                                                                                      
-	                                                                                
-	                     
-	  
-	                                                                                  
-	                                                                                      
-	                                                            
 	KeyStoreDir string `toml:",omitempty"`
 
-	                                                                            
-	                                         
 	UseLightweightKDF bool `toml:",omitempty"`
 
-	                                                              
 	NoUSB bool `toml:",omitempty"`
 
-	                                                                              
-	                                                                             
-	                                                                             
-	                                                                              
 	IPCPath string `toml:",omitempty"`
 
-	                                                                                
-	                                                        
 	HTTPHost string `toml:",omitempty"`
 
-	                                                                             
-	                                                                            
-	                        
 	HTTPPort int `toml:",omitempty"`
 
-	                                                                             
-	                                                                                
-	                                   
 	HTTPCors []string `toml:",omitempty"`
 
-	                                                                                            
-	                                                                     
-	                                                                                    
-	                                                                              
-	                                                                             
-	                                                        
-	                                                      
 	HTTPVirtualHosts []string `toml:",omitempty"`
 
-	                                                                             
-	                                                                               
-	           
 	HTTPModules []string `toml:",omitempty"`
 
-	                                                                              
-	                                                                  
 	WSHost string `toml:",omitempty"`
 
-	                                                                                
-	                                                                                
-	                    
 	WSPort int `toml:",omitempty"`
 
-	                                                                               
-	                                                                                
-	                                                    
 	WSOrigins []string `toml:",omitempty"`
 
-	                                                                                
-	                                                                               
-	           
 	WSModules []string `toml:",omitempty"`
 
-	                                                                             
-	                             
-	  
-	                                                                                
-	                                                            
 	WSExposeAll bool `toml:",omitempty"`
 
-	                                                        
 	Logger log.Logger `toml:",omitempty"`
 }
 
-                                                                                
-                                                                                  
-              
 func (c *Config) IPCEndpoint() string {
-	                                            
+
 	if c.IPCPath == "" {
 		return ""
 	}
-	                                                   
+
 	if runtime.GOOS == "windows" {
 		if strings.HasPrefix(c.IPCPath, `\\.\pipe\`) {
 			return c.IPCPath
 		}
 		return `\\.\pipe\` + c.IPCPath
 	}
-	                                                             
+
 	if filepath.Base(c.IPCPath) == c.IPCPath {
 		if c.DataDir == "" {
 			return filepath.Join(os.TempDir(), c.IPCPath)
@@ -174,15 +93,13 @@ func (c *Config) IPCEndpoint() string {
 	return c.IPCPath
 }
 
-                                                          
 func (c *Config) NodeDB() string {
 	if c.DataDir == "" {
-		return ""             
+		return "" 
 	}
 	return c.resolvePath(datadirNodeDatabase)
 }
 
-                                                           
 func DefaultIPCEndpoint(clientIdentifier string) string {
 	if clientIdentifier == "" {
 		clientIdentifier = strings.TrimSuffix(filepath.Base(os.Args[0]), ".exe")
@@ -194,8 +111,6 @@ func DefaultIPCEndpoint(clientIdentifier string) string {
 	return config.IPCEndpoint()
 }
 
-                                                                                
-                       
 func (c *Config) HTTPEndpoint() string {
 	if c.HTTPHost == "" {
 		return ""
@@ -203,14 +118,11 @@ func (c *Config) HTTPEndpoint() string {
 	return fmt.Sprintf("%s:%d", c.HTTPHost, c.HTTPPort)
 }
 
-                                                                 
 func DefaultHTTPEndpoint() string {
 	config := &Config{HTTPHost: DefaultHTTPHost, HTTPPort: DefaultHTTPPort}
 	return config.HTTPEndpoint()
 }
 
-                                                                                   
-                       
 func (c *Config) WSEndpoint() string {
 	if c.WSHost == "" {
 		return ""
@@ -218,16 +130,14 @@ func (c *Config) WSEndpoint() string {
 	return fmt.Sprintf("%s:%d", c.WSHost, c.WSPort)
 }
 
-                                                                    
 func DefaultWSEndpoint() string {
 	config := &Config{WSHost: DefaultWSHost, WSPort: DefaultWSPort}
 	return config.WSEndpoint()
 }
 
-                                               
 func (c *Config) NodeName() string {
 	name := c.name()
-	                                                                                 
+
 	if name == "gepv" || name == "gepv-testnet" {
 		name = "Gepv"
 	}
@@ -253,7 +163,6 @@ func (c *Config) name() string {
 	return c.Name
 }
 
-                                                                 
 var isOldGepvResource = map[string]bool{
 	"chaindata":          true,
 	"nodes":              true,
@@ -262,7 +171,6 @@ var isOldGepvResource = map[string]bool{
 	"trusted-nodes.json": true,
 }
 
-                                                       
 func (c *Config) resolvePath(path string) string {
 	if filepath.IsAbs(path) {
 		return path
@@ -270,15 +178,14 @@ func (c *Config) resolvePath(path string) string {
 	if c.DataDir == "" {
 		return ""
 	}
-	                                                                    
-	                                      
+
 	if c.name() == "gepv" && isOldGepvResource[path] {
 		oldpath := ""
 		if c.Name == "gepv" {
 			oldpath = filepath.Join(c.DataDir, path)
 		}
 		if oldpath != "" && common.FileExist(oldpath) {
-			                      
+
 			return oldpath
 		}
 	}
@@ -292,15 +199,12 @@ func (c *Config) instanceDir() string {
 	return filepath.Join(c.DataDir, c.name())
 }
 
-                                                                               
-                                                                              
-                                                               
 func (c *Config) NodeKey() *ecdsa.PrivateKey {
-	                                       
+
 	if c.P2P.PrivateKey != nil {
 		return c.P2P.PrivateKey
 	}
-	                                                      
+
 	if c.DataDir == "" {
 		key, err := crypto.GenerateKey()
 		if err != nil {
@@ -313,7 +217,7 @@ func (c *Config) NodeKey() *ecdsa.PrivateKey {
 	if key, err := crypto.LoadECDSA(keyfile); err == nil {
 		return key
 	}
-	                                                         
+
 	key, err := crypto.GenerateKey()
 	if err != nil {
 		log.Crit(fmt.Sprintf("Failed to generate node key: %v", err))
@@ -330,33 +234,29 @@ func (c *Config) NodeKey() *ecdsa.PrivateKey {
 	return key
 }
 
-                                                                            
 func (c *Config) StaticNodes() []*discover.Node {
 	return c.parsePersistentNodes(c.resolvePath(datadirStaticNodes))
 }
 
-                                                                              
 func (c *Config) TrustedNodes() []*discover.Node {
 	return c.parsePersistentNodes(c.resolvePath(datadirTrustedNodes))
 }
 
-                                                                                
-                                       
 func (c *Config) parsePersistentNodes(path string) []*discover.Node {
-	                                             
+
 	if c.DataDir == "" {
 		return nil
 	}
 	if _, err := os.Stat(path); err != nil {
 		return nil
 	}
-	                                       
+
 	var nodelist []string
 	if err := common.LoadJSON(path, &nodelist); err != nil {
 		log.Error(fmt.Sprintf("Can't load node file %s: %v", path, err))
 		return nil
 	}
-	                                               
+
 	var nodes []*discover.Node
 	for _, url := range nodelist {
 		if url == "" {
@@ -372,7 +272,6 @@ func (c *Config) parsePersistentNodes(path string) []*discover.Node {
 	return nodes
 }
 
-                                                                    
 func (c *Config) AccountConfig() (int, int, string, error) {
 	scryptN := keystore.StandardScryptN
 	scryptP := keystore.StandardScryptP
@@ -404,7 +303,7 @@ func makeAccountManager(conf *Config) (*accounts.Manager, string, error) {
 	scryptN, scryptP, keydir, err := conf.AccountConfig()
 	var ephemeral string
 	if keydir == "" {
-		                       
+
 		keydir, err = ioutil.TempDir("", "go-epvchain-keystore")
 		ephemeral = keydir
 	}
@@ -415,18 +314,18 @@ func makeAccountManager(conf *Config) (*accounts.Manager, string, error) {
 	if err := os.MkdirAll(keydir, 0700); err != nil {
 		return nil, "", err
 	}
-	                                                      
+
 	backends := []accounts.Backend{
 		keystore.NewKeyStore(keydir, scryptN, scryptP),
 	}
 	if !conf.NoUSB {
-		                                              
+
 		if ledgerhub, err := usbwallet.NewLedgerHub(); err != nil {
 			log.Warn(fmt.Sprintf("Failed to start Ledger hub, disabling: %v", err))
 		} else {
 			backends = append(backends, ledgerhub)
 		}
-		                                              
+
 		if trezorhub, err := usbwallet.NewTrezorHub(); err != nil {
 			log.Warn(fmt.Sprintf("Failed to start Trezor hub, disabling: %v", err))
 		} else {

@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                              
 package jsre
 
 import (
@@ -36,7 +20,6 @@ var (
 	Web3_JS      = deps.MustAsset("web3.js")
 )
 
-                                                                                                                                                                                                              
 type JSRE struct {
 	assetPath     string
 	output        io.Writer
@@ -45,7 +28,6 @@ type JSRE struct {
 	closed        chan struct{}
 }
 
-                                                              
 type jsTimer struct {
 	timer    *time.Timer
 	duration time.Duration
@@ -53,13 +35,11 @@ type jsTimer struct {
 	call     otto.FunctionCall
 }
 
-                                                                          
 type evalReq struct {
 	fn   func(vm *otto.Otto)
 	done chan bool
 }
 
-                                                                                  
 func New(assetPath string, output io.Writer) *JSRE {
 	re := &JSRE{
 		assetPath:     assetPath,
@@ -74,7 +54,6 @@ func New(assetPath string, output io.Writer) *JSRE {
 	return re
 }
 
-                                                        
 func randomSource() *rand.Rand {
 	bytes := make([]byte, 8)
 	seed := time.Now().UnixNano()
@@ -86,15 +65,6 @@ func randomSource() *rand.Rand {
 	return rand.New(src)
 }
 
-                                                                          
-                                                                       
-                                                                      
-                                                                             
-
-                                                                           
-                                                                            
-                                                                             
-                                      
 func (self *JSRE) runEventLoop() {
 	defer close(self.closed)
 
@@ -169,7 +139,7 @@ loop:
 	for {
 		select {
 		case timer := <-ready:
-			                                                
+
 			var arguments []interface{}
 			if len(timer.call.ArgumentList) > 2 {
 				tmp := timer.call.ArgumentList[2:]
@@ -186,7 +156,7 @@ loop:
 				fmt.Println("js error:", err, arguments)
 			}
 
-			_, inreg := registry[timer]                                                                        
+			_, inreg := registry[timer] 
 			if timer.interval && inreg {
 				timer.timer.Reset(timer.duration)
 			} else {
@@ -196,7 +166,7 @@ loop:
 				}
 			}
 		case req := <-self.evalQueue:
-			                                     
+
 			req.fn(vm)
 			close(req.done)
 			if waitForCallbacks && (len(registry) == 0) {
@@ -215,7 +185,6 @@ loop:
 	}
 }
 
-                                                       
 func (self *JSRE) Do(fn func(*otto.Otto)) {
 	done := make(chan bool)
 	req := &evalReq{fn, done}
@@ -223,7 +192,6 @@ func (self *JSRE) Do(fn func(*otto.Otto)) {
 	<-done
 }
 
-                                                                              
 func (self *JSRE) Stop(waitForCallbacks bool) {
 	select {
 	case <-self.closed:
@@ -232,8 +200,6 @@ func (self *JSRE) Stop(waitForCallbacks bool) {
 	}
 }
 
-                                                   
-                                                            
 func (self *JSRE) Exec(file string) error {
 	code, err := ioutil.ReadFile(common.AbsolutePath(self.assetPath, file))
 	if err != nil {
@@ -250,54 +216,46 @@ func (self *JSRE) Exec(file string) error {
 	return err
 }
 
-                                                           
-                                      
 func (self *JSRE) Bind(name string, v interface{}) error {
 	return self.Set(name, v)
 }
 
-                               
 func (self *JSRE) Run(code string) (v otto.Value, err error) {
 	self.Do(func(vm *otto.Otto) { v, err = vm.Run(code) })
 	return v, err
 }
 
-                                                             
 func (self *JSRE) Get(ns string) (v otto.Value, err error) {
 	self.Do(func(vm *otto.Otto) { v, err = vm.Get(ns) })
 	return v, err
 }
 
-                                                           
 func (self *JSRE) Set(ns string, v interface{}) (err error) {
 	self.Do(func(vm *otto.Otto) { err = vm.Set(ns, v) })
 	return err
 }
 
-                                                                               
 func (self *JSRE) loadScript(call otto.FunctionCall) otto.Value {
 	file, err := call.Argument(0).ToString()
 	if err != nil {
-		                        
+
 		return otto.FalseValue()
 	}
 	file = common.AbsolutePath(self.assetPath, file)
 	source, err := ioutil.ReadFile(file)
 	if err != nil {
-		                        
+
 		return otto.FalseValue()
 	}
 	if _, err := compileAndRun(call.Otto, file, source); err != nil {
-		                        
+
 		fmt.Println("err:", err)
 		return otto.FalseValue()
 	}
-	                                 
+
 	return otto.TrueValue()
 }
 
-                                                                              
-          
 func (self *JSRE) Evaluate(code string, w io.Writer) error {
 	var fail error
 
@@ -313,7 +271,6 @@ func (self *JSRE) Evaluate(code string, w io.Writer) error {
 	return fail
 }
 
-                                                     
 func (self *JSRE) Compile(filename string, src interface{}) (err error) {
 	self.Do(func(vm *otto.Otto) { _, err = compileAndRun(vm, filename, src) })
 	return err

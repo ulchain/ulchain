@@ -1,12 +1,8 @@
-                                                      
-                                                     
-                                                 
 
 //  +build !amd64 appengine gccgo
 
 package sha3
 
-                                                        
 var rc = [24]uint64{
 	0x0000000000000001,
 	0x0000000000008082,
@@ -34,18 +30,12 @@ var rc = [24]uint64{
 	0x8000000080008008,
 }
 
-                                                             
-                                              
 func keccakF1600(a *[25]uint64) {
-	                                                  
-	                                
+
 	var t, bc0, bc1, bc2, bc3, bc4, d0, d1, d2, d3, d4 uint64
 
 	for i := 0; i < 24; i += 4 {
-		                                                   
-		                                                                  
 
-		          
 		bc0 = a[0] ^ a[5] ^ a[10] ^ a[15] ^ a[20]
 		bc1 = a[1] ^ a[6] ^ a[11] ^ a[16] ^ a[21]
 		bc2 = a[2] ^ a[7] ^ a[12] ^ a[17] ^ a[22]
@@ -136,7 +126,6 @@ func keccakF1600(a *[25]uint64) {
 		a[8] = bc3 ^ (bc0 &^ bc4)
 		a[14] = bc4 ^ (bc1 &^ bc0)
 
-		          
 		bc0 = a[0] ^ a[5] ^ a[10] ^ a[15] ^ a[20]
 		bc1 = a[1] ^ a[6] ^ a[11] ^ a[16] ^ a[21]
 		bc2 = a[2] ^ a[7] ^ a[12] ^ a[17] ^ a[22]
@@ -227,7 +216,6 @@ func keccakF1600(a *[25]uint64) {
 		a[3] = bc3 ^ (bc0 &^ bc4)
 		a[19] = bc4 ^ (bc1 &^ bc0)
 
-		          
 		bc0 = a[0] ^ a[5] ^ a[10] ^ a[15] ^ a[20]
 		bc1 = a[1] ^ a[6] ^ a[11] ^ a[16] ^ a[21]
 		bc2 = a[2] ^ a[7] ^ a[12] ^ a[17] ^ a[22]
@@ -318,7 +306,6 @@ func keccakF1600(a *[25]uint64) {
 		a[18] = bc3 ^ (bc0 &^ bc4)
 		a[4] = bc4 ^ (bc1 &^ bc0)
 
-		          
 		bc0 = a[0] ^ a[5] ^ a[10] ^ a[15] ^ a[20]
 		bc1 = a[1] ^ a[6] ^ a[11] ^ a[16] ^ a[21]
 		bc2 = a[2] ^ a[7] ^ a[12] ^ a[17] ^ a[22]

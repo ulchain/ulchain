@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package build
 
@@ -34,8 +19,6 @@ import (
 
 var DryRunFlag = flag.Bool("n", false, "dry run, don't execute commands")
 
-                                                                    
-             
 func MustRun(cmd *exec.Cmd) {
 	fmt.Println(">>>", strings.Join(cmd.Args, " "))
 	if !*DryRunFlag {
@@ -51,8 +34,6 @@ func MustRunCommand(cmd string, args ...string) {
 	MustRun(exec.Command(cmd, args...))
 }
 
-                                                       
-                             
 func GOPATH() string {
 	if os.Getenv("GOPATH") == "" {
 		log.Fatal("GOPATH is not set")
@@ -60,7 +41,6 @@ func GOPATH() string {
 	return os.Getenv("GOPATH")
 }
 
-                                                   
 func VERSION() string {
 	version, err := ioutil.ReadFile("VERSION")
 	if err != nil {
@@ -71,8 +51,6 @@ func VERSION() string {
 
 var warnedAboutGit bool
 
-                                                       
-                                          
 func RunGit(args ...string) string {
 	cmd := exec.Command("git", args...)
 	var stdout, stderr bytes.Buffer
@@ -89,7 +67,6 @@ func RunGit(args ...string) string {
 	return strings.TrimSpace(stdout.String())
 }
 
-                                                         
 func readGitFile(file string) string {
 	content, err := ioutil.ReadFile(path.Join(".git", file))
 	if err != nil {
@@ -98,13 +75,11 @@ func readGitFile(file string) string {
 	return strings.TrimSpace(string(content))
 }
 
-                                                          
 func Render(templateFile, outputFile string, outputPerm os.FileMode, x interface{}) {
 	tpl := template.Must(template.ParseFiles(templateFile))
 	render(tpl, outputFile, outputPerm, x)
 }
 
-                                                                  
 func RenderString(templateContent, outputFile string, outputPerm os.FileMode, x interface{}) {
 	tpl := template.Must(template.New("").Parse(templateContent))
 	render(tpl, outputFile, outputPerm, x)
@@ -126,7 +101,6 @@ func render(tpl *template.Template, outputFile string, outputPerm os.FileMode, x
 	}
 }
 
-                          
 func CopyFile(dst, src string, mode os.FileMode) {
 	if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
 		log.Fatal(err)
@@ -153,8 +127,6 @@ func GoTool(tool string, args ...string) *exec.Cmd {
 	return exec.Command(filepath.Join(runtime.GOROOT(), "bin", "go"), args...)
 }
 
-                                                                        
-                     
 func ExpandPackagesNoVendor(patterns []string) []string {
 	expand := false
 	for _, pkg := range patterns {

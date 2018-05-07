@@ -1,24 +1,8 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package common
 
 import "math/big"
 
-                                 
 var (
 	Big1   = big.NewInt(1)
 	Big2   = big.NewInt(2)

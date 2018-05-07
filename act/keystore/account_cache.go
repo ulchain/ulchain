@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package keystore
 
@@ -33,9 +18,6 @@ import (
 	"gopkg.in/fatih/set.v0"
 )
 
-                                                                                        
-                                                                                       
-                                                                           
 const minReloadInterval = 2 * time.Second
 
 type accountsByURL []accounts.Account
@@ -44,8 +26,6 @@ func (s accountsByURL) Len() int           { return len(s) }
 func (s accountsByURL) Less(i, j int) bool { return s[i].URL.Cmp(s[j].URL) < 0 }
 func (s accountsByURL) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 
-                                                           
-                                                  
 type AmbiguousAddrError struct {
 	Addr    common.Address
 	Matches []accounts.Account
@@ -62,7 +42,6 @@ func (err *AmbiguousAddrError) Error() string {
 	return fmt.Sprintf("multiple keys match address (%s)", files)
 }
 
-                                                                
 type accountCache struct {
 	keydir   string
 	watcher  *watcher
@@ -109,14 +88,13 @@ func (ac *accountCache) add(newAccount accounts.Account) {
 	if i < len(ac.all) && ac.all[i] == newAccount {
 		return
 	}
-	                                  
+
 	ac.all = append(ac.all, accounts.Account{})
 	copy(ac.all[i+1:], ac.all[i:])
 	ac.all[i] = newAccount
 	ac.byAddr[newAccount.Address] = append(ac.byAddr[newAccount.Address], newAccount)
 }
 
-                                                                                  
 func (ac *accountCache) delete(removed accounts.Account) {
 	ac.mu.Lock()
 	defer ac.mu.Unlock()
@@ -129,7 +107,6 @@ func (ac *accountCache) delete(removed accounts.Account) {
 	}
 }
 
-                                                                
 func (ac *accountCache) deleteByFile(path string) {
 	ac.mu.Lock()
 	defer ac.mu.Unlock()
@@ -155,17 +132,14 @@ func removeAccount(slice []accounts.Account, elem accounts.Account) []accounts.A
 	return slice
 }
 
-                                                                          
-                                                                                   
-                           
 func (ac *accountCache) find(a accounts.Account) (accounts.Account, error) {
-	                                                  
+
 	matches := ac.all
 	if (a.Address != common.Address{}) {
 		matches = ac.byAddr[a.Address]
 	}
 	if a.URL.Path != "" {
-		                                                        
+
 		if !strings.ContainsRune(a.URL.Path, filepath.Separator) {
 			a.URL.Path = filepath.Join(ac.keydir, a.URL.Path)
 		}
@@ -196,7 +170,7 @@ func (ac *accountCache) maybeReload() {
 
 	if ac.watcher.running {
 		ac.mu.Unlock()
-		return                                                            
+		return 
 	}
 	if ac.throttle == nil {
 		ac.throttle = time.NewTimer(0)
@@ -205,10 +179,10 @@ func (ac *accountCache) maybeReload() {
 		case <-ac.throttle.C:
 		default:
 			ac.mu.Unlock()
-			return                                    
+			return 
 		}
 	}
-	                                
+
 	ac.watcher.start()
 	ac.throttle.Reset(minReloadInterval)
 	ac.mu.Unlock()
@@ -228,10 +202,8 @@ func (ac *accountCache) close() {
 	ac.mu.Unlock()
 }
 
-                                                                          
-                                        
 func (ac *accountCache) scanAccounts() error {
-	                                                   
+
 	creates, deletes, updates, err := ac.fileC.scan(ac.keydir)
 	if err != nil {
 		log.Debug("Failed to reload keystore contents", "err", err)
@@ -240,7 +212,7 @@ func (ac *accountCache) scanAccounts() error {
 	if creates.Size() == 0 && deletes.Size() == 0 && updates.Size() == 0 {
 		return nil
 	}
-	                                                               
+
 	var (
 		buf = new(bufio.Reader)
 		key struct {
@@ -255,7 +227,7 @@ func (ac *accountCache) scanAccounts() error {
 		}
 		defer fd.Close()
 		buf.Reset(fd)
-		                     
+
 		key.Address = ""
 		err = json.NewDecoder(buf).Decode(&key)
 		addr := common.HexToAddress(key.Address)
@@ -269,7 +241,7 @@ func (ac *accountCache) scanAccounts() error {
 		}
 		return nil
 	}
-	                             
+
 	start := time.Now()
 
 	for _, p := range creates.List() {

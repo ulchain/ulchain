@@ -1,5 +1,3 @@
-                                                
-                         
 
 package trezor
 
@@ -7,13 +5,10 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 
-                                                                       
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-    
-                                                                       
 type MessageType int32
 
 const (
@@ -261,9 +256,6 @@ func (x *MessageType) UnmarshalJSON(data []byte) error {
 }
 func (MessageType) EnumDescriptor() ([]byte, []int) { return fileDescriptor1, []int{0} }
 
-    
-                                                                    
-                 
 type Initialize struct {
 	XXX_unrecognized []byte `json:"-"`
 }
@@ -273,9 +265,6 @@ func (m *Initialize) String() string            { return proto.CompactTextString
 func (*Initialize) ProtoMessage()               {}
 func (*Initialize) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{0} }
 
-    
-                                                    
-                 
 type GetFeatures struct {
 	XXX_unrecognized []byte `json:"-"`
 }
@@ -285,10 +274,6 @@ func (m *GetFeatures) String() string            { return proto.CompactTextStrin
 func (*GetFeatures) ProtoMessage()               {}
 func (*GetFeatures) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{1} }
 
-    
-                                                         
-                   
-                    
 type Features struct {
 	Vendor               *string     `protobuf:"bytes,1,opt,name=vendor" json:"vendor,omitempty"`
 	MajorVersion         *uint32     `protobuf:"varint,2,opt,name=major_version,json=majorVersion" json:"major_version,omitempty"`
@@ -458,9 +443,6 @@ func (m *Features) GetFlags() uint32 {
 	return 0
 }
 
-    
-                                                                
-                
 type ClearSession struct {
 	XXX_unrecognized []byte `json:"-"`
 }
@@ -470,12 +452,6 @@ func (m *ClearSession) String() string            { return proto.CompactTextStri
 func (*ClearSession) ProtoMessage()               {}
 func (*ClearSession) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{3} }
 
-    
-                                                      
-                
-                
-                      
-                         
 type ApplySettings struct {
 	Language         *string `protobuf:"bytes,1,opt,name=language" json:"language,omitempty"`
 	Label            *string `protobuf:"bytes,2,opt,name=label" json:"label,omitempty"`
@@ -517,10 +493,6 @@ func (m *ApplySettings) GetHomescreen() []byte {
 	return nil
 }
 
-    
-                                   
-                
-                
 type ApplyFlags struct {
 	Flags            *uint32 `protobuf:"varint,1,opt,name=flags" json:"flags,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
@@ -538,10 +510,6 @@ func (m *ApplyFlags) GetFlags() uint32 {
 	return 0
 }
 
-    
-                                                                 
-                      
-                         
 type ChangePin struct {
 	Remove           *bool  `protobuf:"varint,1,opt,name=remove" json:"remove,omitempty"`
 	XXX_unrecognized []byte `json:"-"`
@@ -559,9 +527,6 @@ func (m *ChangePin) GetRemove() bool {
 	return false
 }
 
-    
-                                                                                          
-                
 type Ping struct {
 	Message              *string `protobuf:"bytes,1,opt,name=message" json:"message,omitempty"`
 	ButtonProtection     *bool   `protobuf:"varint,2,opt,name=button_protection,json=buttonProtection" json:"button_protection,omitempty"`
@@ -603,8 +568,6 @@ func (m *Ping) GetPassphraseProtection() bool {
 	return false
 }
 
-    
-                                            
 type Success struct {
 	Message          *string `protobuf:"bytes,1,opt,name=message" json:"message,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
@@ -622,8 +585,6 @@ func (m *Success) GetMessage() string {
 	return ""
 }
 
-    
-                                            
 type Failure struct {
 	Code             *FailureType `protobuf:"varint,1,opt,name=code,enum=FailureType" json:"code,omitempty"`
 	Message          *string      `protobuf:"bytes,2,opt,name=message" json:"message,omitempty"`
@@ -649,10 +610,6 @@ func (m *Failure) GetMessage() string {
 	return ""
 }
 
-    
-                                                   
-                  
-               
 type ButtonRequest struct {
 	Code             *ButtonRequestType `protobuf:"varint,1,opt,name=code,enum=ButtonRequestType" json:"code,omitempty"`
 	Data             *string            `protobuf:"bytes,2,opt,name=data" json:"data,omitempty"`
@@ -678,9 +635,6 @@ func (m *ButtonRequest) GetData() string {
 	return ""
 }
 
-    
-                                                       
-                      
 type ButtonAck struct {
 	XXX_unrecognized []byte `json:"-"`
 }
@@ -690,10 +644,6 @@ func (m *ButtonAck) String() string            { return proto.CompactTextString(
 func (*ButtonAck) ProtoMessage()               {}
 func (*ButtonAck) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{11} }
 
-    
-                                                                                                         
-                     
-               
 type PinMatrixRequest struct {
 	Type             *PinMatrixRequestType `protobuf:"varint,1,opt,name=type,enum=PinMatrixRequestType" json:"type,omitempty"`
 	XXX_unrecognized []byte                `json:"-"`
@@ -711,9 +661,6 @@ func (m *PinMatrixRequest) GetType() PinMatrixRequestType {
 	return PinMatrixRequestType_PinMatrixRequestType_Current
 }
 
-    
-                                              
-                         
 type PinMatrixAck struct {
 	Pin              *string `protobuf:"bytes,1,req,name=pin" json:"pin,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
@@ -731,11 +678,6 @@ func (m *PinMatrixAck) GetPin() string {
 	return ""
 }
 
-    
-                                                               
-                      
-                         
-                          
 type Cancel struct {
 	XXX_unrecognized []byte `json:"-"`
 }
@@ -745,10 +687,6 @@ func (m *Cancel) String() string            { return proto.CompactTextString(m) 
 func (*Cancel) ProtoMessage()               {}
 func (*Cancel) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{14} }
 
-    
-                                                
-                      
-               
 type PassphraseRequest struct {
 	XXX_unrecognized []byte `json:"-"`
 }
@@ -758,9 +696,6 @@ func (m *PassphraseRequest) String() string            { return proto.CompactTex
 func (*PassphraseRequest) ProtoMessage()               {}
 func (*PassphraseRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{15} }
 
-    
-                                
-                          
 type PassphraseAck struct {
 	Passphrase       *string `protobuf:"bytes,1,req,name=passphrase" json:"passphrase,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
@@ -778,11 +713,6 @@ func (m *PassphraseAck) GetPassphrase() string {
 	return ""
 }
 
-    
-                                                                                               
-                      
-                
-                
 type GetEntropy struct {
 	Size             *uint32 `protobuf:"varint,1,req,name=size" json:"size,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
@@ -800,9 +730,6 @@ func (m *GetEntropy) GetSize() uint32 {
 	return 0
 }
 
-    
-                                                             
-                   
 type Entropy struct {
 	Entropy          []byte `protobuf:"bytes,1,req,name=entropy" json:"entropy,omitempty"`
 	XXX_unrecognized []byte `json:"-"`
@@ -820,11 +747,6 @@ func (m *Entropy) GetEntropy() []byte {
 	return nil
 }
 
-    
-                                                                     
-                          
-                  
-                
 type GetPublicKey struct {
 	AddressN         []uint32 `protobuf:"varint,1,rep,name=address_n,json=addressN" json:"address_n,omitempty"`
 	EcdsaCurveName   *string  `protobuf:"bytes,2,opt,name=ecdsa_curve_name,json=ecdsaCurveName" json:"ecdsa_curve_name,omitempty"`
@@ -868,9 +790,6 @@ func (m *GetPublicKey) GetCoinName() string {
 	return Default_GetPublicKey_CoinName
 }
 
-    
-                                                                 
-                     
 type PublicKey struct {
 	Node             *HDNodeType `protobuf:"bytes,1,req,name=node" json:"node,omitempty"`
 	Xpub             *string     `protobuf:"bytes,2,opt,name=xpub" json:"xpub,omitempty"`
@@ -896,11 +815,6 @@ func (m *PublicKey) GetXpub() string {
 	return ""
 }
 
-    
-                                                                  
-                          
-                
-                
 type GetAddress struct {
 	AddressN         []uint32                  `protobuf:"varint,1,rep,name=address_n,json=addressN" json:"address_n,omitempty"`
 	CoinName         *string                   `protobuf:"bytes,2,opt,name=coin_name,json=coinName,def=Bitcoin" json:"coin_name,omitempty"`
@@ -953,11 +867,6 @@ func (m *GetAddress) GetScriptType() InputScriptType {
 	return Default_GetAddress_ScriptType
 }
 
-    
-                                                                           
-                          
-                        
-                
 type EPVchainGetAddress struct {
 	AddressN         []uint32 `protobuf:"varint,1,rep,name=address_n,json=addressN" json:"address_n,omitempty"`
 	ShowDisplay      *bool    `protobuf:"varint,2,opt,name=show_display,json=showDisplay" json:"show_display,omitempty"`
@@ -983,9 +892,6 @@ func (m *EPVchainGetAddress) GetShowDisplay() bool {
 	return false
 }
 
-    
-                                                              
-                   
 type Address struct {
 	Address          *string `protobuf:"bytes,1,req,name=address" json:"address,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
@@ -1003,9 +909,6 @@ func (m *Address) GetAddress() string {
 	return ""
 }
 
-    
-                                                                          
-                           
 type EPVchainAddress struct {
 	Address          []byte `protobuf:"bytes,1,req,name=address" json:"address,omitempty"`
 	XXX_unrecognized []byte `json:"-"`
@@ -1023,9 +926,6 @@ func (m *EPVchainAddress) GetAddress() []byte {
 	return nil
 }
 
-    
-                                                                  
-                      
 type WipeDevice struct {
 	XXX_unrecognized []byte `json:"-"`
 }
@@ -1035,11 +935,6 @@ func (m *WipeDevice) String() string            { return proto.CompactTextString
 func (*WipeDevice) ProtoMessage()               {}
 func (*WipeDevice) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{25} }
 
-    
-                                                                     
-                      
-                
-                
 type LoadDevice struct {
 	Mnemonic             *string     `protobuf:"bytes,1,opt,name=mnemonic" json:"mnemonic,omitempty"`
 	Node                 *HDNodeType `protobuf:"bytes,2,opt,name=node" json:"node,omitempty"`
@@ -1115,10 +1010,6 @@ func (m *LoadDevice) GetU2FCounter() uint32 {
 	return 0
 }
 
-    
-                                                                      
-                       
-                
 type ResetDevice struct {
 	DisplayRandom        *bool   `protobuf:"varint,1,opt,name=display_random,json=displayRandom" json:"display_random,omitempty"`
 	Strength             *uint32 `protobuf:"varint,2,opt,name=strength,def=256" json:"strength,omitempty"`
@@ -1195,9 +1086,6 @@ func (m *ResetDevice) GetSkipBackup() bool {
 	return false
 }
 
-    
-                                                                                
-                      
 type BackupDevice struct {
 	XXX_unrecognized []byte `json:"-"`
 }
@@ -1207,10 +1095,6 @@ func (m *BackupDevice) String() string            { return proto.CompactTextStri
 func (*BackupDevice) ProtoMessage()               {}
 func (*BackupDevice) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{28} }
 
-    
-                                                          
-                    
-                   
 type EntropyRequest struct {
 	XXX_unrecognized []byte `json:"-"`
 }
@@ -1220,10 +1104,6 @@ func (m *EntropyRequest) String() string            { return proto.CompactTextSt
 func (*EntropyRequest) ProtoMessage()               {}
 func (*EntropyRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{29} }
 
-    
-                                                                   
-                       
-                      
 type EntropyAck struct {
 	Entropy          []byte `protobuf:"bytes,1,opt,name=entropy" json:"entropy,omitempty"`
 	XXX_unrecognized []byte `json:"-"`
@@ -1241,10 +1121,6 @@ func (m *EntropyAck) GetEntropy() []byte {
 	return nil
 }
 
-    
-                                                                              
-                                                             
-                    
 type RecoveryDevice struct {
 	WordCount            *uint32 `protobuf:"varint,1,opt,name=word_count,json=wordCount" json:"word_count,omitempty"`
 	PassphraseProtection *bool   `protobuf:"varint,2,opt,name=passphrase_protection,json=passphraseProtection" json:"passphrase_protection,omitempty"`
@@ -1252,7 +1128,7 @@ type RecoveryDevice struct {
 	Language             *string `protobuf:"bytes,4,opt,name=language,def=english" json:"language,omitempty"`
 	Label                *string `protobuf:"bytes,5,opt,name=label" json:"label,omitempty"`
 	EnforceWordlist      *bool   `protobuf:"varint,6,opt,name=enforce_wordlist,json=enforceWordlist" json:"enforce_wordlist,omitempty"`
-	                                        
+
 	Type             *uint32 `protobuf:"varint,8,opt,name=type" json:"type,omitempty"`
 	U2FCounter       *uint32 `protobuf:"varint,9,opt,name=u2f_counter,json=u2fCounter" json:"u2f_counter,omitempty"`
 	DryRun           *bool   `protobuf:"varint,10,opt,name=dry_run,json=dryRun" json:"dry_run,omitempty"`
@@ -1329,11 +1205,6 @@ func (m *RecoveryDevice) GetDryRun() bool {
 	return false
 }
 
-    
-                                                                     
-                                                           
-                       
-                
 type WordRequest struct {
 	Type             *WordRequestType `protobuf:"varint,1,opt,name=type,enum=WordRequestType" json:"type,omitempty"`
 	XXX_unrecognized []byte           `json:"-"`
@@ -1351,12 +1222,6 @@ func (m *WordRequest) GetType() WordRequestType {
 	return WordRequestType_WordRequestType_Plain
 }
 
-    
-                                                        
-                    
-                    
-                
-                
 type WordAck struct {
 	Word             *string `protobuf:"bytes,1,req,name=word" json:"word,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
@@ -1374,10 +1239,6 @@ func (m *WordAck) GetWord() string {
 	return ""
 }
 
-    
-                                      
-                         
-                
 type SignMessage struct {
 	AddressN         []uint32         `protobuf:"varint,1,rep,name=address_n,json=addressN" json:"address_n,omitempty"`
 	Message          []byte           `protobuf:"bytes,2,req,name=message" json:"message,omitempty"`
@@ -1422,10 +1283,6 @@ func (m *SignMessage) GetScriptType() InputScriptType {
 	return Default_SignMessage_ScriptType
 }
 
-    
-                                        
-                
-                
 type VerifyMessage struct {
 	Address          *string `protobuf:"bytes,1,opt,name=address" json:"address,omitempty"`
 	Signature        []byte  `protobuf:"bytes,2,opt,name=signature" json:"signature,omitempty"`
@@ -1469,9 +1326,6 @@ func (m *VerifyMessage) GetCoinName() string {
 	return Default_VerifyMessage_CoinName
 }
 
-    
-                           
-                    
 type MessageSignature struct {
 	Address          *string `protobuf:"bytes,1,opt,name=address" json:"address,omitempty"`
 	Signature        []byte  `protobuf:"bytes,2,opt,name=signature" json:"signature,omitempty"`
@@ -1497,10 +1351,6 @@ func (m *MessageSignature) GetSignature() []byte {
 	return nil
 }
 
-    
-                                         
-                         
-                
 type EncryptMessage struct {
 	Pubkey           []byte   `protobuf:"bytes,1,opt,name=pubkey" json:"pubkey,omitempty"`
 	Message          []byte   `protobuf:"bytes,2,opt,name=message" json:"message,omitempty"`
@@ -1552,9 +1402,6 @@ func (m *EncryptMessage) GetCoinName() string {
 	return Default_EncryptMessage_CoinName
 }
 
-    
-                              
-                       
 type EncryptedMessage struct {
 	Nonce            []byte `protobuf:"bytes,1,opt,name=nonce" json:"nonce,omitempty"`
 	Message          []byte `protobuf:"bytes,2,opt,name=message" json:"message,omitempty"`
@@ -1588,10 +1435,6 @@ func (m *EncryptedMessage) GetHmac() []byte {
 	return nil
 }
 
-    
-                                         
-                
-                
 type DecryptMessage struct {
 	AddressN         []uint32 `protobuf:"varint,1,rep,name=address_n,json=addressN" json:"address_n,omitempty"`
 	Nonce            []byte   `protobuf:"bytes,2,opt,name=nonce" json:"nonce,omitempty"`
@@ -1633,9 +1476,6 @@ func (m *DecryptMessage) GetHmac() []byte {
 	return nil
 }
 
-    
-                              
-                         
 type DecryptedMessage struct {
 	Message          []byte  `protobuf:"bytes,1,opt,name=message" json:"message,omitempty"`
 	Address          *string `protobuf:"bytes,2,opt,name=address" json:"address,omitempty"`
@@ -1661,10 +1501,6 @@ func (m *DecryptedMessage) GetAddress() string {
 	return ""
 }
 
-    
-                                                               
-                         
-                
 type CipherKeyValue struct {
 	AddressN         []uint32 `protobuf:"varint,1,rep,name=address_n,json=addressN" json:"address_n,omitempty"`
 	Key              *string  `protobuf:"bytes,2,opt,name=key" json:"key,omitempty"`
@@ -1730,9 +1566,6 @@ func (m *CipherKeyValue) GetIv() []byte {
 	return nil
 }
 
-    
-                                             
-                       
 type CipheredKeyValue struct {
 	Value            []byte `protobuf:"bytes,1,opt,name=value" json:"value,omitempty"`
 	XXX_unrecognized []byte `json:"-"`
@@ -1750,12 +1583,6 @@ func (m *CipheredKeyValue) GetValue() []byte {
 	return nil
 }
 
-    
-                                             
-                                                                                
-                                                                                   
-               
-                
 type EstimateTxSize struct {
 	OutputsCount     *uint32 `protobuf:"varint,1,req,name=outputs_count,json=outputsCount" json:"outputs_count,omitempty"`
 	InputsCount      *uint32 `protobuf:"varint,2,req,name=inputs_count,json=inputsCount" json:"inputs_count,omitempty"`
@@ -1791,9 +1618,6 @@ func (m *EstimateTxSize) GetCoinName() string {
 	return Default_EstimateTxSize_CoinName
 }
 
-    
-                                              
-                       
 type TxSize struct {
 	TxSize           *uint32 `protobuf:"varint,1,opt,name=tx_size,json=txSize" json:"tx_size,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
@@ -1811,12 +1635,6 @@ func (m *TxSize) GetTxSize() uint32 {
 	return 0
 }
 
-    
-                                          
-                          
-                         
-                  
-                
 type SignTx struct {
 	OutputsCount     *uint32 `protobuf:"varint,1,req,name=outputs_count,json=outputsCount" json:"outputs_count,omitempty"`
 	InputsCount      *uint32 `protobuf:"varint,2,req,name=inputs_count,json=inputsCount" json:"inputs_count,omitempty"`
@@ -1870,14 +1688,6 @@ func (m *SignTx) GetLockTime() uint32 {
 	return Default_SignTx_LockTime
 }
 
-    
-                                          
-                                                                                                       
-                                                                      
-                          
-                         
-                  
-                
 type SimpleSignTx struct {
 	Inputs           []*TxInputType     `protobuf:"bytes,1,rep,name=inputs" json:"inputs,omitempty"`
 	Outputs          []*TxOutputType    `protobuf:"bytes,2,rep,name=outputs" json:"outputs,omitempty"`
@@ -1939,13 +1749,6 @@ func (m *SimpleSignTx) GetLockTime() uint32 {
 	return Default_SimpleSignTx_LockTime
 }
 
-    
-                                                                                           
-                                                                                                         
-                                                                                          
-               
-                     
-              
 type TxRequest struct {
 	RequestType      *RequestType             `protobuf:"varint,1,opt,name=request_type,json=requestType,enum=RequestType" json:"request_type,omitempty"`
 	Details          *TxRequestDetailsType    `protobuf:"bytes,2,opt,name=details" json:"details,omitempty"`
@@ -1979,10 +1782,6 @@ func (m *TxRequest) GetSerialized() *TxRequestSerializedType {
 	return nil
 }
 
-    
-                                     
-                  
-                  
 type TxAck struct {
 	Tx               *TransactionType `protobuf:"bytes,1,opt,name=tx" json:"tx,omitempty"`
 	XXX_unrecognized []byte           `json:"-"`
@@ -2000,14 +1799,6 @@ func (m *TxAck) GetTx() *TransactionType {
 	return nil
 }
 
-    
-                                          
-                                                                                                          
-                                                                                          
-                          
-                         
-                          
-                
 type EPVchainSignTx struct {
 	AddressN         []uint32 `protobuf:"varint,1,rep,name=address_n,json=addressN" json:"address_n,omitempty"`
 	Nonce            []byte   `protobuf:"bytes,2,opt,name=nonce" json:"nonce,omitempty"`
@@ -2089,12 +1880,6 @@ func (m *EPVchainSignTx) GetChainId() uint32 {
 	return 0
 }
 
-    
-                                                                                          
-                                                                        
-                                                                                                                  
-                       
-                      
 type EPVchainTxRequest struct {
 	DataLength       *uint32 `protobuf:"varint,1,opt,name=data_length,json=dataLength" json:"data_length,omitempty"`
 	SignatureV       *uint32 `protobuf:"varint,2,opt,name=signature_v,json=signatureV" json:"signature_v,omitempty"`
@@ -2136,10 +1921,6 @@ func (m *EPVchainTxRequest) GetSignatureS() []byte {
 	return nil
 }
 
-    
-                                     
-                          
-                          
 type EPVchainTxAck struct {
 	DataChunk        []byte `protobuf:"bytes,1,opt,name=data_chunk,json=dataChunk" json:"data_chunk,omitempty"`
 	XXX_unrecognized []byte `json:"-"`
@@ -2157,10 +1938,6 @@ func (m *EPVchainTxAck) GetDataChunk() []byte {
 	return nil
 }
 
-    
-                                      
-                                 
-                
 type EPVchainSignMessage struct {
 	AddressN         []uint32 `protobuf:"varint,1,rep,name=address_n,json=addressN" json:"address_n,omitempty"`
 	Message          []byte   `protobuf:"bytes,2,req,name=message" json:"message,omitempty"`
@@ -2186,10 +1963,6 @@ func (m *EPVchainSignMessage) GetMessage() []byte {
 	return nil
 }
 
-    
-                                        
-                
-                
 type EPVchainVerifyMessage struct {
 	Address          []byte `protobuf:"bytes,1,opt,name=address" json:"address,omitempty"`
 	Signature        []byte `protobuf:"bytes,2,opt,name=signature" json:"signature,omitempty"`
@@ -2223,9 +1996,6 @@ func (m *EPVchainVerifyMessage) GetMessage() []byte {
 	return nil
 }
 
-    
-                           
-                            
 type EPVchainMessageSignature struct {
 	Address          []byte `protobuf:"bytes,1,opt,name=address" json:"address,omitempty"`
 	Signature        []byte `protobuf:"bytes,2,opt,name=signature" json:"signature,omitempty"`
@@ -2251,10 +2021,6 @@ func (m *EPVchainMessageSignature) GetSignature() []byte {
 	return nil
 }
 
-    
-                                       
-                       
-                
 type SignIdentity struct {
 	Identity         *IdentityType `protobuf:"bytes,1,opt,name=identity" json:"identity,omitempty"`
 	ChallengeHidden  []byte        `protobuf:"bytes,2,opt,name=challenge_hidden,json=challengeHidden" json:"challenge_hidden,omitempty"`
@@ -2296,9 +2062,6 @@ func (m *SignIdentity) GetEcdsaCurveName() string {
 	return ""
 }
 
-    
-                                            
-                     
 type SignedIdentity struct {
 	Address          *string `protobuf:"bytes,1,opt,name=address" json:"address,omitempty"`
 	PublicKey        []byte  `protobuf:"bytes,2,opt,name=public_key,json=publicKey" json:"public_key,omitempty"`
@@ -2332,10 +2095,6 @@ func (m *SignedIdentity) GetSignature() []byte {
 	return nil
 }
 
-    
-                                                   
-                       
-                
 type GetECDHSessionKey struct {
 	Identity         *IdentityType `protobuf:"bytes,1,opt,name=identity" json:"identity,omitempty"`
 	PeerPublicKey    []byte        `protobuf:"bytes,2,opt,name=peer_public_key,json=peerPublicKey" json:"peer_public_key,omitempty"`
@@ -2369,9 +2128,6 @@ func (m *GetECDHSessionKey) GetEcdsaCurveName() string {
 	return ""
 }
 
-    
-                                             
-                          
 type ECDHSessionKey struct {
 	SessionKey       []byte `protobuf:"bytes,1,opt,name=session_key,json=sessionKey" json:"session_key,omitempty"`
 	XXX_unrecognized []byte `json:"-"`
@@ -2389,9 +2145,6 @@ func (m *ECDHSessionKey) GetSessionKey() []byte {
 	return nil
 }
 
-    
-                           
-                
 type SetU2FCounter struct {
 	U2FCounter       *uint32 `protobuf:"varint,1,opt,name=u2f_counter,json=u2fCounter" json:"u2f_counter,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
@@ -2409,11 +2162,6 @@ func (m *SetU2FCounter) GetU2FCounter() uint32 {
 	return 0
 }
 
-    
-                                                                                       
-                
-                        
-                
 type FirmwareErase struct {
 	Length           *uint32 `protobuf:"varint,1,opt,name=length" json:"length,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
@@ -2431,9 +2179,6 @@ func (m *FirmwareErase) GetLength() uint32 {
 	return 0
 }
 
-    
-                                   
-                       
 type FirmwareRequest struct {
 	Offset           *uint32 `protobuf:"varint,1,opt,name=offset" json:"offset,omitempty"`
 	Length           *uint32 `protobuf:"varint,2,opt,name=length" json:"length,omitempty"`
@@ -2459,10 +2204,6 @@ func (m *FirmwareRequest) GetLength() uint32 {
 	return 0
 }
 
-    
-                                                      
-                
-                
 type FirmwareUpload struct {
 	Payload          []byte `protobuf:"bytes,1,req,name=payload" json:"payload,omitempty"`
 	Hash             []byte `protobuf:"bytes,2,opt,name=hash" json:"hash,omitempty"`
@@ -2488,10 +2229,6 @@ func (m *FirmwareUpload) GetHash() []byte {
 	return nil
 }
 
-    
-                                      
-                
-                
 type SelfTest struct {
 	Payload          []byte `protobuf:"bytes,1,opt,name=payload" json:"payload,omitempty"`
 	XXX_unrecognized []byte `json:"-"`
@@ -2509,9 +2246,6 @@ func (m *SelfTest) GetPayload() []byte {
 	return nil
 }
 
-    
-                                            
-                
 type DebugLinkDecision struct {
 	YesNo            *bool  `protobuf:"varint,1,req,name=yes_no,json=yesNo" json:"yes_no,omitempty"`
 	XXX_unrecognized []byte `json:"-"`
@@ -2529,9 +2263,6 @@ func (m *DebugLinkDecision) GetYesNo() bool {
 	return false
 }
 
-    
-                                          
-                       
 type DebugLinkGetState struct {
 	XXX_unrecognized []byte `json:"-"`
 }
@@ -2541,9 +2272,6 @@ func (m *DebugLinkGetState) String() string            { return proto.CompactTex
 func (*DebugLinkGetState) ProtoMessage()               {}
 func (*DebugLinkGetState) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{65} }
 
-    
-                                 
-                          
 type DebugLinkState struct {
 	Layout               []byte      `protobuf:"bytes,1,opt,name=layout" json:"layout,omitempty"`
 	Pin                  *string     `protobuf:"bytes,2,opt,name=pin" json:"pin,omitempty"`
@@ -2633,8 +2361,6 @@ func (m *DebugLinkState) GetRecoveryWordPos() uint32 {
 	return 0
 }
 
-    
-                                 
 type DebugLinkStop struct {
 	XXX_unrecognized []byte `json:"-"`
 }
@@ -2644,8 +2370,6 @@ func (m *DebugLinkStop) String() string            { return proto.CompactTextStr
 func (*DebugLinkStop) ProtoMessage()               {}
 func (*DebugLinkStop) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{67} }
 
-    
-                                           
 type DebugLinkLog struct {
 	Level            *uint32 `protobuf:"varint,1,opt,name=level" json:"level,omitempty"`
 	Bucket           *string `protobuf:"bytes,2,opt,name=bucket" json:"bucket,omitempty"`
@@ -2679,9 +2403,6 @@ func (m *DebugLinkLog) GetText() string {
 	return ""
 }
 
-    
-                                   
-                        
 type DebugLinkMemoryRead struct {
 	Address          *uint32 `protobuf:"varint,1,opt,name=address" json:"address,omitempty"`
 	Length           *uint32 `protobuf:"varint,2,opt,name=length" json:"length,omitempty"`
@@ -2707,9 +2428,6 @@ func (m *DebugLinkMemoryRead) GetLength() uint32 {
 	return 0
 }
 
-    
-                                     
-                            
 type DebugLinkMemory struct {
 	Memory           []byte `protobuf:"bytes,1,opt,name=memory" json:"memory,omitempty"`
 	XXX_unrecognized []byte `json:"-"`
@@ -2727,9 +2445,6 @@ func (m *DebugLinkMemory) GetMemory() []byte {
 	return nil
 }
 
-    
-                                   
-                                                                           
 type DebugLinkMemoryWrite struct {
 	Address          *uint32 `protobuf:"varint,1,opt,name=address" json:"address,omitempty"`
 	Memory           []byte  `protobuf:"bytes,2,opt,name=memory" json:"memory,omitempty"`
@@ -2763,9 +2478,6 @@ func (m *DebugLinkMemoryWrite) GetFlash() bool {
 	return false
 }
 
-    
-                                          
-                                                                           
 type DebugLinkFlashErase struct {
 	Sector           *uint32 `protobuf:"varint,1,opt,name=sector" json:"sector,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
@@ -2863,7 +2575,7 @@ func init() {
 func init() { proto.RegisterFile("messages.proto", fileDescriptor1) }
 
 var fileDescriptor1 = []byte{
-	                                              
+
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x5a, 0xcb, 0x6f, 0xdc, 0x46,
 	0x9a, 0x5f, 0x76, 0xb7, 0xfa, 0xf1, 0x35, 0xbb, 0x55, 0xa2, 0x2d, 0xbb, 0x2d, 0x5b, 0xb6, 0x4c,
 	0xc9, 0xb6, 0x64, 0x27, 0xed, 0x44, 0x79, 0x6c, 0xd6, 0xbb, 0x79, 0xc8, 0x7a, 0xd8, 0xde, 0xd8,

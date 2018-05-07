@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package common
 
@@ -24,7 +9,6 @@ import (
 	"strings"
 )
 
-                                                                                           
 func Report(extra ...interface{}) {
 	fmt.Fprintln(os.Stderr, "You've encountered a sought after, hard to reproduce bug. Please report this to the developers <3 https://github.com/epvchain/go-epvchain/issues")
 	fmt.Fprintln(os.Stderr, extra...)
@@ -37,7 +21,6 @@ func Report(extra ...interface{}) {
 	fmt.Fprintln(os.Stderr, "#### BUG! PLEASE REPORT ####")
 }
 
-                                                                              
 func PrintDepricationWarning(str string) {
 	line := strings.Repeat("#", len(str)+4)
 	emptyLine := strings.Repeat(" ", len(str))

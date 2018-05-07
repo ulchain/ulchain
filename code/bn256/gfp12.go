@@ -1,21 +1,12 @@
-                                                      
-                                                     
-                                                 
 
 package bn256
-
-                                                                          
-                                           
-                                       
 
 import (
 	"math/big"
 )
 
-                                                                            
-                 
 type gfP12 struct {
-	x, y *gfP6                    
+	x, y *gfP6 
 }
 
 func newGFp12(pool *bnPool) *gfP12 {
@@ -76,7 +67,6 @@ func (e *gfP12) Negative(a *gfP12) *gfP12 {
 	return e
 }
 
-                                                            
 func (e *gfP12) Frobenius(a *gfP12, pool *bnPool) *gfP12 {
 	e.x.Frobenius(a.x, pool)
 	e.y.Frobenius(a.y, pool)
@@ -84,7 +74,6 @@ func (e *gfP12) Frobenius(a *gfP12, pool *bnPool) *gfP12 {
 	return e
 }
 
-                                                                      
 func (e *gfP12) FrobeniusP2(a *gfP12, pool *bnPool) *gfP12 {
 	e.x.FrobeniusP2(a.x)
 	e.x.MulGFP(e.x, xiToPSquaredMinus1Over6)
@@ -153,7 +142,7 @@ func (c *gfP12) Exp(a *gfP12, power *big.Int, pool *bnPool) *gfP12 {
 }
 
 func (e *gfP12) Square(a *gfP12, pool *bnPool) *gfP12 {
-	                             
+
 	v0 := newGFp6(pool)
 	v0.Mul(a.x, a.y, pool)
 
@@ -178,8 +167,7 @@ func (e *gfP12) Square(a *gfP12, pool *bnPool) *gfP12 {
 }
 
 func (e *gfP12) Invert(a *gfP12, pool *bnPool) *gfP12 {
-	                                                                    
-	                                               
+
 	t1 := newGFp6(pool)
 	t2 := newGFp6(pool)
 

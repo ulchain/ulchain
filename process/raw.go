@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package rlp
 
@@ -21,21 +6,14 @@ import (
 	"reflect"
 )
 
-                                                                    
-                                                                        
-                                                            
 type RawValue []byte
 
 var rawValueType = reflect.TypeOf(RawValue{})
 
-                                                                  
-                
 func ListSize(contentSize uint64) uint64 {
 	return uint64(headsize(contentSize)) + contentSize
 }
 
-                                                       
-                                           
 func Split(b []byte) (k Kind, content, rest []byte, err error) {
 	k, ts, cs, err := readKind(b)
 	if err != nil {
@@ -44,8 +22,6 @@ func Split(b []byte) (k Kind, content, rest []byte, err error) {
 	return k, b[ts : ts+cs], b[ts+cs:], nil
 }
 
-                                                         
-                                            
 func SplitString(b []byte) (content, rest []byte, err error) {
 	k, content, rest, err := Split(b)
 	if err != nil {
@@ -57,8 +33,6 @@ func SplitString(b []byte) (content, rest []byte, err error) {
 	return content, rest, nil
 }
 
-                                                                  
-                        
 func SplitList(b []byte) (content, rest []byte, err error) {
 	k, content, rest, err := Split(b)
 	if err != nil {
@@ -70,7 +44,6 @@ func SplitList(b []byte) (content, rest []byte, err error) {
 	return content, rest, nil
 }
 
-                                                        
 func CountValues(b []byte) (int, error) {
 	i := 0
 	for ; len(b) > 0; i++ {
@@ -97,7 +70,7 @@ func readKind(buf []byte) (k Kind, tagsize, contentsize uint64, err error) {
 		k = String
 		tagsize = 1
 		contentsize = uint64(b - 0x80)
-		                                                   
+
 		if contentsize == 1 && len(buf) > 1 && buf[1] < 128 {
 			return 0, 0, 0, ErrCanonSize
 		}
@@ -117,7 +90,7 @@ func readKind(buf []byte) (k Kind, tagsize, contentsize uint64, err error) {
 	if err != nil {
 		return 0, 0, 0, err
 	}
-	                                             
+
 	if contentsize > uint64(len(buf))-tagsize {
 		return 0, 0, 0, ErrValueTooLarge
 	}
@@ -147,8 +120,7 @@ func readSize(b []byte, slen byte) (uint64, error) {
 	case 8:
 		s = uint64(b[0])<<56 | uint64(b[1])<<48 | uint64(b[2])<<40 | uint64(b[3])<<32 | uint64(b[4])<<24 | uint64(b[5])<<16 | uint64(b[6])<<8 | uint64(b[7])
 	}
-	                                                                  
-	                      
+
 	if s < 56 || b[0] == 0 {
 		return 0, ErrCanonSize
 	}

@@ -1,23 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                                           
-  
-                                                                                              
-                                                                                                 
 package keystore
 
 import (
@@ -46,26 +27,22 @@ var (
 	ErrDecrypt = errors.New("could not decrypt key with given passphrase")
 )
 
-                                                          
 var KeyStoreType = reflect.TypeOf(&KeyStore{})
 
-                                                                           
 var KeyStoreScheme = "keystore"
 
-                                                                                  
 const walletRefreshCycle = 3 * time.Second
 
-                                                    
 type KeyStore struct {
-	storage  keyStore                                                                        
-	cache    *accountCache                                                                      
-	changes  chan struct{}                                                                        
-	unlocked map[common.Address]*unlocked                                                       
+	storage  keyStore                     
+	cache    *accountCache                
+	changes  chan struct{}                
+	unlocked map[common.Address]*unlocked 
 
-	wallets     []accounts.Wallet                                                         
-	updateFeed  event.Feed                                                               
-	updateScope event.SubscriptionScope                                                      
-	updating    bool                                                                     
+	wallets     []accounts.Wallet       
+	updateFeed  event.Feed              
+	updateScope event.SubscriptionScope 
+	updating    bool                    
 
 	mu sync.RWMutex
 }
@@ -75,7 +52,6 @@ type unlocked struct {
 	abort chan struct{}
 }
 
-                                                          
 func NewKeyStore(keydir string, scryptN, scryptP int) *KeyStore {
 	keydir, _ = filepath.Abs(keydir)
 	ks := &KeyStore{storage: &keyStorePassphrase{keydir, scryptN, scryptP}}
@@ -83,8 +59,6 @@ func NewKeyStore(keydir string, scryptN, scryptP int) *KeyStore {
 	return ks
 }
 
-                                                                   
-                               
 func NewPlaintextKeyStore(keydir string) *KeyStore {
 	keydir, _ = filepath.Abs(keydir)
 	ks := &KeyStore{storage: &keyStorePlain{keydir}}
@@ -93,21 +67,17 @@ func NewPlaintextKeyStore(keydir string) *KeyStore {
 }
 
 func (ks *KeyStore) init(keydir string) {
-	                                                                     
+
 	ks.mu.Lock()
 	defer ks.mu.Unlock()
 
-	                                                            
 	ks.unlocked = make(map[common.Address]*unlocked)
 	ks.cache, ks.changes = newAccountCache(keydir)
 
-	                                                                         
-	                                                                     
-	                                                                          
 	runtime.SetFinalizer(ks, func(m *KeyStore) {
 		m.cache.close()
 	})
-	                                                    
+
 	accs := ks.cache.accounts()
 	ks.wallets = make([]accounts.Wallet, len(accs))
 	for i := 0; i < len(accs); i++ {
@@ -115,10 +85,8 @@ func (ks *KeyStore) init(keydir string) {
 	}
 }
 
-                                                                                 
-                      
 func (ks *KeyStore) Wallets() []accounts.Wallet {
-	                                                                  
+
 	ks.refreshWallets()
 
 	ks.mu.RLock()
@@ -129,24 +97,21 @@ func (ks *KeyStore) Wallets() []accounts.Wallet {
 	return cpy
 }
 
-                                                                               
-                              
 func (ks *KeyStore) refreshWallets() {
-	                                        
+
 	ks.mu.Lock()
 	accs := ks.cache.accounts()
 
-	                                                         
 	wallets := make([]accounts.Wallet, 0, len(accs))
 	events := []accounts.WalletEvent{}
 
 	for _, account := range accs {
-		                                                            
+
 		for len(ks.wallets) > 0 && ks.wallets[0].URL().Cmp(account.URL) < 0 {
 			events = append(events, accounts.WalletEvent{Wallet: ks.wallets[0], Kind: accounts.WalletDropped})
 			ks.wallets = ks.wallets[1:]
 		}
-		                                                                                  
+
 		if len(ks.wallets) == 0 || ks.wallets[0].URL().Cmp(account.URL) > 0 {
 			wallet := &keystoreWallet{account: account, keystore: ks}
 
@@ -154,37 +119,32 @@ func (ks *KeyStore) refreshWallets() {
 			wallets = append(wallets, wallet)
 			continue
 		}
-		                                                          
+
 		if ks.wallets[0].Accounts()[0] == account {
 			wallets = append(wallets, ks.wallets[0])
 			ks.wallets = ks.wallets[1:]
 			continue
 		}
 	}
-	                                                  
+
 	for _, wallet := range ks.wallets {
 		events = append(events, accounts.WalletEvent{Wallet: wallet, Kind: accounts.WalletDropped})
 	}
 	ks.wallets = wallets
 	ks.mu.Unlock()
 
-	                                    
 	for _, event := range events {
 		ks.updateFeed.Send(event)
 	}
 }
 
-                                                                           
-                                                                        
 func (ks *KeyStore) Subscribe(sink chan<- accounts.WalletEvent) event.Subscription {
-	                                                           
+
 	ks.mu.Lock()
 	defer ks.mu.Unlock()
 
-	                                                      
 	sub := ks.updateScope.Track(ks.updateFeed.Subscribe(sink))
 
-	                                                            
 	if !ks.updating {
 		ks.updating = true
 		go ks.updater()
@@ -192,22 +152,16 @@ func (ks *KeyStore) Subscribe(sink chan<- accounts.WalletEvent) event.Subscripti
 	return sub
 }
 
-                                                                                 
-                                                                              
-                                                                                 
-                                                                                   
-                   
 func (ks *KeyStore) updater() {
 	for {
-		                                                  
+
 		select {
 		case <-ks.changes:
 		case <-time.After(walletRefreshCycle):
 		}
-		                           
+
 		ks.refreshWallets()
 
-		                                                
 		ks.mu.Lock()
 		if ks.updateScope.Count() == 0 {
 			ks.updating = false
@@ -218,22 +172,16 @@ func (ks *KeyStore) updater() {
 	}
 }
 
-                                                                      
 func (ks *KeyStore) HasAddress(addr common.Address) bool {
 	return ks.cache.hasAddress(addr)
 }
 
-                                                           
 func (ks *KeyStore) Accounts() []accounts.Account {
 	return ks.cache.accounts()
 }
 
-                                                                          
-                                                                            
 func (ks *KeyStore) Delete(a accounts.Account, passphrase string) error {
-	                                                       
-	                                                       
-	                          
+
 	a, key, err := ks.getDecryptedKey(a, passphrase)
 	if key != nil {
 		zeroKey(key.PrivateKey)
@@ -241,9 +189,7 @@ func (ks *KeyStore) Delete(a accounts.Account, passphrase string) error {
 	if err != nil {
 		return err
 	}
-	                                                         
-	                                                             
-	                                                
+
 	err = os.Remove(a.URL.Path)
 	if err == nil {
 		ks.cache.delete(a)
@@ -252,10 +198,8 @@ func (ks *KeyStore) Delete(a accounts.Account, passphrase string) error {
 	return err
 }
 
-                                                                         
-                                                              
 func (ks *KeyStore) SignHash(a accounts.Account, hash []byte) ([]byte, error) {
-	                                                               
+
 	ks.mu.RLock()
 	defer ks.mu.RUnlock()
 
@@ -263,13 +207,12 @@ func (ks *KeyStore) SignHash(a accounts.Account, hash []byte) ([]byte, error) {
 	if !found {
 		return nil, ErrLocked
 	}
-	                                             
+
 	return crypto.Sign(hash, unlockedKey.PrivateKey)
 }
 
-                                                                 
 func (ks *KeyStore) SignTx(a accounts.Account, tx *types.Transaction, chainID *big.Int) (*types.Transaction, error) {
-	                                                               
+
 	ks.mu.RLock()
 	defer ks.mu.RUnlock()
 
@@ -277,16 +220,13 @@ func (ks *KeyStore) SignTx(a accounts.Account, tx *types.Transaction, chainID *b
 	if !found {
 		return nil, ErrLocked
 	}
-	                                                                           
+
 	if chainID != nil {
 		return types.SignTx(tx, types.NewEIP155Signer(chainID), unlockedKey.PrivateKey)
 	}
 	return types.SignTx(tx, types.HomesteadSigner{}, unlockedKey.PrivateKey)
 }
 
-                                                                                  
-                                                                               
-                                          
 func (ks *KeyStore) SignHashWithPassphrase(a accounts.Account, passphrase string, hash []byte) (signature []byte, err error) {
 	_, key, err := ks.getDecryptedKey(a, passphrase)
 	if err != nil {
@@ -296,8 +236,6 @@ func (ks *KeyStore) SignHashWithPassphrase(a accounts.Account, passphrase string
 	return crypto.Sign(hash, key.PrivateKey)
 }
 
-                                                                             
-                                                            
 func (ks *KeyStore) SignTxWithPassphrase(a accounts.Account, passphrase string, tx *types.Transaction, chainID *big.Int) (*types.Transaction, error) {
 	_, key, err := ks.getDecryptedKey(a, passphrase)
 	if err != nil {
@@ -305,19 +243,16 @@ func (ks *KeyStore) SignTxWithPassphrase(a accounts.Account, passphrase string, 
 	}
 	defer zeroKey(key.PrivateKey)
 
-	                                                                           
 	if chainID != nil {
 		return types.SignTx(tx, types.NewEIP155Signer(chainID), key.PrivateKey)
 	}
 	return types.SignTx(tx, types.HomesteadSigner{}, key.PrivateKey)
 }
 
-                                                 
 func (ks *KeyStore) Unlock(a accounts.Account, passphrase string) error {
 	return ks.TimedUnlock(a, passphrase, 0)
 }
 
-                                                                   
 func (ks *KeyStore) Lock(addr common.Address) error {
 	ks.mu.Lock()
 	if unl, found := ks.unlocked[addr]; found {
@@ -329,13 +264,6 @@ func (ks *KeyStore) Lock(addr common.Address) error {
 	return nil
 }
 
-                                                                         
-                                                                                 
-                                                                     
-  
-                                                                                    
-                                                                             
-                                           
 func (ks *KeyStore) TimedUnlock(a accounts.Account, passphrase string, timeout time.Duration) error {
 	a, key, err := ks.getDecryptedKey(a, passphrase)
 	if err != nil {
@@ -347,12 +275,11 @@ func (ks *KeyStore) TimedUnlock(a accounts.Account, passphrase string, timeout t
 	u, found := ks.unlocked[a.Address]
 	if found {
 		if u.abort == nil {
-			                                                      
-			                                        
+
 			zeroKey(key.PrivateKey)
 			return nil
 		}
-		                                                       
+
 		close(u.abort)
 	}
 	if timeout > 0 {
@@ -365,7 +292,6 @@ func (ks *KeyStore) TimedUnlock(a accounts.Account, passphrase string, timeout t
 	return nil
 }
 
-                                                                       
 func (ks *KeyStore) Find(a accounts.Account) (accounts.Account, error) {
 	ks.cache.maybeReload()
 	ks.cache.mu.Lock()
@@ -388,13 +314,10 @@ func (ks *KeyStore) expire(addr common.Address, u *unlocked, timeout time.Durati
 	defer t.Stop()
 	select {
 	case <-u.abort:
-		            
+
 	case <-t.C:
 		ks.mu.Lock()
-		                                                               
-		                                                              
-		                                                             
-		            
+
 		if ks.unlocked[addr] == u {
 			zeroKey(u.PrivateKey)
 			delete(ks.unlocked, addr)
@@ -403,21 +326,17 @@ func (ks *KeyStore) expire(addr common.Address, u *unlocked, timeout time.Durati
 	}
 }
 
-                                                                       
-                                     
 func (ks *KeyStore) NewAccount(passphrase string) (accounts.Account, error) {
 	_, account, err := storeNewKey(ks.storage, crand.Reader, passphrase)
 	if err != nil {
 		return accounts.Account{}, err
 	}
-	                                                  
-	                                                            
+
 	ks.cache.add(account)
 	ks.refreshWallets()
 	return account, nil
 }
 
-                                                              
 func (ks *KeyStore) Export(a accounts.Account, passphrase, newPassphrase string) (keyJSON []byte, err error) {
 	_, key, err := ks.getDecryptedKey(a, passphrase)
 	if err != nil {
@@ -432,7 +351,6 @@ func (ks *KeyStore) Export(a accounts.Account, passphrase, newPassphrase string)
 	return EncryptKey(key, newPassphrase, N, P)
 }
 
-                                                                     
 func (ks *KeyStore) Import(keyJSON []byte, passphrase, newPassphrase string) (accounts.Account, error) {
 	key, err := DecryptKey(keyJSON, passphrase)
 	if key != nil && key.PrivateKey != nil {
@@ -444,7 +362,6 @@ func (ks *KeyStore) Import(keyJSON []byte, passphrase, newPassphrase string) (ac
 	return ks.importKey(key, newPassphrase)
 }
 
-                                                                                              
 func (ks *KeyStore) ImportECDSA(priv *ecdsa.PrivateKey, passphrase string) (accounts.Account, error) {
 	key := newKeyFromECDSA(priv)
 	if ks.cache.hasAddress(key.Address) {
@@ -463,7 +380,6 @@ func (ks *KeyStore) importKey(key *Key, passphrase string) (accounts.Account, er
 	return a, nil
 }
 
-                                                        
 func (ks *KeyStore) Update(a accounts.Account, passphrase, newPassphrase string) error {
 	a, key, err := ks.getDecryptedKey(a, passphrase)
 	if err != nil {
@@ -472,8 +388,6 @@ func (ks *KeyStore) Update(a accounts.Account, passphrase, newPassphrase string)
 	return ks.storage.StoreKey(a.URL.Path, key, newPassphrase)
 }
 
-                                                                         
-                                                                                       
 func (ks *KeyStore) ImportPreSaleKey(keyJSON []byte, passphrase string) (accounts.Account, error) {
 	a, _, err := importPreSaleKey(ks.storage, keyJSON, passphrase)
 	if err != nil {
@@ -484,7 +398,6 @@ func (ks *KeyStore) ImportPreSaleKey(keyJSON []byte, passphrase string) (account
 	return a, nil
 }
 
-                                          
 func zeroKey(k *ecdsa.PrivateKey) {
 	b := k.D.Bits()
 	for i := range b {

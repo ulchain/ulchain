@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package les
 
@@ -24,25 +9,16 @@ import (
 )
 
 const (
-	                                                                               
-	                                                                 
+
 	bloomServiceThreads = 16
 
-	                                                                            
-	                                                           
 	bloomFilterThreads = 3
 
-	                                                                               
-	                     
 	bloomRetrievalBatch = 16
 
-	                                                                               
-	                                                               
 	bloomRetrievalWait = time.Microsecond * 100
 )
 
-                                                                               
-                                                                               
 func (epv *LightEPVchain) startBloomHandlers() {
 	for i := 0; i < bloomServiceThreads; i++ {
 		go func() {
@@ -74,11 +50,8 @@ func (epv *LightEPVchain) startBloomHandlers() {
 }
 
 const (
-	                                                                               
-	                                                                 
+
 	bloomConfirms = 256
 
-	                                                                               
-	                                                                        
 	bloomThrottling = 100 * time.Millisecond
 )

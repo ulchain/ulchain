@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package discv5
 
@@ -34,7 +19,6 @@ import (
 
 const Version = 4
 
-         
 var (
 	errPacketTooSmall   = errors.New("too small")
 	errBadPrefix        = errors.New("bad prefix")
@@ -46,71 +30,59 @@ var (
 	errClosed           = errors.New("socket closed")
 )
 
-           
 const (
 	respTimeout = 500 * time.Millisecond
 	queryDelay  = 1000 * time.Millisecond
 	expiration  = 20 * time.Second
 
-	ntpFailureThreshold = 32                                                              
-	ntpWarningCooldown  = 10 * time.Minute                                                               
-	driftThreshold      = 10 * time.Second                                           
+	ntpFailureThreshold = 32               
+	ntpWarningCooldown  = 10 * time.Minute 
+	driftThreshold      = 10 * time.Second 
 )
 
-                         
 type (
 	ping struct {
 		Version    uint
 		From, To   rpcEndpoint
 		Expiration uint64
 
-		     
 		Topics []Topic
 
-		                                                        
 		Rest []rlp.RawValue `rlp:"tail"`
 	}
 
-	                             
 	pong struct {
-		                                                    
-		                                                           
-		                                    
+
 		To rpcEndpoint
 
-		ReplyTok   []byte                                              
-		Expiration uint64                                                           
+		ReplyTok   []byte 
+		Expiration uint64 
 
-		     
 		TopicHash    common.Hash
 		TicketSerial uint32
 		WaitPeriods  []uint32
 
-		                                                        
 		Rest []rlp.RawValue `rlp:"tail"`
 	}
 
-	                                                           
 	findnode struct {
-		Target     NodeID                                           
+		Target     NodeID 
 		Expiration uint64
-		                                                        
+
 		Rest []rlp.RawValue `rlp:"tail"`
 	}
 
-	                                                           
 	findnodeHash struct {
 		Target     common.Hash
 		Expiration uint64
-		                                                        
+
 		Rest []rlp.RawValue `rlp:"tail"`
 	}
 
-	                    
 	neighbors struct {
 		Nodes      []rpcNode
 		Expiration uint64
-		                                                        
+
 		Rest []rlp.RawValue `rlp:"tail"`
 	}
 
@@ -125,23 +97,22 @@ type (
 		Expiration uint64
 	}
 
-	                      
 	topicNodes struct {
 		Echo  common.Hash
 		Nodes []rpcNode
 	}
 
 	rpcNode struct {
-		IP  net.IP                                 
-		UDP uint16                          
-		TCP uint16                     
+		IP  net.IP 
+		UDP uint16 
+		TCP uint16 
 		ID  NodeID
 	}
 
 	rpcEndpoint struct {
-		IP  net.IP                                 
-		UDP uint16                          
-		TCP uint16                     
+		IP  net.IP 
+		UDP uint16 
+		TCP uint16 
 	}
 )
 
@@ -149,12 +120,9 @@ var (
 	versionPrefix     = []byte("temporary discovery v5")
 	versionPrefixSize = len(versionPrefix)
 	sigSize           = 520 / 8
-	headSize          = versionPrefixSize + sigSize                              
+	headSize          = versionPrefixSize + sigSize 
 )
 
-                                                        
-                                                                
-                                                            
 var maxNeighbors = func() int {
 	p := neighbors{Expiration: ^uint64(0)}
 	maxSizeNode := rpcNode{IP: make(net.IP, 16), UDP: ^uint16(0), TCP: ^uint16(0)}
@@ -162,7 +130,7 @@ var maxNeighbors = func() int {
 		p.Nodes = append(p.Nodes, maxSizeNode)
 		size, _, err := rlp.EncodeToReader(p)
 		if err != nil {
-			                                                             
+
 			panic("cannot encode: " + err.Error())
 		}
 		if headSize+size+1 >= 1280 {
@@ -178,7 +146,7 @@ var maxTopicNodes = func() int {
 		p.Nodes = append(p.Nodes, maxSizeNode)
 		size, _, err := rlp.EncodeToReader(p)
 		if err != nil {
-			                                                             
+
 			panic("cannot encode: " + err.Error())
 		}
 		if headSize+size+1 >= 1280 {
@@ -217,7 +185,7 @@ type ingressPacket struct {
 	remoteAddr *net.UDPAddr
 	ev         nodeEvent
 	hash       []byte
-	data       interface{}                          
+	data       interface{} 
 	rawData    []byte
 }
 
@@ -228,7 +196,6 @@ type conn interface {
 	LocalAddr() net.Addr
 }
 
-                                   
 type udp struct {
 	conn        conn
 	priv        *ecdsa.PrivateKey
@@ -237,7 +204,6 @@ type udp struct {
 	net         *Network
 }
 
-                                                                       
 func ListenUDP(priv *ecdsa.PrivateKey, conn conn, realaddr *net.UDPAddr, nodeDBPath string, netrestrict *netutil.Netlist) (*Network, error) {
 	transport, err := listenUDP(priv, conn, realaddr)
 	if err != nil {
@@ -274,7 +240,7 @@ func (t *udp) sendPing(remote *Node, toaddr *net.UDPAddr, topics []Topic) (hash 
 	hash, _ = t.sendPacket(remote.ID, toaddr, byte(pingPacket), ping{
 		Version:    Version,
 		From:       t.ourEndpoint,
-		To:         makeEndpoint(toaddr, uint16(toaddr.Port)),                                          
+		To:         makeEndpoint(toaddr, uint16(toaddr.Port)), 
 		Expiration: uint64(time.Now().Add(expiration).Unix()),
 		Topics:     topics,
 	})
@@ -289,8 +255,7 @@ func (t *udp) sendFindnode(remote *Node, target NodeID) {
 }
 
 func (t *udp) sendNeighbours(remote *Node, results []*Node) {
-	                                                                
-	                                     
+
 	p := neighbors{Expiration: uint64(time.Now().Add(expiration).Unix())}
 	for i, result := range results {
 		p.Nodes = append(p.Nodes, nodeToRPC(result))
@@ -335,21 +300,20 @@ func (t *udp) sendTopicNodes(remote *Node, queryHash common.Hash, nodes []*Node)
 }
 
 func (t *udp) sendPacket(toid NodeID, toaddr *net.UDPAddr, ptype byte, req interface{}) (hash []byte, err error) {
-	                                                                             
+
 	packet, hash, err := encodePacket(t.priv, ptype, req)
 	if err != nil {
-		                  
+
 		return hash, err
 	}
 	log.Trace(fmt.Sprintf(">>> %v to %x@%v", nodeEvent(ptype), toid[:8], toaddr))
 	if _, err = t.conn.WriteToUDP(packet, toaddr); err != nil {
 		log.Trace(fmt.Sprint("UDP send failed:", err))
 	}
-	                  
+
 	return hash, err
 }
 
-                                         
 var headSpace = make([]byte, headSize)
 
 func encodePacket(priv *ecdsa.PrivateKey, ptype byte, req interface{}) (p, hash []byte, err error) {
@@ -372,22 +336,18 @@ func encodePacket(priv *ecdsa.PrivateKey, ptype byte, req interface{}) (p, hash 
 	return packet, hash, nil
 }
 
-                                                                     
-                         
 func (t *udp) readLoop() {
 	defer t.conn.Close()
-	                                                                 
-	                                                                   
-	                                             
+
 	buf := make([]byte, 1280)
 	for {
 		nbytes, from, err := t.conn.ReadFromUDP(buf)
 		if netutil.IsTemporaryError(err) {
-			                                
+
 			log.Debug(fmt.Sprintf("Temporary read error: %v", err))
 			continue
 		} else if err != nil {
-			                                           
+
 			log.Debug(fmt.Sprintf("Read error: %v", err))
 			return
 		}
@@ -399,7 +359,7 @@ func (t *udp) handlePacket(from *net.UDPAddr, buf []byte) error {
 	pkt := ingressPacket{remoteAddr: from}
 	if err := decodePacket(buf, &pkt); err != nil {
 		log.Debug(fmt.Sprintf("Bad packet from %v: %v", from, err))
-		                                
+
 		return err
 	}
 	t.net.reqReadPacket(pkt)

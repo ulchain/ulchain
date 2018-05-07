@@ -1,21 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                                               
-                                 
 package les
 
 import (
@@ -25,12 +8,8 @@ import (
 	"time"
 )
 
-                                                                                       
 var ErrNoPeers = errors.New("no suitable peers available")
 
-                                                                         
-                                                                               
-                                           
 type requestDistributor struct {
 	reqQueue         *list.List
 	lastReqOrder     uint64
@@ -41,25 +20,12 @@ type requestDistributor struct {
 	lock             sync.Mutex
 }
 
-                                                                        
-                                                                                
-                                                                                 
-                                                                            
-                                                             
 type distPeer interface {
 	waitBefore(uint64) (time.Duration, float64)
 	canQueue() bool
 	queueSend(f func())
 }
 
-                                                                             
-                            
-                                                                                          
-                                                                      
-                                                                                       
-                                                                                                
-                                                                                           
-                                                                                           
 type distReq struct {
 	getCost func(distPeer) uint64
 	canSend func(distPeer) bool
@@ -70,7 +36,6 @@ type distReq struct {
 	element  *list.Element
 }
 
-                                                          
 func newRequestDistributor(peers *peerSet, stopChn chan struct{}) *requestDistributor {
 	d := &requestDistributor{
 		reqQueue: list.New(),
@@ -85,32 +50,26 @@ func newRequestDistributor(peers *peerSet, stopChn chan struct{}) *requestDistri
 	return d
 }
 
-                                        
 func (d *requestDistributor) registerPeer(p *peer) {
 	d.peerLock.Lock()
 	d.peers[p] = struct{}{}
 	d.peerLock.Unlock()
 }
 
-                                          
 func (d *requestDistributor) unregisterPeer(p *peer) {
 	d.peerLock.Lock()
 	delete(d.peers, p)
 	d.peerLock.Unlock()
 }
 
-                                        
 func (d *requestDistributor) registerTestPeer(p distPeer) {
 	d.peerLock.Lock()
 	d.peers[p] = struct{}{}
 	d.peerLock.Unlock()
 }
 
-                                                                                
-                                                                
 const distMaxWait = time.Millisecond * 10
 
-                  
 func (d *requestDistributor) loop() {
 	for {
 		select {
@@ -130,7 +89,7 @@ func (d *requestDistributor) loop() {
 			for {
 				peer, req, wait := d.nextRequest()
 				if req != nil && wait == 0 {
-					chn := req.sentChn                                              
+					chn := req.sentChn 
 					d.remove(req)
 					send := req.request(peer)
 					if send != nil {
@@ -140,13 +99,12 @@ func (d *requestDistributor) loop() {
 					close(chn)
 				} else {
 					if wait == 0 {
-						                                                       
-						                                       
+
 						break loop
 					}
-					d.loopNextSent = true                                                                                           
+					d.loopNextSent = true 
 					if wait > distMaxWait {
-						                                                                                                           
+
 						wait = distMaxWait
 					}
 					go func() {
@@ -161,20 +119,16 @@ func (d *requestDistributor) loop() {
 	}
 }
 
-                                                                                        
 type selectPeerItem struct {
 	peer   distPeer
 	req    *distReq
 	weight int64
 }
 
-                                      
 func (sp selectPeerItem) Weight() int64 {
 	return sp.weight
 }
 
-                                                                              
-                                             
 func (d *requestDistributor) nextRequest() (distPeer, *distReq, time.Duration) {
 	checkedPeers := make(map[distPeer]struct{})
 	elem := d.reqQueue.Front()
@@ -226,10 +180,6 @@ func (d *requestDistributor) nextRequest() (distPeer, *distReq, time.Duration) {
 	return bestPeer, bestReq, bestWait
 }
 
-                                                                              
-                                                                                     
-                                                                                  
-                                                    
 func (d *requestDistributor) queue(r *distReq) chan distPeer {
 	d.lock.Lock()
 	defer d.lock.Unlock()
@@ -259,9 +209,6 @@ func (d *requestDistributor) queue(r *distReq) chan distPeer {
 	return r.sentChn
 }
 
-                                                                               
-                                                                                   
-                                           
 func (d *requestDistributor) cancel(r *distReq) bool {
 	d.lock.Lock()
 	defer d.lock.Unlock()
@@ -275,7 +222,6 @@ func (d *requestDistributor) cancel(r *distReq) bool {
 	return true
 }
 
-                                          
 func (d *requestDistributor) remove(r *distReq) {
 	r.sentChn = nil
 	if r.element != nil {

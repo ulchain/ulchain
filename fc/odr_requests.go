@@ -1,21 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                                               
-                                 
 package les
 
 import (
@@ -73,33 +56,24 @@ func LesRequest(req light.OdrRequest) LesOdrRequest {
 	}
 }
 
-                                                        
 type BlockRequest light.BlockRequest
 
-                                                                             
-                                                      
 func (r *BlockRequest) GetCost(peer *peer) uint64 {
 	return peer.GetRequestCost(GetBlockBodiesMsg, 1)
 }
 
-                                                                            
 func (r *BlockRequest) CanSend(peer *peer) bool {
 	return peer.HasBlock(r.Hash, r.Number)
 }
 
-                                                                                    
 func (r *BlockRequest) Request(reqID uint64, peer *peer) error {
 	peer.Log().Debug("Requesting block body", "hash", r.Hash)
 	return peer.RequestBodies(reqID, r.GetCost(peer), []common.Hash{r.Hash})
 }
 
-                                                                    
-                                                                             
-                                                   
 func (r *BlockRequest) Validate(db epvdb.Database, msg *Msg) error {
 	log.Debug("Validating block body", "hash", r.Hash)
 
-	                                                            
 	if msg.MsgType != MsgBlockBodies {
 		return errInvalidMessageType
 	}
@@ -109,7 +83,6 @@ func (r *BlockRequest) Validate(db epvdb.Database, msg *Msg) error {
 	}
 	body := bodies[0]
 
-	                                                                   
 	header := core.GetHeader(db, r.Hash, r.Number)
 	if header == nil {
 		return errHeaderUnavailable
@@ -120,7 +93,7 @@ func (r *BlockRequest) Validate(db epvdb.Database, msg *Msg) error {
 	if header.UncleHash != types.CalcUncleHash(body.Uncles) {
 		return errUncleHashMismatch
 	}
-	                                           
+
 	data, err := rlp.EncodeToBytes(body)
 	if err != nil {
 		return err
@@ -129,33 +102,24 @@ func (r *BlockRequest) Validate(db epvdb.Database, msg *Msg) error {
 	return nil
 }
 
-                                                                           
 type ReceiptsRequest light.ReceiptsRequest
 
-                                                                             
-                                                      
 func (r *ReceiptsRequest) GetCost(peer *peer) uint64 {
 	return peer.GetRequestCost(GetReceiptsMsg, 1)
 }
 
-                                                                            
 func (r *ReceiptsRequest) CanSend(peer *peer) bool {
 	return peer.HasBlock(r.Hash, r.Number)
 }
 
-                                                                                    
 func (r *ReceiptsRequest) Request(reqID uint64, peer *peer) error {
 	peer.Log().Debug("Requesting block receipts", "hash", r.Hash)
 	return peer.RequestReceipts(reqID, r.GetCost(peer), []common.Hash{r.Hash})
 }
 
-                                                                    
-                                                                             
-                                                   
 func (r *ReceiptsRequest) Validate(db epvdb.Database, msg *Msg) error {
 	log.Debug("Validating block receipts", "hash", r.Hash)
 
-	                                                               
 	if msg.MsgType != MsgReceipts {
 		return errInvalidMessageType
 	}
@@ -165,7 +129,6 @@ func (r *ReceiptsRequest) Validate(db epvdb.Database, msg *Msg) error {
 	}
 	receipt := receipts[0]
 
-	                                                                     
 	header := core.GetHeader(db, r.Hash, r.Number)
 	if header == nil {
 		return errHeaderUnavailable
@@ -173,7 +136,7 @@ func (r *ReceiptsRequest) Validate(db epvdb.Database, msg *Msg) error {
 	if header.ReceiptHash != types.DeriveSha(receipt) {
 		return errReceiptHashMismatch
 	}
-	                                       
+
 	r.Receipts = receipt
 	return nil
 }
@@ -184,11 +147,8 @@ type ProofReq struct {
 	FromLevel   uint
 }
 
-                                                                               
 type TrieRequest light.TrieRequest
 
-                                                                             
-                                                      
 func (r *TrieRequest) GetCost(peer *peer) uint64 {
 	switch peer.version {
 	case lpv1:
@@ -200,12 +160,10 @@ func (r *TrieRequest) GetCost(peer *peer) uint64 {
 	}
 }
 
-                                                                            
 func (r *TrieRequest) CanSend(peer *peer) bool {
 	return peer.HasBlock(r.Id.BlockHash, r.Id.BlockNumber)
 }
 
-                                                                                    
 func (r *TrieRequest) Request(reqID uint64, peer *peer) error {
 	peer.Log().Debug("Requesting trie proof", "root", r.Id.Root, "key", r.Key)
 	req := ProofReq{
@@ -216,9 +174,6 @@ func (r *TrieRequest) Request(reqID uint64, peer *peer) error {
 	return peer.RequestProofs(reqID, r.GetCost(peer), []ProofReq{req})
 }
 
-                                                                    
-                                                                             
-                                                   
 func (r *TrieRequest) Validate(db epvdb.Database, msg *Msg) error {
 	log.Debug("Validating trie proof", "root", r.Id.Root, "key", r.Key)
 
@@ -229,7 +184,7 @@ func (r *TrieRequest) Validate(db epvdb.Database, msg *Msg) error {
 			return errInvalidEntryCount
 		}
 		nodeSet := proofs[0].NodeSet()
-		                                           
+
 		if _, err, _ := trie.VerifyProof(r.Id.Root, r.Key, nodeSet); err != nil {
 			return fmt.Errorf("merkle proof verification failed: %v", err)
 		}
@@ -238,13 +193,13 @@ func (r *TrieRequest) Validate(db epvdb.Database, msg *Msg) error {
 
 	case MsgProofsV2:
 		proofs := msg.Obj.(light.NodeList)
-		                                           
+
 		nodeSet := proofs.NodeSet()
 		reads := &readTraceDB{db: nodeSet}
 		if _, err, _ := trie.VerifyProof(r.Id.Root, r.Key, reads); err != nil {
 			return fmt.Errorf("merkle proof verification failed: %v", err)
 		}
-		                                                   
+
 		if len(reads.reads) != nodeSet.KeyCount() {
 			return errUselessNodes
 		}
@@ -261,21 +216,16 @@ type CodeReq struct {
 	AccKey []byte
 }
 
-                                                                                                  
 type CodeRequest light.CodeRequest
 
-                                                                             
-                                                      
 func (r *CodeRequest) GetCost(peer *peer) uint64 {
 	return peer.GetRequestCost(GetCodeMsg, 1)
 }
 
-                                                                            
 func (r *CodeRequest) CanSend(peer *peer) bool {
 	return peer.HasBlock(r.Id.BlockHash, r.Id.BlockNumber)
 }
 
-                                                                                    
 func (r *CodeRequest) Request(reqID uint64, peer *peer) error {
 	peer.Log().Debug("Requesting code data", "hash", r.Hash)
 	req := CodeReq{
@@ -285,13 +235,9 @@ func (r *CodeRequest) Request(reqID uint64, peer *peer) error {
 	return peer.RequestCode(reqID, r.GetCost(peer), []CodeReq{req})
 }
 
-                                                                    
-                                                                             
-                                                   
 func (r *CodeRequest) Validate(db epvdb.Database, msg *Msg) error {
 	log.Debug("Validating code data", "hash", r.Hash)
 
-	                                                              
 	if msg.MsgType != MsgCode {
 		return errInvalidMessageType
 	}
@@ -301,7 +247,6 @@ func (r *CodeRequest) Validate(db epvdb.Database, msg *Msg) error {
 	}
 	data := reply[0]
 
-	                                          
 	if hash := crypto.Keccak256Hash(data); r.Hash != hash {
 		return errDataHashMismatch
 	}
@@ -310,13 +255,12 @@ func (r *CodeRequest) Validate(db epvdb.Database, msg *Msg) error {
 }
 
 const (
-	                             
-	htCanonical = iota                       
-	htBloomBits                         
 
-	                                          
+	htCanonical = iota 
+	htBloomBits        
+
 	auxRoot = 1
-	                             
+
 	auxHeader = 2
 )
 
@@ -327,28 +271,23 @@ type HelperTrieReq struct {
 	FromLevel, AuxReq uint
 }
 
-type HelperTrieResps struct {                                                  
+type HelperTrieResps struct { 
 	Proofs  light.NodeList
 	AuxData [][]byte
 }
 
-               
 type ChtReq struct {
 	ChtNum, BlockNum uint64
 	FromLevel        uint
 }
 
-               
 type ChtResp struct {
 	Header *types.Header
 	Proof  []rlp.RawValue
 }
 
-                                                                                              
 type ChtRequest light.ChtRequest
 
-                                                                             
-                                                      
 func (r *ChtRequest) GetCost(peer *peer) uint64 {
 	switch peer.version {
 	case lpv1:
@@ -360,7 +299,6 @@ func (r *ChtRequest) GetCost(peer *peer) uint64 {
 	}
 }
 
-                                                                            
 func (r *ChtRequest) CanSend(peer *peer) bool {
 	peer.lock.RLock()
 	defer peer.lock.RUnlock()
@@ -368,7 +306,6 @@ func (r *ChtRequest) CanSend(peer *peer) bool {
 	return peer.headInfo.Number >= light.HelperTrieConfirmations && r.ChtNum <= (peer.headInfo.Number-light.HelperTrieConfirmations)/light.CHTFrequencyClient
 }
 
-                                                                                    
 func (r *ChtRequest) Request(reqID uint64, peer *peer) error {
 	peer.Log().Debug("Requesting CHT", "cht", r.ChtNum, "block", r.BlockNum)
 	var encNum [8]byte
@@ -382,21 +319,17 @@ func (r *ChtRequest) Request(reqID uint64, peer *peer) error {
 	return peer.RequestHelperTrieProofs(reqID, r.GetCost(peer), []HelperTrieReq{req})
 }
 
-                                                                    
-                                                                             
-                                                   
 func (r *ChtRequest) Validate(db epvdb.Database, msg *Msg) error {
 	log.Debug("Validating CHT", "cht", r.ChtNum, "block", r.BlockNum)
 
 	switch msg.MsgType {
-	case MsgHeaderProofs:                                 
+	case MsgHeaderProofs: 
 		proofs := msg.Obj.([]ChtResp)
 		if len(proofs) != 1 {
 			return errInvalidEntryCount
 		}
 		proof := proofs[0]
 
-		                 
 		var encNumber [8]byte
 		binary.BigEndian.PutUint64(encNumber[:], r.BlockNum)
 
@@ -411,7 +344,7 @@ func (r *ChtRequest) Validate(db epvdb.Database, msg *Msg) error {
 		if node.Hash != proof.Header.Hash() {
 			return errCHTHashMismatch
 		}
-		                                         
+
 		r.Header = proof.Header
 		r.Proof = light.NodeList(proof.Proof).NodeSet()
 		r.Td = node.Td
@@ -430,7 +363,6 @@ func (r *ChtRequest) Validate(db epvdb.Database, msg *Msg) error {
 			return errHeaderUnavailable
 		}
 
-		                 
 		var encNumber [8]byte
 		binary.BigEndian.PutUint64(encNumber[:], r.BlockNum)
 
@@ -453,7 +385,7 @@ func (r *ChtRequest) Validate(db epvdb.Database, msg *Msg) error {
 		if r.BlockNum != header.Number.Uint64() {
 			return errCHTNumberMismatch
 		}
-		                                         
+
 		r.Header = header
 		r.Proof = nodeSet
 		r.Td = node.Td
@@ -467,16 +399,12 @@ type BloomReq struct {
 	BloomTrieNum, BitIdx, SectionIdx, FromLevel uint64
 }
 
-                                                                                              
 type BloomRequest light.BloomRequest
 
-                                                                             
-                                                      
 func (r *BloomRequest) GetCost(peer *peer) uint64 {
 	return peer.GetRequestCost(GetHelperTrieProofsMsg, len(r.SectionIdxList))
 }
 
-                                                                            
 func (r *BloomRequest) CanSend(peer *peer) bool {
 	peer.lock.RLock()
 	defer peer.lock.RUnlock()
@@ -487,7 +415,6 @@ func (r *BloomRequest) CanSend(peer *peer) bool {
 	return peer.headInfo.Number >= light.HelperTrieConfirmations && r.BloomTrieNum <= (peer.headInfo.Number-light.HelperTrieConfirmations)/light.BloomTrieFrequency
 }
 
-                                                                                    
 func (r *BloomRequest) Request(reqID uint64, peer *peer) error {
 	peer.Log().Debug("Requesting BloomBits", "bloomTrie", r.BloomTrieNum, "bitIdx", r.BitIdx, "sections", r.SectionIdxList)
 	reqs := make([]HelperTrieReq, len(r.SectionIdxList))
@@ -506,13 +433,9 @@ func (r *BloomRequest) Request(reqID uint64, peer *peer) error {
 	return peer.RequestHelperTrieProofs(reqID, r.GetCost(peer), reqs)
 }
 
-                                                                    
-                                                                             
-                                                   
 func (r *BloomRequest) Validate(db epvdb.Database, msg *Msg) error {
 	log.Debug("Validating BloomBits", "bloomTrie", r.BloomTrieNum, "bitIdx", r.BitIdx, "sections", r.SectionIdxList)
 
-	                                                               
 	if msg.MsgType != MsgHelperTrieProofs {
 		return errInvalidMessageType
 	}
@@ -523,7 +446,6 @@ func (r *BloomRequest) Validate(db epvdb.Database, msg *Msg) error {
 
 	r.BloomBits = make([][]byte, len(r.SectionIdxList))
 
-	                    
 	var encNumber [10]byte
 	binary.BigEndian.PutUint16(encNumber[:2], uint16(r.BitIdx))
 
@@ -543,14 +465,11 @@ func (r *BloomRequest) Validate(db epvdb.Database, msg *Msg) error {
 	return nil
 }
 
-                                                                                         
-                                                                  
 type readTraceDB struct {
 	db    trie.DatabaseReader
 	reads map[string]struct{}
 }
 
-                            
 func (db *readTraceDB) Get(k []byte) ([]byte, error) {
 	if db.reads == nil {
 		db.reads = make(map[string]struct{})
@@ -559,7 +478,6 @@ func (db *readTraceDB) Get(k []byte) ([]byte, error) {
 	return db.db.Get(k)
 }
 
-                                                          
 func (db *readTraceDB) Has(key []byte) (bool, error) {
 	_, err := db.Get(key)
 	return err == nil, nil

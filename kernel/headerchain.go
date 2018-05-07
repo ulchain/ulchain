@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package core
 
@@ -40,23 +25,18 @@ const (
 	numberCacheLimit = 2048
 )
 
-                                                                              
-                                                                            
-                              
-                                                                             
-                                         
 type HeaderChain struct {
 	config *params.ChainConfig
 
 	chainDb       epvdb.Database
 	genesisHeader *types.Header
 
-	currentHeader     *types.Header                                                                    
-	currentHeaderHash common.Hash                                                                                     
+	currentHeader     *types.Header 
+	currentHeaderHash common.Hash   
 
-	headerCache *lru.Cache                                           
-	tdCache     *lru.Cache                                                      
-	numberCache *lru.Cache                                           
+	headerCache *lru.Cache 
+	tdCache     *lru.Cache 
+	numberCache *lru.Cache 
 
 	procInterrupt func() bool
 
@@ -64,16 +44,11 @@ type HeaderChain struct {
 	engine consensus.Engine
 }
 
-                                                      
-                                                     
-                                                            
-                                                 
 func NewHeaderChain(chainDb epvdb.Database, config *params.ChainConfig, engine consensus.Engine, procInterrupt func() bool) (*HeaderChain, error) {
 	headerCache, _ := lru.New(headerCacheLimit)
 	tdCache, _ := lru.New(tdCacheLimit)
 	numberCache, _ := lru.New(numberCacheLimit)
 
-	                                                      
 	seed, err := crand.Int(crand.Reader, big.NewInt(math.MaxInt64))
 	if err != nil {
 		return nil, err
@@ -106,8 +81,6 @@ func NewHeaderChain(chainDb epvdb.Database, config *params.ChainConfig, engine c
 	return hc, nil
 }
 
-                                                                        
-                             
 func (hc *HeaderChain) GetBlockNumber(hash common.Hash) uint64 {
 	if cached, ok := hc.numberCache.Get(hash); ok {
 		return cached.(uint64)
@@ -119,22 +92,13 @@ func (hc *HeaderChain) GetBlockNumber(hash common.Hash) uint64 {
 	return number
 }
 
-                                                                             
-                                                                              
-                                                                       
-  
-                                                                                
-                                                                               
-                                                                               
-                                                                               
-                                                       
 func (hc *HeaderChain) WriteHeader(header *types.Header) (status WriteStatus, err error) {
-	                                                      
+
 	var (
 		hash   = header.Hash()
 		number = header.Number.Uint64()
 	)
-	                                               
+
 	ptd := hc.GetTd(header.ParentHash, number-1)
 	if ptd == nil {
 		return NonStatTy, consensus.ErrUnknownAncestor
@@ -142,18 +106,15 @@ func (hc *HeaderChain) WriteHeader(header *types.Header) (status WriteStatus, er
 	localTd := hc.GetTd(hc.currentHeaderHash, hc.currentHeader.Number.Uint64())
 	externTd := new(big.Int).Add(header.Difficulty, ptd)
 
-	                                                                              
 	if err := hc.WriteTd(hash, number, externTd); err != nil {
 		log.Crit("Failed to write header total difficulty", "err", err)
 	}
 	if err := WriteHeader(hc.chainDb, header); err != nil {
 		log.Crit("Failed to write header content", "err", err)
 	}
-	                                                                                  
-	                                                                                 
-	                                                                             
+
 	if externTd.Cmp(localTd) > 0 || (externTd.Cmp(localTd) == 0 && mrand.Float64() < 0.5) {
-		                                                             
+
 		for i := number + 1; ; i++ {
 			hash := GetCanonicalHash(hc.chainDb, i)
 			if hash == (common.Hash{}) {
@@ -161,7 +122,7 @@ func (hc *HeaderChain) WriteHeader(header *types.Header) (status WriteStatus, er
 			}
 			DeleteCanonicalHash(hc.chainDb, i)
 		}
-		                                                   
+
 		var (
 			headHash   = header.ParentHash
 			headNumber = header.Number.Uint64() - 1
@@ -174,7 +135,7 @@ func (hc *HeaderChain) WriteHeader(header *types.Header) (status WriteStatus, er
 			headNumber = headHeader.Number.Uint64() - 1
 			headHeader = hc.GetHeader(headHash, headNumber)
 		}
-		                                                 
+
 		if err := WriteCanonicalHash(hc.chainDb, hash, number); err != nil {
 			log.Crit("Failed to insert header number", "err", err)
 		}
@@ -194,18 +155,13 @@ func (hc *HeaderChain) WriteHeader(header *types.Header) (status WriteStatus, er
 	return
 }
 
-                                                                      
-                                                                               
-                                                                           
-                                                                            
-                                                                            
 type WhCallback func(*types.Header) error
 
 func (hc *HeaderChain) ValidateHeaderChain(chain []*types.Header, checkFreq int) (int, error) {
-	                                                                           
+
 	for i := 1; i < len(chain); i++ {
 		if chain[i].Number.Uint64() != chain[i-1].Number.Uint64()+1 || chain[i].ParentHash != chain[i-1].Hash() {
-			                                                                            
+
 			log.Error("Non contiguous header insert", "number", chain[i].Number, "hash", chain[i].Hash(),
 				"parent", chain[i].ParentHash, "prevnumber", chain[i-1].Number, "prevhash", chain[i-1].Hash())
 
@@ -214,7 +170,6 @@ func (hc *HeaderChain) ValidateHeaderChain(chain []*types.Header, checkFreq int)
 		}
 	}
 
-	                                                                                   
 	seals := make([]bool, len(chain))
 	for i := 0; i < len(seals)/checkFreq; i++ {
 		index := i*checkFreq + hc.rand.Intn(checkFreq)
@@ -223,23 +178,22 @@ func (hc *HeaderChain) ValidateHeaderChain(chain []*types.Header, checkFreq int)
 		}
 		seals[index] = true
 	}
-	seals[len(seals)-1] = true                                                
+	seals[len(seals)-1] = true 
 
 	abort, results := hc.engine.VerifyHeaders(hc, chain, seals)
 	defer close(abort)
 
-	                                                         
 	for i, header := range chain {
-		                                                      
+
 		if hc.procInterrupt() {
 			log.Debug("Premature abort during headers verification")
 			return 0, errors.New("aborted")
 		}
-		                                                    
+
 		if BadHashes[header.Hash()] {
 			return i, ErrBlacklistedHash
 		}
-		                                                         
+
 		if err := <-results; err != nil {
 			return i, err
 		}
@@ -248,25 +202,17 @@ func (hc *HeaderChain) ValidateHeaderChain(chain []*types.Header, checkFreq int)
 	return 0, nil
 }
 
-                                                                              
-                                                                                
-                                                                                  
-  
-                                                                           
-                                                                              
-                                                                              
-                                                                      
 func (hc *HeaderChain) InsertHeaderChain(chain []*types.Header, writeHeader WhCallback, start time.Time) (int, error) {
-	                                              
+
 	stats := struct{ processed, ignored int }{}
-	                                                                 
+
 	for i, header := range chain {
-		                                           
+
 		if hc.procInterrupt() {
 			log.Debug("Premature abort during headers import")
 			return i, errors.New("aborted")
 		}
-		                                                          
+
 		if hc.HasHeader(header.Hash(), header.Number.Uint64()) {
 			stats.ignored++
 			continue
@@ -276,7 +222,7 @@ func (hc *HeaderChain) InsertHeaderChain(chain []*types.Header, writeHeader WhCa
 		}
 		stats.processed++
 	}
-	                                                                       
+
 	last := chain[len(chain)-1]
 	log.Info("Imported new block headers", "count", stats.processed, "elapsed", common.PrettyDuration(time.Since(start)),
 		"number", last.Number, "hash", last.Hash(), "ignored", stats.ignored)
@@ -284,15 +230,13 @@ func (hc *HeaderChain) InsertHeaderChain(chain []*types.Header, writeHeader WhCa
 	return 0, nil
 }
 
-                                                                                
-                                            
 func (hc *HeaderChain) GetBlockHashesFromHash(hash common.Hash, max uint64) []common.Hash {
-	                                            
+
 	header := hc.GetHeaderByHash(hash)
 	if header == nil {
 		return nil
 	}
-	                                                                       
+
 	chain := make([]common.Hash, 0, max)
 	for i := uint64(0); i < max; i++ {
 		next := header.ParentHash
@@ -307,10 +251,8 @@ func (hc *HeaderChain) GetBlockHashesFromHash(hash common.Hash, max uint64) []co
 	return chain
 }
 
-                                                                             
-                                                    
 func (hc *HeaderChain) GetTd(hash common.Hash, number uint64) *big.Int {
-	                                                                     
+
 	if cached, ok := hc.tdCache.Get(hash); ok {
 		return cached.(*big.Int)
 	}
@@ -318,19 +260,15 @@ func (hc *HeaderChain) GetTd(hash common.Hash, number uint64) *big.Int {
 	if td == nil {
 		return nil
 	}
-	                                                
+
 	hc.tdCache.Add(hash, td)
 	return td
 }
 
-                                                                                   
-                                         
 func (hc *HeaderChain) GetTdByHash(hash common.Hash) *big.Int {
 	return hc.GetTd(hash, hc.GetBlockNumber(hash))
 }
 
-                                                                               
-                 
 func (hc *HeaderChain) WriteTd(hash common.Hash, number uint64, td *big.Int) error {
 	if err := WriteTd(hc.chainDb, hash, number, td); err != nil {
 		return err
@@ -339,10 +277,8 @@ func (hc *HeaderChain) WriteTd(hash common.Hash, number uint64, td *big.Int) err
 	return nil
 }
 
-                                                                           
-                       
 func (hc *HeaderChain) GetHeader(hash common.Hash, number uint64) *types.Header {
-	                                                                         
+
 	if header, ok := hc.headerCache.Get(hash); ok {
 		return header.(*types.Header)
 	}
@@ -350,18 +286,15 @@ func (hc *HeaderChain) GetHeader(hash common.Hash, number uint64) *types.Header 
 	if header == nil {
 		return nil
 	}
-	                                                  
+
 	hc.headerCache.Add(hash, header)
 	return header
 }
 
-                                                                                    
-         
 func (hc *HeaderChain) GetHeaderByHash(hash common.Hash) *types.Header {
 	return hc.GetHeader(hash, hc.GetBlockNumber(hash))
 }
 
-                                                                        
 func (hc *HeaderChain) HasHeader(hash common.Hash, number uint64) bool {
 	if hc.numberCache.Contains(hash) || hc.headerCache.Contains(hash) {
 		return true
@@ -370,8 +303,6 @@ func (hc *HeaderChain) HasHeader(hash common.Hash, number uint64) bool {
 	return ok
 }
 
-                                                                          
-                                                  
 func (hc *HeaderChain) GetHeaderByNumber(number uint64) *types.Header {
 	hash := GetCanonicalHash(hc.chainDb, number)
 	if hash == (common.Hash{}) {
@@ -380,13 +311,10 @@ func (hc *HeaderChain) GetHeaderByNumber(number uint64) *types.Header {
 	return hc.GetHeader(hash, number)
 }
 
-                                                                              
-                                                             
 func (hc *HeaderChain) CurrentHeader() *types.Header {
 	return hc.currentHeader
 }
 
-                                                                        
 func (hc *HeaderChain) SetCurrentHeader(head *types.Header) {
 	if err := WriteHeadHeaderHash(hc.chainDb, head.Hash()); err != nil {
 		log.Crit("Failed to insert head header hash", "err", err)
@@ -395,12 +323,8 @@ func (hc *HeaderChain) SetCurrentHeader(head *types.Header) {
 	hc.currentHeaderHash = head.Hash()
 }
 
-                                                                         
-                          
 type DeleteCallback func(common.Hash, uint64)
 
-                                                                               
-                                       
 func (hc *HeaderChain) SetHead(head uint64, delFn DeleteCallback) {
 	height := uint64(0)
 	if hc.currentHeader != nil {
@@ -417,11 +341,11 @@ func (hc *HeaderChain) SetHead(head uint64, delFn DeleteCallback) {
 		DeleteTd(hc.chainDb, hash, num)
 		hc.currentHeader = hc.GetHeader(hc.currentHeader.ParentHash, hc.currentHeader.Number.Uint64()-1)
 	}
-	                                          
+
 	for i := height; i > head; i-- {
 		DeleteCanonicalHash(hc.chainDb, i)
 	}
-	                                              
+
 	hc.headerCache.Purge()
 	hc.tdCache.Purge()
 	hc.numberCache.Purge()
@@ -436,19 +360,14 @@ func (hc *HeaderChain) SetHead(head uint64, delFn DeleteCallback) {
 	}
 }
 
-                                                           
 func (hc *HeaderChain) SetGenesis(head *types.Header) {
 	hc.genesisHeader = head
 }
 
-                                                           
 func (hc *HeaderChain) Config() *params.ChainConfig { return hc.config }
 
-                                                        
 func (hc *HeaderChain) Engine() consensus.Engine { return hc.engine }
 
-                                                                                
-                                                               
 func (hc *HeaderChain) GetBlock(hash common.Hash, number uint64) *types.Block {
 	return nil
 }

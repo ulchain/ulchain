@@ -4,8 +4,6 @@ package log
 
 import "sync/atomic"
 
-                                                            
-                                                   
 type swapHandler struct {
 	handler atomic.Value
 }

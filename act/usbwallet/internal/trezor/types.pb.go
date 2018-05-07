@@ -1,7 +1,4 @@
-                                                
-                      
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
 package trezor
 
 import proto "github.com/golang/protobuf/proto"
@@ -9,20 +6,12 @@ import fmt "fmt"
 import math "math"
 import google_protobuf "github.com/golang/protobuf/protoc-gen-go/descriptor"
 
-                                                                       
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-                                                                      
-                                                                     
-                                                                 
-                                     
-const _ = proto.ProtoPackageIsVersion2                                    
+const _ = proto.ProtoPackageIsVersion2 
 
-    
-                                               
-                   
 type FailureType int32
 
 const (
@@ -87,9 +76,6 @@ func (x *FailureType) UnmarshalJSON(data []byte) error {
 }
 func (FailureType) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
-    
-                                                           
-                        
 type OutputScriptType int32
 
 const (
@@ -136,9 +122,6 @@ func (x *OutputScriptType) UnmarshalJSON(data []byte) error {
 }
 func (OutputScriptType) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
 
-    
-                                                           
-                       
 type InputScriptType int32
 
 const (
@@ -182,9 +165,6 @@ func (x *InputScriptType) UnmarshalJSON(data []byte) error {
 }
 func (InputScriptType) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
 
-    
-                                                              
-                     
 type RequestType int32
 
 const (
@@ -228,9 +208,6 @@ func (x *RequestType) UnmarshalJSON(data []byte) error {
 }
 func (RequestType) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
 
-    
-                         
-                         
 type ButtonRequestType int32
 
 const (
@@ -292,9 +269,6 @@ func (x *ButtonRequestType) UnmarshalJSON(data []byte) error {
 }
 func (ButtonRequestType) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
 
-    
-                      
-                            
 type PinMatrixRequestType int32
 
 const (
@@ -332,19 +306,10 @@ func (x *PinMatrixRequestType) UnmarshalJSON(data []byte) error {
 }
 func (PinMatrixRequestType) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
 
-    
-                                                                     
-                                                                  
-                                                       
-  
-                                                                     
-                                                                 
-  
-                          
 type RecoveryDeviceType int32
 
 const (
-	                                              
+
 	RecoveryDeviceType_RecoveryDeviceType_ScrambledWords RecoveryDeviceType = 0
 	RecoveryDeviceType_RecoveryDeviceType_Matrix         RecoveryDeviceType = 1
 )
@@ -376,9 +341,6 @@ func (x *RecoveryDeviceType) UnmarshalJSON(data []byte) error {
 }
 func (RecoveryDeviceType) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
 
-    
-                                
-                       
 type WordRequestType int32
 
 const (
@@ -416,13 +378,6 @@ func (x *WordRequestType) UnmarshalJSON(data []byte) error {
 }
 func (WordRequestType) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
 
-    
-                                                                 
-                                                                                         
-                     
-                      
-                          
-                   
 type HDNodeType struct {
 	Depth            *uint32 `protobuf:"varint,1,req,name=depth" json:"depth,omitempty"`
 	Fingerprint      *uint32 `protobuf:"varint,2,req,name=fingerprint" json:"fingerprint,omitempty"`
@@ -505,9 +460,6 @@ func (m *HDNodePathType) GetAddressN() []uint32 {
 	return nil
 }
 
-    
-                              
-                    
 type CoinType struct {
 	CoinName            *string `protobuf:"bytes,1,opt,name=coin_name,json=coinName" json:"coin_name,omitempty"`
 	CoinShortcut        *string `protobuf:"bytes,2,opt,name=coin_shortcut,json=coinShortcut" json:"coin_shortcut,omitempty"`
@@ -602,9 +554,6 @@ func (m *CoinType) GetForkid() uint32 {
 	return 0
 }
 
-    
-                                      
-                       
 type MultisigRedeemScriptType struct {
 	Pubkeys          []*HDNodePathType `protobuf:"bytes,1,rep,name=pubkeys" json:"pubkeys,omitempty"`
 	Signatures       [][]byte          `protobuf:"bytes,2,rep,name=signatures" json:"signatures,omitempty"`
@@ -638,10 +587,6 @@ func (m *MultisigRedeemScriptType) GetM() uint32 {
 	return 0
 }
 
-    
-                                           
-                        
-                           
 type TxInputType struct {
 	AddressN         []uint32                  `protobuf:"varint,1,rep,name=address_n,json=addressN" json:"address_n,omitempty"`
 	PrevHash         []byte                    `protobuf:"bytes,2,req,name=prev_hash,json=prevHash" json:"prev_hash,omitempty"`
@@ -718,10 +663,6 @@ func (m *TxInputType) GetAmount() uint64 {
 	return 0
 }
 
-    
-                                            
-                        
-                           
 type TxOutputType struct {
 	Address          *string                   `protobuf:"bytes,1,opt,name=address" json:"address,omitempty"`
 	AddressN         []uint32                  `protobuf:"varint,2,rep,name=address_n,json=addressN" json:"address_n,omitempty"`
@@ -779,9 +720,6 @@ func (m *TxOutputType) GetOpReturnData() []byte {
 	return nil
 }
 
-    
-                                                     
-                           
 type TxOutputBinType struct {
 	Amount           *uint64 `protobuf:"varint,1,req,name=amount" json:"amount,omitempty"`
 	ScriptPubkey     []byte  `protobuf:"bytes,2,req,name=script_pubkey,json=scriptPubkey" json:"script_pubkey,omitempty"`
@@ -807,9 +745,6 @@ func (m *TxOutputBinType) GetScriptPubkey() []byte {
 	return nil
 }
 
-    
-                                     
-                        
 type TransactionType struct {
 	Version          *uint32            `protobuf:"varint,1,opt,name=version" json:"version,omitempty"`
 	Inputs           []*TxInputType     `protobuf:"bytes,2,rep,name=inputs" json:"inputs,omitempty"`
@@ -891,9 +826,6 @@ func (m *TransactionType) GetExtraDataLen() uint32 {
 	return 0
 }
 
-    
-                                         
-                     
 type TxRequestDetailsType struct {
 	RequestIndex     *uint32 `protobuf:"varint,1,opt,name=request_index,json=requestIndex" json:"request_index,omitempty"`
 	TxHash           []byte  `protobuf:"bytes,2,opt,name=tx_hash,json=txHash" json:"tx_hash,omitempty"`
@@ -935,9 +867,6 @@ func (m *TxRequestDetailsType) GetExtraDataOffset() uint32 {
 	return 0
 }
 
-    
-                                         
-                     
 type TxRequestSerializedType struct {
 	SignatureIndex   *uint32 `protobuf:"varint,1,opt,name=signature_index,json=signatureIndex" json:"signature_index,omitempty"`
 	Signature        []byte  `protobuf:"bytes,2,opt,name=signature" json:"signature,omitempty"`
@@ -971,9 +900,6 @@ func (m *TxRequestSerializedType) GetSerializedTx() []byte {
 	return nil
 }
 
-    
-                                       
-                        
 type IdentityType struct {
 	Proto            *string `protobuf:"bytes,1,opt,name=proto" json:"proto,omitempty"`
 	User             *string `protobuf:"bytes,2,opt,name=user" json:"user,omitempty"`
@@ -1118,7 +1044,7 @@ func init() {
 func init() { proto.RegisterFile("types.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	                                              
+
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x57, 0xdb, 0x72, 0x1a, 0xc9,
 	0x19, 0xf6, 0x00, 0x92, 0xe0, 0x07, 0xc4, 0xa8, 0x7d, 0xd0, 0x78, 0x6d, 0xaf, 0x31, 0x76, 0x62,
 	0x45, 0x55, 0x61, 0x77, 0xc9, 0x5a, 0x8e, 0x55, 0xa9, 0x24, 0x3a, 0xa0, 0x15, 0x65, 0x0b, 0x51,

@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package p2p
 
@@ -22,35 +7,18 @@ import (
 	"github.com/epvchain/go-epvchain/peer/discover"
 )
 
-                                                        
 type Protocol struct {
-	                                                  
-	                             
+
 	Name string
 
-	                                                             
 	Version uint
 
-	                                                         
-	                   
 	Length uint64
 
-	                                                             
-	                                                                 
-	                                                           
-	  
-	                                                                     
-	                                                          
-	               
 	Run func(peer *Peer, rw MsgReadWriter) error
 
-	                                                                               
-	                       
 	NodeInfo func() interface{}
 
-	                                                                               
-	                                                                             
-	                                                                               
 	PeerInfo func(id discover.NodeID) interface{}
 }
 
@@ -58,7 +26,6 @@ func (p Protocol) cap() Cap {
 	return Cap{p.Name, p.Version}
 }
 
-                                             
 type Cap struct {
 	Name    string
 	Version uint

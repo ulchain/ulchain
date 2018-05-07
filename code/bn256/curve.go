@@ -1,6 +1,3 @@
-                                                      
-                                                     
-                                                 
 
 package bn256
 
@@ -8,16 +5,12 @@ import (
 	"math/big"
 )
 
-                                                                         
-                                                                                 
-         
 type curvePoint struct {
 	x, y, z, t *big.Int
 }
 
 var curveB = new(big.Int).SetInt64(3)
 
-                                     
 var curveGen = &curvePoint{
 	new(big.Int).SetInt64(1),
 	new(big.Int).SetInt64(2),
@@ -53,7 +46,6 @@ func (c *curvePoint) Set(a *curvePoint) {
 	c.t.Set(a.t)
 }
 
-                                                                               
 func (c *curvePoint) IsOnCurve() bool {
 	yy := new(big.Int).Mul(c.y, c.y)
 	xxx := new(big.Int).Mul(c.x, c.x)
@@ -84,11 +76,6 @@ func (c *curvePoint) Add(a, b *curvePoint, pool *bnPool) {
 		return
 	}
 
-	                                                                                            
-
-	                                                                      
-	                                       
-	                                                                      
 	z1z1 := pool.Get().Mul(a.z, a.z)
 	z1z1.Mod(z1z1, P)
 	z2z2 := pool.Get().Mul(b.z, b.z)
@@ -108,21 +95,14 @@ func (c *curvePoint) Add(a, b *curvePoint, pool *bnPool) {
 	s2 := pool.Get().Mul(b.y, t)
 	s2.Mod(s2, P)
 
-	                                
-	                                                             
-	                                                                                       
-	                
-	                                                           
-	                                        
-	                            
 	h := pool.Get().Sub(u2, u1)
 	xEqual := h.Sign() == 0
 
 	t.Add(h, h)
-	           
+
 	i := pool.Get().Mul(t, t)
 	i.Mod(i, P)
-	           
+
 	j := pool.Get().Mul(h, i)
 	j.Mod(j, P)
 
@@ -137,30 +117,25 @@ func (c *curvePoint) Add(a, b *curvePoint, pool *bnPool) {
 	v := pool.Get().Mul(u1, i)
 	v.Mod(v, P)
 
-	                  
 	t4 := pool.Get().Mul(r, r)
 	t4.Mod(t4, P)
 	t.Add(v, v)
 	t6 := pool.Get().Sub(t4, j)
 	c.x.Sub(t6, t)
 
-	                                      
-	               
-	                                                            
-	t.Sub(v, c.x)      
-	t4.Mul(s1, j)      
+	t.Sub(v, c.x) 
+	t4.Mul(s1, j) 
 	t4.Mod(t4, P)
-	t6.Add(t4, t4)      
-	t4.Mul(r, t)         
+	t6.Add(t4, t4) 
+	t4.Mul(r, t)   
 	t4.Mod(t4, P)
 	c.y.Sub(t4, t6)
 
-	                                        
-	t.Add(a.z, b.z)       
-	t4.Mul(t, t)          
+	t.Add(a.z, b.z) 
+	t4.Mul(t, t)    
 	t4.Mod(t4, P)
-	t.Sub(t4, z1z1)       
-	t4.Sub(t, z2z2)       
+	t.Sub(t4, z1z1) 
+	t4.Sub(t, z2z2) 
 	c.z.Mul(t4, h)
 	c.z.Mod(c.z, P)
 
@@ -181,7 +156,7 @@ func (c *curvePoint) Add(a, b *curvePoint, pool *bnPool) {
 }
 
 func (c *curvePoint) Double(a *curvePoint, pool *bnPool) {
-	                                                                                           
+
 	A := pool.Get().Mul(a.x, a.x)
 	A.Mod(A, P)
 	B := pool.Get().Mul(a.y, a.y)

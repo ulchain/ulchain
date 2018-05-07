@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                
 package math
 
 import (
@@ -32,16 +16,14 @@ var (
 )
 
 const (
-	                               
+
 	wordBits = 32 << (uint64(^big.Word(0)) >> 63)
-	                                
+
 	wordBytes = wordBits / 8
 )
 
-                                                      
 type HexOrDecimal256 big.Int
 
-                                                     
 func (i *HexOrDecimal256) UnmarshalText(input []byte) error {
 	bigint, ok := ParseBig256(string(input))
 	if !ok {
@@ -51,7 +33,6 @@ func (i *HexOrDecimal256) UnmarshalText(input []byte) error {
 	return nil
 }
 
-                                                 
 func (i *HexOrDecimal256) MarshalText() ([]byte, error) {
 	if i == nil {
 		return []byte("0x0"), nil
@@ -59,8 +40,6 @@ func (i *HexOrDecimal256) MarshalText() ([]byte, error) {
 	return []byte(fmt.Sprintf("%#x", (*big.Int)(i))), nil
 }
 
-                                                                              
-                                                               
 func ParseBig256(s string) (*big.Int, bool) {
 	if s == "" {
 		return new(big.Int), true
@@ -78,7 +57,6 @@ func ParseBig256(s string) (*big.Int, bool) {
 	return bigint, ok
 }
 
-                                                                                      
 func MustParseBig256(s string) *big.Int {
 	v, ok := ParseBig256(s)
 	if !ok {
@@ -87,13 +65,11 @@ func MustParseBig256(s string) *big.Int {
 	return v
 }
 
-                                          
 func BigPow(a, b int64) *big.Int {
 	r := big.NewInt(a)
 	return r.Exp(r, big.NewInt(b), nil)
 }
 
-                                       
 func BigMax(x, y *big.Int) *big.Int {
 	if x.Cmp(y) < 0 {
 		return y
@@ -101,7 +77,6 @@ func BigMax(x, y *big.Int) *big.Int {
 	return x
 }
 
-                                        
 func BigMin(x, y *big.Int) *big.Int {
 	if x.Cmp(y) > 0 {
 		return y
@@ -109,7 +84,6 @@ func BigMin(x, y *big.Int) *big.Int {
 	return x
 }
 
-                                                                            
 func FirstBitSet(v *big.Int) int {
 	for i := 0; i < v.BitLen(); i++ {
 		if v.Bit(i) > 0 {
@@ -119,8 +93,6 @@ func FirstBitSet(v *big.Int) int {
 	return v.BitLen()
 }
 
-                                                                              
-                                    
 func PaddedBigBytes(bigint *big.Int, n int) []byte {
 	if bigint.BitLen()/8 >= n {
 		return bigint.Bytes()
@@ -130,27 +102,20 @@ func PaddedBigBytes(bigint *big.Int, n int) []byte {
 	return ret
 }
 
-                                                  
-                         
-                                             
 func bigEndianByteAt(bigint *big.Int, n int) byte {
 	words := bigint.Bits()
-	                                            
+
 	i := n / wordBytes
 	if i >= len(words) {
 		return byte(0)
 	}
 	word := words[i]
-	                     
+
 	shift := 8 * uint(n%wordBytes)
 
 	return byte(word >> shift)
 }
 
-                                       
-                                                         
-                       
-                                               
 func Byte(bigint *big.Int, padlength, n int) byte {
 	if n >= padlength {
 		return byte(0)
@@ -158,8 +123,6 @@ func Byte(bigint *big.Int, padlength, n int) byte {
 	return bigEndianByteAt(bigint, padlength-1-n)
 }
 
-                                                                                         
-                                                                                
 func ReadBits(bigint *big.Int, buf []byte) {
 	i := len(buf)
 	for _, d := range bigint.Bits() {
@@ -171,18 +134,10 @@ func ReadBits(bigint *big.Int, buf []byte) {
 	}
 }
 
-                                                                                    
 func U256(x *big.Int) *big.Int {
 	return x.And(x, tt256m1)
 }
 
-                                                  
-                                                                                       
-  
-                       
-                       
-                             
-                        
 func S256(x *big.Int) *big.Int {
 	if x.Cmp(tt255) < 0 {
 		return x
@@ -191,11 +146,6 @@ func S256(x *big.Int) *big.Int {
 	}
 }
 
-                                             
-                                                                
-                                                         
-  
-                                 
 func Exp(base, exponent *big.Int) *big.Int {
 	result := big.NewInt(1)
 

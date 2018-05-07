@@ -1,7 +1,4 @@
-                         
-                                                      
-                                                     
-                                                 
+
 // +build !appengine
 
 package term

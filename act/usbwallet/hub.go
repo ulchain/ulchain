@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package usbwallet
 
@@ -28,55 +13,44 @@ import (
 	"github.com/karalabe/hid"
 )
 
-                                                                         
 const LedgerScheme = "ledger"
 
-                                                                         
 const TrezorScheme = "trezor"
 
-                                                                            
-                             
 const refreshCycle = time.Second
 
-                                                                              
-            
 const refreshThrottling = 500 * time.Millisecond
 
-                                                                                   
 type Hub struct {
-	scheme     string                                                                       
-	vendorID   uint16                                                                    
-	productIDs []uint16                                                                    
-	usageID    uint16                                                                              
-	endpointID int                                                                                   
-	makeDriver func(log.Logger) driver                                                        
+	scheme     string                  
+	vendorID   uint16                  
+	productIDs []uint16                
+	usageID    uint16                  
+	endpointID int                     
+	makeDriver func(log.Logger) driver 
 
-	refreshed   time.Time                                                                           
-	wallets     []accounts.Wallet                                                       
-	updateFeed  event.Feed                                                               
-	updateScope event.SubscriptionScope                                                      
-	updating    bool                                                                     
+	refreshed   time.Time               
+	wallets     []accounts.Wallet       
+	updateFeed  event.Feed              
+	updateScope event.SubscriptionScope 
+	updating    bool                    
 
 	quit chan chan error
 
-	stateLock sync.RWMutex                                                       
+	stateLock sync.RWMutex 
 
-	                                                     
-	commsPend int                                                    
-	commsLock sync.Mutex                                                       
+	commsPend int        
+	commsLock sync.Mutex 
 }
 
-                                                                         
 func NewLedgerHub() (*Hub, error) {
-	return newHub(LedgerScheme, 0x2c97, []uint16{0x0000                  , 0x0001                    }, 0xffa0, 0, newLedgerDriver)
+	return newHub(LedgerScheme, 0x2c97, []uint16{0x0000 , 0x0001 }, 0xffa0, 0, newLedgerDriver)
 }
 
-                                                                         
 func NewTrezorHub() (*Hub, error) {
-	return newHub(TrezorScheme, 0x534c, []uint16{0x0001               }, 0xff00, 0, newTrezorDriver)
+	return newHub(TrezorScheme, 0x534c, []uint16{0x0001 }, 0xff00, 0, newTrezorDriver)
 }
 
-                                                                        
 func newHub(scheme string, vendorID uint16, productIDs []uint16, usageID uint16, endpointID int, makeDriver func(log.Logger) driver) (*Hub, error) {
 	if !hid.Supported() {
 		return nil, errors.New("unsupported platform")
@@ -94,10 +68,8 @@ func newHub(scheme string, vendorID uint16, productIDs []uint16, usageID uint16,
 	return hub, nil
 }
 
-                                                                               
-                                              
 func (hub *Hub) Wallets() []accounts.Wallet {
-	                                              
+
 	hub.refreshWallets()
 
 	hub.stateLock.RLock()
@@ -108,10 +80,8 @@ func (hub *Hub) Wallets() []accounts.Wallet {
 	return cpy
 }
 
-                                                                               
-                                              
 func (hub *Hub) refreshWallets() {
-	                                                                      
+
 	hub.stateLock.RLock()
 	elapsed := time.Since(hub.refreshed)
 	hub.stateLock.RUnlock()
@@ -119,18 +89,13 @@ func (hub *Hub) refreshWallets() {
 	if elapsed < refreshThrottling {
 		return
 	}
-	                                                  
+
 	var devices []hid.DeviceInfo
 
 	if runtime.GOOS == "linux" {
-		                                                                              
-		                                                                              
-		                                                                              
-		                                                                              
-		                                                                              
-		                                                                            
+
 		hub.commsLock.Lock()
-		if hub.commsPend > 0 {                                            
+		if hub.commsPend > 0 { 
 			hub.commsLock.Unlock()
 			return
 		}
@@ -144,10 +109,10 @@ func (hub *Hub) refreshWallets() {
 		}
 	}
 	if runtime.GOOS == "linux" {
-		                                                                             
+
 		hub.commsLock.Unlock()
 	}
-	                                                         
+
 	hub.stateLock.Lock()
 
 	wallets := make([]accounts.Wallet, 0, len(devices))
@@ -156,18 +121,17 @@ func (hub *Hub) refreshWallets() {
 	for _, device := range devices {
 		url := accounts.URL{Scheme: hub.scheme, Path: device.Path}
 
-		                                                                                
 		for len(hub.wallets) > 0 {
-			                                                                      
+
 			_, failure := hub.wallets[0].Status()
 			if hub.wallets[0].URL().Cmp(url) >= 0 || failure == nil {
 				break
 			}
-			                                    
+
 			events = append(events, accounts.WalletEvent{Wallet: hub.wallets[0], Kind: accounts.WalletDropped})
 			hub.wallets = hub.wallets[1:]
 		}
-		                                                                                 
+
 		if len(hub.wallets) == 0 || hub.wallets[0].URL().Cmp(url) > 0 {
 			logger := log.New("url", url)
 			wallet := &wallet{hub: hub, driver: hub.makeDriver(logger), url: &url, info: device, log: logger}
@@ -176,14 +140,14 @@ func (hub *Hub) refreshWallets() {
 			wallets = append(wallets, wallet)
 			continue
 		}
-		                                                         
+
 		if hub.wallets[0].URL().Cmp(url) == 0 {
 			wallets = append(wallets, hub.wallets[0])
 			hub.wallets = hub.wallets[1:]
 			continue
 		}
 	}
-	                                                  
+
 	for _, wallet := range hub.wallets {
 		events = append(events, accounts.WalletEvent{Wallet: wallet, Kind: accounts.WalletDropped})
 	}
@@ -191,23 +155,18 @@ func (hub *Hub) refreshWallets() {
 	hub.wallets = wallets
 	hub.stateLock.Unlock()
 
-	                                    
 	for _, event := range events {
 		hub.updateFeed.Send(event)
 	}
 }
 
-                                                                           
-                                                                   
 func (hub *Hub) Subscribe(sink chan<- accounts.WalletEvent) event.Subscription {
-	                                                           
+
 	hub.stateLock.Lock()
 	defer hub.stateLock.Unlock()
 
-	                                                      
 	sub := hub.updateScope.Track(hub.updateFeed.Subscribe(sink))
 
-	                                                            
 	if !hub.updating {
 		hub.updating = true
 		go hub.updater()
@@ -215,18 +174,13 @@ func (hub *Hub) Subscribe(sink chan<- accounts.WalletEvent) event.Subscription {
 	return sub
 }
 
-                                                                               
-                                                                 
 func (hub *Hub) updater() {
 	for {
-		                                                                              
-		                
+
 		time.Sleep(refreshCycle)
 
-		                           
 		hub.refreshWallets()
 
-		                                                
 		hub.stateLock.Lock()
 		if hub.updateScope.Count() == 0 {
 			hub.updating = false

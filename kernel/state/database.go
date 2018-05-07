@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package state
 
@@ -26,40 +11,30 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 )
 
-                                                                          
 var MaxTrieCacheGen = uint16(120)
 
 const (
-	                                                               
-	                                                           
+
 	maxPastTries = 12
 
-	                                                 
 	codeSizeCacheSize = 100000
 )
 
-                                                    
 type Database interface {
-	                                        
+
 	OpenTrie(root common.Hash) (Trie, error)
 
-	                                                        
 	OpenStorageTrie(addrHash, root common.Hash) (Trie, error)
 
-	                                                          
 	CopyTrie(Trie) Trie
 
-	                                                       
 	ContractCode(addrHash, codeHash common.Hash) ([]byte, error)
 
-	                                                                 
 	ContractCodeSize(addrHash, codeHash common.Hash) (int, error)
 
-	                                                                      
 	TrieDB() *trie.Database
 }
 
-                                  
 type Trie interface {
 	TryGet(key []byte) ([]byte, error)
 	TryUpdate(key, value []byte) error
@@ -67,14 +42,10 @@ type Trie interface {
 	Commit(onleaf trie.LeafCallback) (common.Hash, error)
 	Hash() common.Hash
 	NodeIterator(startKey []byte) trie.NodeIterator
-	GetKey([]byte) []byte                                                     
+	GetKey([]byte) []byte 
 	Prove(key []byte, fromLevel uint, proofDb epvdb.Putter) error
 }
 
-                                                                                   
-                                                                                  
-                                                                                 
-                               
 func NewDatabase(db epvdb.Database) Database {
 	csc, _ := lru.New(codeSizeCacheSize)
 	return &cachingDB{
@@ -90,7 +61,6 @@ type cachingDB struct {
 	codeSizeCache *lru.Cache
 }
 
-                                        
 func (db *cachingDB) OpenTrie(root common.Hash) (Trie, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
@@ -119,12 +89,10 @@ func (db *cachingDB) pushTrie(t *trie.SecureTrie) {
 	}
 }
 
-                                                        
 func (db *cachingDB) OpenStorageTrie(addrHash, root common.Hash) (Trie, error) {
 	return trie.NewSecure(root, db.db, 0)
 }
 
-                                                          
 func (db *cachingDB) CopyTrie(t Trie) Trie {
 	switch t := t.(type) {
 	case cachedTrie:
@@ -136,7 +104,6 @@ func (db *cachingDB) CopyTrie(t Trie) Trie {
 	}
 }
 
-                                                       
 func (db *cachingDB) ContractCode(addrHash, codeHash common.Hash) ([]byte, error) {
 	code, err := db.db.Node(codeHash)
 	if err == nil {
@@ -145,7 +112,6 @@ func (db *cachingDB) ContractCode(addrHash, codeHash common.Hash) ([]byte, error
 	return code, err
 }
 
-                                                                 
 func (db *cachingDB) ContractCodeSize(addrHash, codeHash common.Hash) (int, error) {
 	if cached, ok := db.codeSizeCache.Get(codeHash); ok {
 		return cached.(int), nil
@@ -157,12 +123,10 @@ func (db *cachingDB) ContractCodeSize(addrHash, codeHash common.Hash) (int, erro
 	return len(code), err
 }
 
-                                                             
 func (db *cachingDB) TrieDB() *trie.Database {
 	return db.db
 }
 
-                                                          
 type cachedTrie struct {
 	*trie.SecureTrie
 	db *cachingDB

@@ -1,18 +1,3 @@
-                                         
-                                    
-  
-                                                                      
-                                                                       
-                                                                    
-                                      
-  
-                                                                 
-                                                                 
-                                                               
-                                               
-  
-                                                                    
-                                                                      
 
 package main
 
@@ -204,7 +189,6 @@ func accountList(ctx *cli.Context) error {
 	return nil
 }
 
-                                                     
 func unlockAccount(ctx *cli.Context, ks *keystore.KeyStore, address string, i int, passwords []string) (accounts.Account, string) {
 	account, err := utils.MakeAddress(ks, address)
 	if err != nil {
@@ -223,27 +207,25 @@ func unlockAccount(ctx *cli.Context, ks *keystore.KeyStore, address string, i in
 			return ambiguousAddrRecovery(ks, err, password), password
 		}
 		if err != keystore.ErrDecrypt {
-			                                                                  
+
 			break
 		}
 	}
-	                                                  
+
 	utils.Fatalf("Failed to unlock account %s (%v)", address, err)
 
 	return accounts.Account{}, ""
 }
 
-                                                                                  
-                                                                                  
 func getPassPhrase(prompt string, confirmation bool, i int, passwords []string) string {
-	                                                          
+
 	if len(passwords) > 0 {
 		if i < len(passwords) {
 			return passwords[i]
 		}
 		return passwords[len(passwords)-1]
 	}
-	                                             
+
 	if prompt != "" {
 		fmt.Println(prompt)
 	}
@@ -289,10 +271,9 @@ func ambiguousAddrRecovery(ks *keystore.KeyStore, err *keystore.AmbiguousAddrErr
 	return *match
 }
 
-                                                                                  
 func accountCreate(ctx *cli.Context) error {
 	cfg := gepvConfig{Node: defaultNodeConfig()}
-	                    
+
 	if file := ctx.GlobalString(configFileFlag.Name); file != "" {
 		if err := loadConfig(file, &cfg); err != nil {
 			utils.Fatalf("%v", err)
@@ -316,8 +297,6 @@ func accountCreate(ctx *cli.Context) error {
 	return nil
 }
 
-                                                                             
-                                                                 
 func accountUpdate(ctx *cli.Context) error {
 	if len(ctx.Args()) == 0 {
 		utils.Fatalf("No accounts specified to update")

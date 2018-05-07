@@ -1,25 +1,8 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package les
 
 import "sync"
 
-                                                                                
-                                              
 type execQueue struct {
 	mu        sync.Mutex
 	cond      *sync.Cond
@@ -27,7 +10,6 @@ type execQueue struct {
 	closeWait chan struct{}
 }
 
-                                              
 func newExecQueue(capacity int) *execQueue {
 	q := &execQueue{funcs: make([]func(), 0, capacity)}
 	q.cond = sync.NewCond(&q.mu)
@@ -45,8 +27,7 @@ func (q *execQueue) loop() {
 func (q *execQueue) waitNext(drop bool) (f func()) {
 	q.mu.Lock()
 	if drop {
-		                                                                          
-		                                                                   
+
 		q.funcs = append(q.funcs[:0], q.funcs[1:]...)
 	}
 	for !q.isClosed() {
@@ -64,7 +45,6 @@ func (q *execQueue) isClosed() bool {
 	return q.closeWait != nil
 }
 
-                                                                                    
 func (q *execQueue) canQueue() bool {
 	q.mu.Lock()
 	ok := !q.isClosed() && len(q.funcs) < cap(q.funcs)
@@ -72,7 +52,6 @@ func (q *execQueue) canQueue() bool {
 	return ok
 }
 
-                                                                                 
 func (q *execQueue) queue(f func()) bool {
 	q.mu.Lock()
 	ok := !q.isClosed() && len(q.funcs) < cap(q.funcs)
@@ -84,8 +63,6 @@ func (q *execQueue) queue(f func()) bool {
 	return ok
 }
 
-                             
-                                                                   
 func (q *execQueue) quit() {
 	q.mu.Lock()
 	if !q.isClosed() {

@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                                      
 package flowcontrol
 
 import (
@@ -97,8 +81,8 @@ type ServerNode struct {
 	bufEstimate uint64
 	lastTime    mclock.AbsTime
 	params      *ServerParams
-	sumCost     uint64                                                   
-	pending     map[uint64]uint64                                               
+	sumCost     uint64            
+	pending     map[uint64]uint64 
 	lock        sync.RWMutex
 }
 
@@ -123,7 +107,6 @@ func (peer *ServerNode) recalcBLE(time mclock.AbsTime) {
 	peer.lastTime = time
 }
 
-                                                                                            
 const safetyMargin = time.Millisecond
 
 func (peer *ServerNode) canSend(maxCost uint64) (time.Duration, float64) {
@@ -138,9 +121,6 @@ func (peer *ServerNode) canSend(maxCost uint64) (time.Duration, float64) {
 	return time.Duration((maxCost - peer.bufEstimate) * uint64(fcTimeConst) / peer.params.MinRecharge), 0
 }
 
-                                                                             
-                                                                             
-                                                                          
 func (peer *ServerNode) CanSend(maxCost uint64) (time.Duration, float64) {
 	peer.lock.RLock()
 	defer peer.lock.RUnlock()
@@ -148,9 +128,6 @@ func (peer *ServerNode) CanSend(maxCost uint64) (time.Duration, float64) {
 	return peer.canSend(maxCost)
 }
 
-                                                                                
-                                                                                  
-                                                                 
 func (peer *ServerNode) QueueRequest(reqID, maxCost uint64) {
 	peer.lock.Lock()
 	defer peer.lock.Unlock()
@@ -160,8 +137,6 @@ func (peer *ServerNode) QueueRequest(reqID, maxCost uint64) {
 	peer.pending[reqID] = peer.sumCost
 }
 
-                                                                             
-                            
 func (peer *ServerNode) GotReply(reqID, bv uint64) {
 
 	peer.lock.Lock()

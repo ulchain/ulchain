@@ -6,7 +6,6 @@ import (
 
 const ioctlReadTermios = syscall.TIOCGETA
 
-                                                                                                                         
 type Termios struct {
 	Iflag  uint32
 	Oflag  uint32

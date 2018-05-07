@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                                     
 package downloader
 
 import (
@@ -36,34 +20,34 @@ import (
 )
 
 var (
-	MaxHashFetch    = 512                                                        
-	MaxBlockFetch   = 128                                                        
-	MaxHeaderFetch  = 192                                                               
-	MaxSkeletonSize = 128                                                            
-	MaxBodyFetch    = 128                                                              
-	MaxReceiptFetch = 256                                                                
-	MaxStateFetch   = 384                                                             
+	MaxHashFetch    = 512 
+	MaxBlockFetch   = 128 
+	MaxHeaderFetch  = 192 
+	MaxSkeletonSize = 128 
+	MaxBodyFetch    = 128 
+	MaxReceiptFetch = 256 
+	MaxStateFetch   = 384 
 
-	MaxForkAncestry  = 3 * params.EpochDuration                                
-	rttMinEstimate   = 2 * time.Second                                                                    
-	rttMaxEstimate   = 20 * time.Second                                                                   
-	rttMinConfidence = 0.1                                                                           
-	ttlScaling       = 3                                                                            
-	ttlLimit         = time.Minute                                                                         
+	MaxForkAncestry  = 3 * params.EpochDuration 
+	rttMinEstimate   = 2 * time.Second          
+	rttMaxEstimate   = 20 * time.Second         
+	rttMinConfidence = 0.1                      
+	ttlScaling       = 3                        
+	ttlLimit         = time.Minute              
 
-	qosTuningPeers   = 5                                                    
-	qosConfidenceCap = 10                                                              
-	qosTuningImpact  = 0.25                                                             
+	qosTuningPeers   = 5    
+	qosConfidenceCap = 10   
+	qosTuningImpact  = 0.25 
 
-	maxQueuedHeaders  = 32 * 1024                                                                           
-	maxHeadersProcess = 2048                                                                           
-	maxResultsProcess = 2048                                                                            
+	maxQueuedHeaders  = 32 * 1024 
+	maxHeadersProcess = 2048      
+	maxResultsProcess = 2048      
 
-	fsHeaderCheckFrequency = 100                                                                                 
-	fsHeaderSafetyNet      = 2048                                                                                 
-	fsHeaderForceVerify    = 24                                                                                    
-	fsHeaderContCheck      = 3 * time.Second                                                                         
-	fsMinFullBlocks        = 64                                                                     
+	fsHeaderCheckFrequency = 100             
+	fsHeaderSafetyNet      = 2048            
+	fsHeaderForceVerify    = 24              
+	fsHeaderContCheck      = 3 * time.Second 
+	fsMinFullBlocks        = 64              
 )
 
 var (
@@ -92,110 +76,88 @@ var (
 )
 
 type Downloader struct {
-	mode SyncMode                                                                          
-	mux  *event.TypeMux                                                       
+	mode SyncMode       
+	mux  *event.TypeMux 
 
-	queue   *queue                                                    
-	peers   *peerSet                                                       
+	queue   *queue   
+	peers   *peerSet 
 	stateDB epvdb.Database
 
-	rttEstimate   uint64                                                   
-	rttConfidence uint64                                                                          
+	rttEstimate   uint64 
+	rttConfidence uint64 
 
-	             
-	syncStatsChainOrigin uint64                                                
-	syncStatsChainHeight uint64                                                   
+	syncStatsChainOrigin uint64 
+	syncStatsChainHeight uint64 
 	syncStatsState       stateSyncStats
-	syncStatsLock        sync.RWMutex                                         
+	syncStatsLock        sync.RWMutex 
 
 	lightchain LightChain
 	blockchain BlockChain
 
-	            
-	dropPeer peerDropFn                                
+	dropPeer peerDropFn 
 
-	         
-	synchroniseMock func(id string, hash common.Hash) error                                              
+	synchroniseMock func(id string, hash common.Hash) error 
 	synchronising   int32
 	notified        int32
 	committed       int32
 
-	           
-	headerCh      chan dataPack                                                           
-	bodyCh        chan dataPack                                                          
-	receiptCh     chan dataPack                                                      
-	bodyWakeCh    chan bool                                                                             
-	receiptWakeCh chan bool                                                                          
-	headerProcCh  chan []*types.Header                                                           
+	headerCh      chan dataPack        
+	bodyCh        chan dataPack        
+	receiptCh     chan dataPack        
+	bodyWakeCh    chan bool            
+	receiptWakeCh chan bool            
+	headerProcCh  chan []*types.Header 
 
-	                   
 	stateSyncStart chan *stateSync
 	trackStateReq  chan *stateReq
-	stateCh        chan dataPack                                                      
+	stateCh        chan dataPack 
 
-	                               
-	cancelPeer string                                                                                     
-	cancelCh   chan struct{}                                      
-	cancelLock sync.RWMutex                                                            
+	cancelPeer string        
+	cancelCh   chan struct{} 
+	cancelLock sync.RWMutex  
 
-	quitCh   chan struct{}                                      
-	quitLock sync.RWMutex                                  
+	quitCh   chan struct{} 
+	quitLock sync.RWMutex  
 
-	                
-	syncInitHook     func(uint64, uint64)                                                  
-	bodyFetchHook    func([]*types.Header)                                                   
-	receiptFetchHook func([]*types.Header)                                                
-	chainInsertHook  func([]*fetchResult)                                                                                       
+	syncInitHook     func(uint64, uint64)  
+	bodyFetchHook    func([]*types.Header) 
+	receiptFetchHook func([]*types.Header) 
+	chainInsertHook  func([]*fetchResult)  
 }
 
-                                                                           
 type LightChain interface {
-	                                                             
+
 	HasHeader(common.Hash, uint64) bool
 
-	                                                           
 	GetHeaderByHash(common.Hash) *types.Header
 
-	                                                                
 	CurrentHeader() *types.Header
 
-	                                                       
 	GetTd(common.Hash, uint64) *big.Int
 
-	                                                                     
 	InsertHeaderChain([]*types.Header, int) (int, error)
 
-	                                                                       
 	Rollback([]common.Hash)
 }
 
-                                                                                  
 type BlockChain interface {
 	LightChain
 
-	                                                           
 	HasBlock(common.Hash, uint64) bool
 
-	                                                         
 	GetBlockByHash(common.Hash) *types.Block
 
-	                                                              
 	CurrentBlock() *types.Block
 
-	                                                                       
 	CurrentFastBlock() *types.Block
 
-	                                                                          
 	FastSyncCommitHead(common.Hash) error
 
-	                                                              
 	InsertChain(types.Blocks) (int, error)
 
-	                                                                       
 	InsertReceiptChain(types.Blocks, []types.Receipts) (int, error)
 }
 
-                                                                             
 func New(mode SyncMode, stateDb epvdb.Database, mux *event.TypeMux, chain BlockChain, lightchain LightChain, dropPeer peerDropFn) *Downloader {
 	if lightchain == nil {
 		lightchain = chain
@@ -228,15 +190,8 @@ func New(mode SyncMode, stateDb epvdb.Database, mux *event.TypeMux, chain BlockC
 	return dl
 }
 
-                                                                             
-                                                                                
-                                                                                     
-  
-                                                                                  
-                                                                                 
-                  
 func (d *Downloader) Progress() epvchain.SyncProgress {
-	                                                 
+
 	d.syncStatsLock.RLock()
 	defer d.syncStatsLock.RUnlock()
 
@@ -258,13 +213,10 @@ func (d *Downloader) Progress() epvchain.SyncProgress {
 	}
 }
 
-                                                                               
 func (d *Downloader) Synchronising() bool {
 	return atomic.LoadInt32(&d.synchronising) > 0
 }
 
-                                                                              
-                                            
 func (d *Downloader) RegisterPeer(id string, version int, peer Peer) error {
 	logger := log.New("peer", id)
 	logger.Trace("Registering sync peer")
@@ -277,16 +229,12 @@ func (d *Downloader) RegisterPeer(id string, version int, peer Peer) error {
 	return nil
 }
 
-                                                                                              
 func (d *Downloader) RegisterLightPeer(id string, version int, peer LightPeer) error {
 	return d.RegisterPeer(id, version, &lightPeerWrapper{peer})
 }
 
-                                                                               
-                                                                                
-             
 func (d *Downloader) UnregisterPeer(id string) error {
-	                                                                          
+
 	logger := log.New("peer", id)
 	logger.Trace("Unregistering sync peer")
 	if err := d.peers.Unregister(id); err != nil {
@@ -295,7 +243,6 @@ func (d *Downloader) UnregisterPeer(id string) error {
 	}
 	d.queue.Revoke(id)
 
-	                                                           
 	d.cancelLock.RLock()
 	master := id == d.cancelPeer
 	d.cancelLock.RUnlock()
@@ -306,8 +253,6 @@ func (d *Downloader) UnregisterPeer(id string) error {
 	return nil
 }
 
-                                                                              
-                                                                                
 func (d *Downloader) Synchronise(id string, head common.Hash, td *big.Int, mode SyncMode) error {
 	err := d.synchronise(id, head, td, mode)
 	switch err {
@@ -319,8 +264,7 @@ func (d *Downloader) Synchronise(id string, head common.Hash, td *big.Int, mode 
 		errInvalidAncestor, errInvalidChain:
 		log.Warn("Synchronisation failed, dropping peer", "peer", id, "err", err)
 		if d.dropPeer == nil {
-			                                                                       
-			                                                                                   
+
 			log.Warn("Downloader wants to drop peer, but peerdrop-function is not set", "peer", id)
 		} else {
 			d.dropPeer(id)
@@ -331,25 +275,21 @@ func (d *Downloader) Synchronise(id string, head common.Hash, td *big.Int, mode 
 	return err
 }
 
-                                                                                             
-                                                                                                     
-                                                                    
 func (d *Downloader) synchronise(id string, hash common.Hash, td *big.Int, mode SyncMode) error {
-	                                          
+
 	if d.synchroniseMock != nil {
 		return d.synchroniseMock(id, hash)
 	}
-	                                                                       
+
 	if !atomic.CompareAndSwapInt32(&d.synchronising, 0, 1) {
 		return errBusy
 	}
 	defer atomic.StoreInt32(&d.synchronising, 0)
 
-	                                                               
 	if atomic.CompareAndSwapInt32(&d.notified, 0, 1) {
 		log.Info("Block synchronisation started")
 	}
-	                                                                                   
+
 	d.queue.Reset()
 	d.peers.Reset()
 
@@ -375,18 +315,16 @@ func (d *Downloader) synchronise(id string, hash common.Hash, td *big.Int, mode 
 			empty = true
 		}
 	}
-	                                                                         
+
 	d.cancelLock.Lock()
 	d.cancelCh = make(chan struct{})
 	d.cancelPeer = id
 	d.cancelLock.Unlock()
 
-	defer d.Cancel()                                                          
+	defer d.Cancel() 
 
-	                                                     
 	d.mode = mode
 
-	                                                                
 	p := d.peers.Peer(id)
 	if p == nil {
 		return errUnknownPeer
@@ -394,12 +332,10 @@ func (d *Downloader) synchronise(id string, hash common.Hash, td *big.Int, mode 
 	return d.syncWithPeer(p, hash, td)
 }
 
-                                                                               
-                                
 func (d *Downloader) syncWithPeer(p *peerConnection, hash common.Hash, td *big.Int) (err error) {
 	d.mux.Post(StartEvent{})
 	defer func() {
-		                 
+
 		if err != nil {
 			d.mux.Post(FailedEvent{err})
 		} else {
@@ -415,7 +351,6 @@ func (d *Downloader) syncWithPeer(p *peerConnection, hash common.Hash, td *big.I
 		log.Debug("Synchronisation terminated", "elapsed", time.Since(start))
 	}(time.Now())
 
-	                                                                        
 	latest, err := d.fetchHeight(p)
 	if err != nil {
 		return err
@@ -433,7 +368,6 @@ func (d *Downloader) syncWithPeer(p *peerConnection, hash common.Hash, td *big.I
 	d.syncStatsChainHeight = height
 	d.syncStatsLock.Unlock()
 
-	                                                             
 	pivot := uint64(0)
 	if d.mode == FastSync {
 		if height <= uint64(fsMinFullBlocks) {
@@ -449,16 +383,16 @@ func (d *Downloader) syncWithPeer(p *peerConnection, hash common.Hash, td *big.I
 	if d.mode == FastSync && pivot != 0 {
 		d.committed = 0
 	}
-	                                                                              
+
 	d.queue.Prepare(origin+1, d.mode)
 	if d.syncInitHook != nil {
 		d.syncInitHook(origin, height)
 	}
 
 	fetchers := []func() error{
-		func() error { return d.fetchHeaders(p, origin+1, pivot) },                                
-		func() error { return d.fetchBodies(origin + 1) },                                                             
-		func() error { return d.fetchReceipts(origin + 1) },                                                  
+		func() error { return d.fetchHeaders(p, origin+1, pivot) }, 
+		func() error { return d.fetchBodies(origin + 1) },          
+		func() error { return d.fetchReceipts(origin + 1) },        
 		func() error { return d.processHeaders(origin+1, pivot, td) },
 	}
 	if d.mode == FastSync {
@@ -469,8 +403,6 @@ func (d *Downloader) syncWithPeer(p *peerConnection, hash common.Hash, td *big.I
 	return d.spawnSync(fetchers)
 }
 
-                                                                            
-                                                               
 func (d *Downloader) spawnSync(fetchers []func() error) error {
 	var wg sync.WaitGroup
 	errc := make(chan error, len(fetchers))
@@ -479,13 +411,11 @@ func (d *Downloader) spawnSync(fetchers []func() error) error {
 		fn := fn
 		go func() { defer wg.Done(); errc <- fn() }()
 	}
-	                                                       
+
 	var err error
 	for i := 0; i < len(fetchers); i++ {
 		if i == len(fetchers)-1 {
-			                                                 
-			                                                  
-			                              
+
 			d.queue.Close()
 		}
 		if err = <-errc; err != nil {
@@ -498,15 +428,13 @@ func (d *Downloader) spawnSync(fetchers []func() error) error {
 	return err
 }
 
-                                                                             
-                                         
 func (d *Downloader) Cancel() {
-	                                   
+
 	d.cancelLock.Lock()
 	if d.cancelCh != nil {
 		select {
 		case <-d.cancelCh:
-			                             
+
 		default:
 			close(d.cancelCh)
 		}
@@ -514,10 +442,8 @@ func (d *Downloader) Cancel() {
 	d.cancelLock.Unlock()
 }
 
-                                                                         
-                                                           
 func (d *Downloader) Terminate() {
-	                                                                    
+
 	d.quitLock.Lock()
 	select {
 	case <-d.quitCh:
@@ -526,16 +452,12 @@ func (d *Downloader) Terminate() {
 	}
 	d.quitLock.Unlock()
 
-	                                       
 	d.Cancel()
 }
 
-                                                                                
-                                                       
 func (d *Downloader) fetchHeight(p *peerConnection) (*types.Header, error) {
 	p.log.Debug("Retrieving remote chain height")
 
-	                                                                     
 	head, _ := p.peer.Head()
 	go p.peer.RequestHeadersByHash(head, 1, 0, false)
 
@@ -547,12 +469,12 @@ func (d *Downloader) fetchHeight(p *peerConnection) (*types.Header, error) {
 			return nil, errCancelBlockFetch
 
 		case packet := <-d.headerCh:
-			                                            
+
 			if packet.PeerId() != p.id {
 				log.Debug("Received headers from incorrect peer", "peer", packet.PeerId())
 				break
 			}
-			                                                   
+
 			headers := packet.(*headerPack).headers
 			if len(headers) != 1 {
 				p.log.Debug("Multiple headers for single request", "headers", len(headers))
@@ -568,18 +490,13 @@ func (d *Downloader) fetchHeight(p *peerConnection) (*types.Header, error) {
 
 		case <-d.bodyCh:
 		case <-d.receiptCh:
-			                                 
+
 		}
 	}
 }
 
-                                                                               
-                                                                               
-                                                                                
-                                                                               
-                                                                            
 func (d *Downloader) findAncestor(p *peerConnection, height uint64) (uint64, error) {
-	                                                                 
+
 	floor, ceil := int64(-1), d.lightchain.CurrentHeader().Number.Uint64()
 
 	if d.mode == FullSync {
@@ -592,7 +509,6 @@ func (d *Downloader) findAncestor(p *peerConnection, height uint64) (uint64, err
 	}
 	p.log.Debug("Looking for common ancestor", "local", ceil, "remote", height)
 
-	                                                                     
 	head := ceil
 	if head > height {
 		head = height
@@ -601,7 +517,7 @@ func (d *Downloader) findAncestor(p *peerConnection, height uint64) (uint64, err
 	if from < 0 {
 		from = 0
 	}
-	                                                                        
+
 	limit := 2 * MaxHeaderFetch / 16
 	count := 1 + int((int64(ceil)-from)/16)
 	if count > limit {
@@ -609,7 +525,6 @@ func (d *Downloader) findAncestor(p *peerConnection, height uint64) (uint64, err
 	}
 	go p.peer.RequestHeadersByNumber(uint64(from), count, 15, false)
 
-	                                                 
 	number, hash := uint64(0), common.Hash{}
 
 	ttl := d.requestTTL()
@@ -621,36 +536,35 @@ func (d *Downloader) findAncestor(p *peerConnection, height uint64) (uint64, err
 			return 0, errCancelHeaderFetch
 
 		case packet := <-d.headerCh:
-			                                            
+
 			if packet.PeerId() != p.id {
 				log.Debug("Received headers from incorrect peer", "peer", packet.PeerId())
 				break
 			}
-			                                                   
+
 			headers := packet.(*headerPack).headers
 			if len(headers) == 0 {
 				p.log.Warn("Empty head header set")
 				return 0, errEmptyHeaderSet
 			}
-			                                                     
+
 			for i := 0; i < len(headers); i++ {
 				if number := headers[i].Number.Int64(); number != from+int64(i)*16 {
 					p.log.Warn("Head headers broke chain ordering", "index", i, "requested", from+int64(i)*16, "received", number)
 					return 0, errInvalidChain
 				}
 			}
-			                                       
+
 			finished = true
 			for i := len(headers) - 1; i >= 0; i-- {
-				                                                             
+
 				if headers[i].Number.Int64() < from || headers[i].Number.Uint64() > ceil {
 					continue
 				}
-				                                                       
+
 				if (d.mode == FullSync && d.blockchain.HasBlock(headers[i].Hash(), headers[i].Number.Uint64())) || (d.mode != FullSync && d.lightchain.HasHeader(headers[i].Hash(), headers[i].Number.Uint64())) {
 					number, hash = headers[i].Number.Uint64(), headers[i].Hash()
 
-					                                                                                        
 					if number > height && i == limit-1 {
 						p.log.Warn("Lied about chain head", "reported", height, "found", number)
 						return 0, errStallingPeer
@@ -665,10 +579,10 @@ func (d *Downloader) findAncestor(p *peerConnection, height uint64) (uint64, err
 
 		case <-d.bodyCh:
 		case <-d.receiptCh:
-			                                 
+
 		}
 	}
-	                                                      
+
 	if !common.EmptyHash(hash) {
 		if int64(number) <= floor {
 			p.log.Warn("Ancestor below allowance", "number", number, "hash", hash, "allowance", floor)
@@ -677,13 +591,13 @@ func (d *Downloader) findAncestor(p *peerConnection, height uint64) (uint64, err
 		p.log.Debug("Found common ancestor", "number", number, "hash", hash)
 		return number, nil
 	}
-	                                                              
+
 	start, end := uint64(0), head
 	if floor > 0 {
 		start = uint64(floor)
 	}
 	for start+1 < end {
-		                                                                       
+
 		check := (start + end) / 2
 
 		ttl := d.requestTTL()
@@ -691,19 +605,18 @@ func (d *Downloader) findAncestor(p *peerConnection, height uint64) (uint64, err
 
 		go p.peer.RequestHeadersByNumber(check, 1, 0, false)
 
-		                                             
 		for arrived := false; !arrived; {
 			select {
 			case <-d.cancelCh:
 				return 0, errCancelHeaderFetch
 
 			case packer := <-d.headerCh:
-				                                            
+
 				if packer.PeerId() != p.id {
 					log.Debug("Received headers from incorrect peer", "peer", packer.PeerId())
 					break
 				}
-				                                                   
+
 				headers := packer.(*headerPack).headers
 				if len(headers) != 1 {
 					p.log.Debug("Multiple headers for single request", "headers", len(headers))
@@ -711,12 +624,11 @@ func (d *Downloader) findAncestor(p *peerConnection, height uint64) (uint64, err
 				}
 				arrived = true
 
-				                                                   
 				if (d.mode == FullSync && !d.blockchain.HasBlock(headers[0].Hash(), headers[0].Number.Uint64())) || (d.mode != FullSync && !d.lightchain.HasHeader(headers[0].Hash(), headers[0].Number.Uint64())) {
 					end = check
 					break
 				}
-				header := d.lightchain.GetHeaderByHash(headers[0].Hash())                                                  
+				header := d.lightchain.GetHeaderByHash(headers[0].Hash()) 
 				if header.Number.Uint64() != check {
 					p.log.Debug("Received non requested header", "number", header.Number, "hash", header.Hash(), "request", check)
 					return 0, errBadPeer
@@ -729,11 +641,11 @@ func (d *Downloader) findAncestor(p *peerConnection, height uint64) (uint64, err
 
 			case <-d.bodyCh:
 			case <-d.receiptCh:
-				                                 
+
 			}
 		}
 	}
-	                                   
+
 	if int64(start) <= floor {
 		p.log.Warn("Ancestor below allowance", "number", start, "hash", hash, "allowance", floor)
 		return 0, errInvalidAncestor
@@ -742,23 +654,14 @@ func (d *Downloader) findAncestor(p *peerConnection, height uint64) (uint64, err
 	return start, nil
 }
 
-                                                                     
-                                                                               
-                                                                               
-                                                                               
-                                                                                
-                                                                               
-                                                                                 
-                         
 func (d *Downloader) fetchHeaders(p *peerConnection, from uint64, pivot uint64) error {
 	p.log.Debug("Directing header downloads", "origin", from)
 	defer p.log.Debug("Header download terminated")
 
-	                                                            
-	skeleton := true                                                      
-	request := time.Now()                                                 
-	timeout := time.NewTimer(0)                                              
-	<-timeout.C                                                             
+	skeleton := true            
+	request := time.Now()       
+	timeout := time.NewTimer(0) 
+	<-timeout.C                 
 	defer timeout.Stop()
 
 	var ttl time.Duration
@@ -776,7 +679,7 @@ func (d *Downloader) fetchHeaders(p *peerConnection, from uint64, pivot uint64) 
 			go p.peer.RequestHeadersByNumber(from, MaxHeaderFetch, 0, false)
 		}
 	}
-	                                                            
+
 	getHeaders(from)
 
 	for {
@@ -785,7 +688,7 @@ func (d *Downloader) fetchHeaders(p *peerConnection, from uint64, pivot uint64) 
 			return errCancelHeaderFetch
 
 		case packet := <-d.headerCh:
-			                                                              
+
 			if packet.PeerId() != p.id {
 				log.Debug("Received skeleton from incorrect peer", "peer", packet.PeerId())
 				break
@@ -793,15 +696,14 @@ func (d *Downloader) fetchHeaders(p *peerConnection, from uint64, pivot uint64) 
 			headerReqTimer.UpdateSince(request)
 			timeout.Stop()
 
-			                                                                                       
 			if packet.Items() == 0 && skeleton {
 				skeleton = false
 				getHeaders(from)
 				continue
 			}
-			                                                                         
+
 			if packet.Items() == 0 {
-				                                                            
+
 				if atomic.LoadInt32(&d.committed) == 0 && pivot <= from {
 					p.log.Debug("No headers, waiting for pivot commit")
 					select {
@@ -812,7 +714,7 @@ func (d *Downloader) fetchHeaders(p *peerConnection, from uint64, pivot uint64) 
 						return errCancelHeaderFetch
 					}
 				}
-				                                                                              
+
 				p.log.Debug("No more headers available")
 				select {
 				case d.headerProcCh <- nil:
@@ -823,7 +725,6 @@ func (d *Downloader) fetchHeaders(p *peerConnection, from uint64, pivot uint64) 
 			}
 			headers := packet.(*headerPack).headers
 
-			                                                                  
 			if skeleton {
 				filled, proced, err := d.fillHeaderSkeleton(from, headers)
 				if err != nil {
@@ -833,7 +734,7 @@ func (d *Downloader) fetchHeaders(p *peerConnection, from uint64, pivot uint64) 
 				headers = filled[proced:]
 				from += uint64(proced)
 			}
-			                                                      
+
 			if len(headers) > 0 {
 				p.log.Trace("Scheduling new headers", "count", len(headers), "from", from)
 				select {
@@ -847,17 +748,15 @@ func (d *Downloader) fetchHeaders(p *peerConnection, from uint64, pivot uint64) 
 
 		case <-timeout.C:
 			if d.dropPeer == nil {
-				                                                                       
-				                                                                                   
+
 				p.log.Warn("Downloader wants to drop peer, but peerdrop-function is not set", "peer", p.id)
 				break
 			}
-			                                                             
+
 			p.log.Debug("Header request timed out", "elapsed", ttl)
 			headerTimeoutMeter.Mark(1)
 			d.dropPeer(p.id)
 
-			                                                                         
 			for _, ch := range []chan bool{d.bodyWakeCh, d.receiptWakeCh} {
 				select {
 				case ch <- false:
@@ -873,15 +772,6 @@ func (d *Downloader) fetchHeaders(p *peerConnection, from uint64, pivot uint64) 
 	}
 }
 
-                                                                                 
-                                                       
-  
-                                                                                    
-                                                                                 
-                                
-  
-                                                                              
-                                    
 func (d *Downloader) fillHeaderSkeleton(from uint64, skeleton []*types.Header) ([]*types.Header, int, error) {
 	log.Debug("Filling up skeleton", "from", from)
 	d.queue.ScheduleSkeleton(from, skeleton)
@@ -910,9 +800,6 @@ func (d *Downloader) fillHeaderSkeleton(from uint64, skeleton []*types.Header) (
 	return filled, proced, err
 }
 
-                                                                           
-                                                                              
-                                               
 func (d *Downloader) fetchBodies(from uint64) error {
 	log.Debug("Downloading block bodies", "origin", from)
 
@@ -934,9 +821,6 @@ func (d *Downloader) fetchBodies(from uint64) error {
 	return err
 }
 
-                                                                               
-                                                                                
-                                               
 func (d *Downloader) fetchReceipts(from uint64) error {
 	log.Debug("Downloading transaction receipts", "origin", from)
 
@@ -958,43 +842,16 @@ func (d *Downloader) fetchReceipts(from uint64) error {
 	return err
 }
 
-                                                                               
-                                                                                
-                                           
-  
-                                                                             
-                                                                                 
-                                                                              
-  
-                                  
-                                                                                                        
-                                                                                                            
-                                                                                                                          
-                                                                                                               
-                                                                                                                          
-                                                                                                                         
-                                                                                                                 
-                                                                                                                    
-                                                                                                                      
-                                                                                                               
-                                                                                                            
-                                                                                                                        
-                                                                                                                          
-                                                                                                                   
-                                                                                                                  
-                                                                                       
 func (d *Downloader) fetchParts(errCancel error, deliveryCh chan dataPack, deliver func(dataPack) (int, error), wakeCh chan bool,
 	expire func() map[string]int, pending func() int, inFlight func() bool, throttle func() bool, reserve func(*peerConnection, int) (*fetchRequest, bool, error),
 	fetchHook func([]*types.Header), fetch func(*peerConnection, *fetchRequest) error, cancel func(*fetchRequest), capacity func(*peerConnection) int,
 	idle func() ([]*peerConnection, int), setIdle func(*peerConnection, int), kind string) error {
 
-	                                                    
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
 	update := make(chan struct{}, 1)
 
-	                                                                                
 	finished := false
 	for {
 		select {
@@ -1002,21 +859,18 @@ func (d *Downloader) fetchParts(errCancel error, deliveryCh chan dataPack, deliv
 			return errCancel
 
 		case packet := <-deliveryCh:
-			                                                                   
-			                                                  
+
 			if peer := d.peers.Peer(packet.PeerId()); peer != nil {
-				                                                              
+
 				accepted, err := deliver(packet)
 				if err == errInvalidChain {
 					return err
 				}
-				                                                                            
-				                                                                          
-				                                                                          
+
 				if err != errStaleDelivery {
 					setIdle(peer, accepted)
 				}
-				                                                 
+
 				switch {
 				case err == nil && packet.Items() == 0:
 					peer.log.Trace("Requested data not delivered", "type", kind)
@@ -1026,53 +880,46 @@ func (d *Downloader) fetchParts(errCancel error, deliveryCh chan dataPack, deliv
 					peer.log.Trace("Failed to deliver retrieved data", "type", kind, "err", err)
 				}
 			}
-			                                               
+
 			select {
 			case update <- struct{}{}:
 			default:
 			}
 
 		case cont := <-wakeCh:
-			                                                                  
+
 			if !cont {
 				finished = true
 			}
-			                                             
+
 			select {
 			case update <- struct{}{}:
 			default:
 			}
 
 		case <-ticker.C:
-			                                   
+
 			select {
 			case update <- struct{}{}:
 			default:
 			}
 
 		case <-update:
-			                                         
+
 			if d.peers.Len() == 0 {
 				return errNoPeers
 			}
-			                                                                    
+
 			for pid, fails := range expire() {
 				if peer := d.peers.Peer(pid); peer != nil {
-					                                                                                                 
-					                                                                                                 
-					                                                     
-					  
-					                                                                                                  
-					                                                                                                  
-					                                                                                           
+
 					if fails > 2 {
 						peer.log.Trace("Data delivery timed out", "type", kind)
 						setIdle(peer, 0)
 					} else {
 						peer.log.Debug("Stalling delivery, dropping", "type", kind)
 						if d.dropPeer == nil {
-							                                                                       
-							                                                                                   
+
 							peer.log.Warn("Downloader wants to drop peer, but peerdrop-function is not set", "peer", pid)
 						} else {
 							d.dropPeer(pid)
@@ -1080,7 +927,7 @@ func (d *Downloader) fetchParts(errCancel error, deliveryCh chan dataPack, deliv
 					}
 				}
 			}
-			                                                      
+
 			if pending() == 0 {
 				if !inFlight() && finished {
 					log.Debug("Data fetching completed", "type", kind)
@@ -1088,23 +935,21 @@ func (d *Downloader) fetchParts(errCancel error, deliveryCh chan dataPack, deliv
 				}
 				break
 			}
-			                                                             
+
 			progressed, throttled, running := false, false, inFlight()
 			idles, total := idle()
 
 			for _, peer := range idles {
-				                                        
+
 				if throttle() {
 					throttled = true
 					break
 				}
-				                                                    
+
 				if pending() == 0 {
 					break
 				}
-				                                                                    
-				                                                                  
-				             
+
 				request, progress, err := reserve(peer, capacity(peer))
 				if err != nil {
 					return err
@@ -1120,22 +965,17 @@ func (d *Downloader) fetchParts(errCancel error, deliveryCh chan dataPack, deliv
 				} else {
 					peer.log.Trace("Requesting new batch of data", "type", kind, "count", len(request.Headers), "from", request.Headers[0].Number)
 				}
-				                                                                          
+
 				if fetchHook != nil {
 					fetchHook(request.Headers)
 				}
 				if err := fetch(peer, request); err != nil {
-					                                                                           
-					                                                                           
-					                                                                            
-					                                                                             
-					                       
+
 					panic(fmt.Sprintf("%v: %s fetch assignment failed", peer, kind))
 				}
 				running = true
 			}
-			                                                                                    
-			                                
+
 			if !progressed && !throttled && !running && len(idles) == total && pending() > 0 {
 				return errPeersUnavailable
 			}
@@ -1143,15 +983,12 @@ func (d *Downloader) fetchParts(errCancel error, deliveryCh chan dataPack, deliv
 	}
 }
 
-                                                                              
-                                                                              
-                                                   
 func (d *Downloader) processHeaders(origin uint64, pivot uint64, td *big.Int) error {
-	                                                 
+
 	rollback := []*types.Header{}
 	defer func() {
 		if len(rollback) > 0 {
-			                                         
+
 			hashes := make([]common.Hash, len(rollback))
 			for i, header := range rollback {
 				hashes[i] = header.Hash()
@@ -1174,7 +1011,6 @@ func (d *Downloader) processHeaders(origin uint64, pivot uint64, td *big.Int) er
 		}
 	}()
 
-	                                         
 	gotHeaders := false
 
 	for {
@@ -1183,98 +1019,80 @@ func (d *Downloader) processHeaders(origin uint64, pivot uint64, td *big.Int) er
 			return errCancelHeaderProcessing
 
 		case headers := <-d.headerProcCh:
-			                                              
+
 			if len(headers) == 0 {
-				                                                   
+
 				for _, ch := range []chan bool{d.bodyWakeCh, d.receiptWakeCh} {
 					select {
 					case ch <- false:
 					case <-d.cancelCh:
 					}
 			  }
-				                                                                                      
-				                                                                                   
-				                                                 
-				  
-				                                                    
-				                                          
-				                               
-				                                                                        
-				                                 
-				                                                  
-				                                                                                
-				                     
+
 				if d.mode != LightSync {
 					head := d.blockchain.CurrentBlock()
 					if !gotHeaders && td.Cmp(d.blockchain.GetTd(head.Hash(), head.NumberU64())) > 0 {
 						return errStallingPeer
 					}
 				}
-				                                                                                  
-				                                                                                    
-				                                                                           
-				  
-				                                                                                    
-				                                                                                    
-				                                                                               
+
 				if d.mode == FastSync || d.mode == LightSync {
 					head := d.lightchain.CurrentHeader()
 					if td.Cmp(d.lightchain.GetTd(head.Hash(), head.Number.Uint64())) > 0 {
 						return errStallingPeer
 					}
 				}
-				                                  
+
 				rollback = nil
 				return nil
 			}
-			                                                                     
+
 			gotHeaders = true
 
 			for len(headers) > 0 {
-				                                                             
+
 				select {
 				case <-d.cancelCh:
 					return errCancelHeaderProcessing
 				default:
 				}
-				                                             
+
 				limit := maxHeadersProcess
 				if limit > len(headers) {
 					limit = len(headers)
 				}
 				chunk := headers[:limit]
 
-				                                                                 
 				if d.mode == FastSync || d.mode == LightSync {
-					                                                            
+
 					unknown := make([]*types.Header, 0, len(headers))
 					for _, header := range chunk {
 						if !d.lightchain.HasHeader(header.Hash(), header.Number.Uint64()) {
 							unknown = append(unknown, header)
 						}
 					}
-					                                                                    
+
 					frequency := fsHeaderCheckFrequency
 					if chunk[len(chunk)-1].Number.Uint64()+uint64(fsHeaderForceVerify) > pivot {
 						frequency = 1
 					}
 					if n, err := d.lightchain.InsertHeaderChain(chunk, frequency); err != nil {
-						                                                                   
+
 						if n > 0 {
 							rollback = append(rollback, chunk[:n]...)
 						}
 						log.Debug("Invalid header encountered", "number", chunk[n].Number, "hash", chunk[n].Hash(), "err", err)
 						return errInvalidChain
 					}
-					                                                                
+
 					rollback = append(rollback, unknown...)
 					if len(rollback) > fsHeaderSafetyNet {
 						rollback = append(rollback[:0], rollback[len(rollback)-fsHeaderSafetyNet:]...)
 					}
 				}
-				                                                                                         
+
 				if d.mode == FullSync || d.mode == FastSync {
-					                                                                      
+
 					for d.queue.PendingBlocks() >= maxQueuedHeaders || d.queue.PendingReceipts() >= maxQueuedHeaders {
 						select {
 						case <-d.cancelCh:
@@ -1282,7 +1100,7 @@ func (d *Downloader) processHeaders(origin uint64, pivot uint64, td *big.Int) er
 						case <-time.After(time.Second):
 						}
 					}
-					                                                     
+
 					inserts := d.queue.Schedule(chunk, origin)
 					if len(inserts) != len(chunk) {
 						log.Debug("Stale headers")
@@ -1292,7 +1110,7 @@ func (d *Downloader) processHeaders(origin uint64, pivot uint64, td *big.Int) er
 				headers = headers[limit:]
 				origin += uint64(limit)
 			}
-			                                                                   
+
 			for _, ch := range []chan bool{d.bodyWakeCh, d.receiptWakeCh} {
 				select {
 				case ch <- true:
@@ -1303,7 +1121,6 @@ func (d *Downloader) processHeaders(origin uint64, pivot uint64, td *big.Int) er
 	}
 }
 
-                                                                                             
 func (d *Downloader) processFullSyncContent() error {
 	for {
 		results := d.queue.Results(true)
@@ -1320,7 +1137,7 @@ func (d *Downloader) processFullSyncContent() error {
 }
 
 func (d *Downloader) importBlockResults(results []*fetchResult) error {
-	                                           
+
 	if len(results) == 0 {
 		return nil
 	}
@@ -1329,7 +1146,7 @@ func (d *Downloader) importBlockResults(results []*fetchResult) error {
 		return errCancelContentProcessing
 	default:
 	}
-	                                            
+
 	first, last := results[0].Header, results[len(results)-1].Header
 	log.Debug("Inserting downloaded chain", "items", len(results),
 		"firstnum", first.Number, "firsthash", first.Hash(),
@@ -1346,40 +1163,34 @@ func (d *Downloader) importBlockResults(results []*fetchResult) error {
 	return nil
 }
 
-                                                                                   
-                                                                                    
 func (d *Downloader) processFastSyncContent(latest *types.Header) error {
-	                                                                             
-	                                
+
 	stateSync := d.syncState(latest.Root)
 	defer stateSync.Cancel()
 	go func() {
 		if err := stateSync.Wait(); err != nil && err != errCancelStateFetch {
-			d.queue.Close()                       
+			d.queue.Close() 
 		}
 	}()
-	                                                                             
-	                                                                   
+
 	pivot := uint64(0)
 	if height := latest.Number.Uint64(); height > uint64(fsMinFullBlocks) {
 		pivot = height - uint64(fsMinFullBlocks)
 	}
-	                                                                           
-	                                          
+
 	var (
-		oldPivot *fetchResult                                                    
-		oldTail  []*fetchResult                                      
+		oldPivot *fetchResult   
+		oldTail  []*fetchResult 
 	)
 	for {
-		                                                                               
-		                                        
-		results := d.queue.Results(oldPivot == nil)                                                 
+
+		results := d.queue.Results(oldPivot == nil) 
 		if len(results) == 0 {
-			                              
+
 			if oldPivot == nil {
 				return stateSync.Cancel()
 			}
-			                       
+
 			select {
 			case <-d.cancelCh:
 				return stateSync.Cancel()
@@ -1392,7 +1203,7 @@ func (d *Downloader) processFastSyncContent(latest *types.Header) error {
 		if oldPivot != nil {
 			results = append(append([]*fetchResult{oldPivot}, oldTail...), results...)
 		}
-		                                                                            
+
 		if atomic.LoadInt32(&d.committed) == 0 {
 			latest = results[len(results)-1].Header
 			if height := latest.Number.Uint64(); height > pivot+2*uint64(fsMinFullBlocks) {
@@ -1405,7 +1216,7 @@ func (d *Downloader) processFastSyncContent(latest *types.Header) error {
 			return err
 		}
 		if P != nil {
-			                                                                   
+
 			if oldPivot != P {
 				stateSync.Cancel()
 
@@ -1413,12 +1224,12 @@ func (d *Downloader) processFastSyncContent(latest *types.Header) error {
 				defer stateSync.Cancel()
 				go func() {
 					if err := stateSync.Wait(); err != nil && err != errCancelStateFetch {
-						d.queue.Close()                       
+						d.queue.Close() 
 					}
 				}()
 				oldPivot = P
 			}
-			                                                                 
+
 			select {
 			case <-stateSync.done:
 				if stateSync.err != nil {
@@ -1434,7 +1245,7 @@ func (d *Downloader) processFastSyncContent(latest *types.Header) error {
 				continue
 			}
 		}
-		                                                 
+
 		if err := d.importBlockResults(afterP); err != nil {
 			return err
 		}
@@ -1457,7 +1268,7 @@ func splitAroundPivot(pivot uint64, results []*fetchResult) (p *fetchResult, bef
 }
 
 func (d *Downloader) commitFastSyncData(results []*fetchResult, stateSync *stateSync) error {
-	                                           
+
 	if len(results) == 0 {
 		return nil
 	}
@@ -1470,7 +1281,7 @@ func (d *Downloader) commitFastSyncData(results []*fetchResult, stateSync *state
 		}
 	default:
 	}
-	                                            
+
 	first, last := results[0].Header, results[len(results)-1].Header
 	log.Debug("Inserting fast-sync blocks", "items", len(results),
 		"firstnum", first.Number, "firsthash", first.Hash(),
@@ -1502,37 +1313,31 @@ func (d *Downloader) commitPivotBlock(result *fetchResult) error {
 	return nil
 }
 
-                                                                             
-                                   
 func (d *Downloader) DeliverHeaders(id string, headers []*types.Header) (err error) {
 	return d.deliver(id, d.headerCh, &headerPack{id, headers}, headerInMeter, headerDropMeter)
 }
 
-                                                                                 
 func (d *Downloader) DeliverBodies(id string, transactions [][]*types.Transaction, uncles [][]*types.Header) (err error) {
 	return d.deliver(id, d.bodyCh, &bodyPack{id, transactions, uncles}, bodyInMeter, bodyDropMeter)
 }
 
-                                                                               
 func (d *Downloader) DeliverReceipts(id string, receipts [][]*types.Receipt) (err error) {
 	return d.deliver(id, d.receiptCh, &receiptPack{id, receipts}, receiptInMeter, receiptDropMeter)
 }
 
-                                                                                      
 func (d *Downloader) DeliverNodeData(id string, data [][]byte) (err error) {
 	return d.deliver(id, d.stateCh, &statePack{id, data}, stateInMeter, stateDropMeter)
 }
 
-                                                                   
 func (d *Downloader) deliver(id string, destCh chan dataPack, packet dataPack, inMeter, dropMeter metrics.Meter) (err error) {
-	                                                                  
+
 	inMeter.Mark(int64(packet.Items()))
 	defer func() {
 		if err != nil {
 			dropMeter.Mark(int64(packet.Items()))
 		}
 	}()
-	                                                         
+
 	d.cancelLock.RLock()
 	cancel := d.cancelCh
 	d.cancelLock.RUnlock()
@@ -1547,20 +1352,16 @@ func (d *Downloader) deliver(id string, destCh chan dataPack, packet dataPack, i
 	}
 }
 
-                                                                               
-                                                                             
 func (d *Downloader) qosTuner() {
 	for {
-		                                                                              
+
 		rtt := time.Duration((1-qosTuningImpact)*float64(atomic.LoadUint64(&d.rttEstimate)) + qosTuningImpact*float64(d.peers.medianRTT()))
 		atomic.StoreUint64(&d.rttEstimate, uint64(rtt))
 
-		                                                                       
 		conf := atomic.LoadUint64(&d.rttConfidence)
 		conf = conf + (1000000-conf)/2
 		atomic.StoreUint64(&d.rttConfidence, conf)
 
-		                                                      
 		log.Debug("Recalculated downloader QoS values", "rtt", rtt, "confidence", float64(conf)/1000000.0, "ttl", d.requestTTL())
 		select {
 		case <-d.quitCh:
@@ -1570,24 +1371,22 @@ func (d *Downloader) qosTuner() {
 	}
 }
 
-                                                                                   
-                                                                           
 func (d *Downloader) qosReduceConfidence() {
-	                                                   
+
 	peers := uint64(d.peers.Len())
 	if peers == 0 {
-		                                                          
+
 		return
 	}
 	if peers == 1 {
 		atomic.StoreUint64(&d.rttConfidence, 1000000)
 		return
 	}
-	                                                    
+
 	if peers >= uint64(qosConfidenceCap) {
 		return
 	}
-	                                       
+
 	conf := atomic.LoadUint64(&d.rttConfidence) * (peers - 1) / peers
 	if float64(conf)/1000000 < rttMinConfidence {
 		conf = uint64(rttMinConfidence * 1000000)
@@ -1598,18 +1397,10 @@ func (d *Downloader) qosReduceConfidence() {
 	log.Debug("Relaxed downloader QoS values", "rtt", rtt, "confidence", float64(conf)/1000000.0, "ttl", d.requestTTL())
 }
 
-                                                                               
-                  
-  
-                                                                                 
-                                                                               
-                                                                           
 func (d *Downloader) requestRTT() time.Duration {
 	return time.Duration(atomic.LoadUint64(&d.rttEstimate)) * 9 / 10
 }
 
-                                                                                 
-                   
 func (d *Downloader) requestTTL() time.Duration {
 	var (
 		rtt  = time.Duration(atomic.LoadUint64(&d.rttEstimate))

@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package p2p
 
@@ -42,7 +27,7 @@ const (
 )
 
 const (
-	                       
+
 	handshakeMsg = 0x00
 	discMsg      = 0x01
 	pingMsg      = 0x02
@@ -51,7 +36,6 @@ const (
 	peersMsg     = 0x05
 )
 
-                                                                 
 type protoHandshake struct {
 	Version    uint64
 	Name       string
@@ -59,33 +43,22 @@ type protoHandshake struct {
 	ListenPort uint64
 	ID         discover.NodeID
 
-	                                                        
 	Rest []rlp.RawValue `rlp:"tail"`
 }
 
-                                                                   
 type PeerEventType string
 
 const (
-	                                                                     
-	                  
+
 	PeerEventTypeAdd PeerEventType = "add"
 
-	                                                                
-	                            
 	PeerEventTypeDrop PeerEventType = "drop"
 
-	                                                           
-	                                         
 	PeerEventTypeMsgSend PeerEventType = "msgsend"
 
-	                                                           
-	                                  
 	PeerEventTypeMsgRecv PeerEventType = "msgrecv"
 )
 
-                                                                            
-                                                                          
 type PeerEvent struct {
 	Type     PeerEventType   `json:"type"`
 	Peer     discover.NodeID `json:"peer"`
@@ -95,7 +68,6 @@ type PeerEvent struct {
 	MsgSize  *uint32         `json:"msg_size,omitempty"`
 }
 
-                                           
 type Peer struct {
 	rw      *conn
 	running map[string]*protoRW
@@ -107,47 +79,38 @@ type Peer struct {
 	closed   chan struct{}
 	disc     chan DiscReason
 
-	                                                       
 	events *event.Feed
 }
 
-                                               
 func NewPeer(id discover.NodeID, name string, caps []Cap) *Peer {
 	pipe, _ := net.Pipe()
 	conn := &conn{fd: pipe, transport: nil, id: id, caps: caps, name: name}
 	peer := newPeer(conn, nil)
-	close(peer.closed)                                    
+	close(peer.closed) 
 	return peer
 }
 
-                                    
 func (p *Peer) ID() discover.NodeID {
 	return p.rw.id
 }
 
-                                                              
 func (p *Peer) Name() string {
 	return p.rw.name
 }
 
-                                                                             
 func (p *Peer) Caps() []Cap {
-	                          
+
 	return p.rw.caps
 }
 
-                                                                   
 func (p *Peer) RemoteAddr() net.Addr {
 	return p.rw.fd.RemoteAddr()
 }
 
-                                                                 
 func (p *Peer) LocalAddr() net.Addr {
 	return p.rw.fd.LocalAddr()
 }
 
-                                                                   
-                                                                           
 func (p *Peer) Disconnect(reason DiscReason) {
 	select {
 	case p.disc <- reason:
@@ -155,12 +118,10 @@ func (p *Peer) Disconnect(reason DiscReason) {
 	}
 }
 
-                                  
 func (p *Peer) String() string {
 	return fmt.Sprintf("Peer %x %v", p.rw.id[:8], p.RemoteAddr())
 }
 
-                                                            
 func (p *Peer) Inbound() bool {
 	return p.rw.flags&inboundConn != 0
 }
@@ -172,7 +133,7 @@ func newPeer(conn *conn, protocols []Protocol) *Peer {
 		running:  protomap,
 		created:  mclock.Now(),
 		disc:     make(chan DiscReason),
-		protoErr: make(chan error, len(protomap)+1),                        
+		protoErr: make(chan error, len(protomap)+1), 
 		closed:   make(chan struct{}),
 		log:      log.New("id", conn.id, "conn", conn.flags),
 	}
@@ -188,23 +149,20 @@ func (p *Peer) run() (remoteRequested bool, err error) {
 		writeStart = make(chan struct{}, 1)
 		writeErr   = make(chan error, 1)
 		readErr    = make(chan error, 1)
-		reason     DiscReason                    
+		reason     DiscReason 
 	)
 	p.wg.Add(2)
 	go p.readLoop(readErr)
 	go p.pingLoop()
 
-	                               
 	writeStart <- struct{}{}
 	p.startProtocols(writeStart, writeErr)
 
-	                                   
 loop:
 	for {
 		select {
 		case err = <-writeErr:
-			                                                     
-			                      
+
 			if err != nil {
 				reason = DiscNetworkError
 				break loop
@@ -273,15 +231,14 @@ func (p *Peer) handle(msg Msg) error {
 		go SendItems(p.rw, pongMsg)
 	case msg.Code == discMsg:
 		var reason [1]DiscReason
-		                                                        
-		                                                                
+
 		rlp.Decode(msg.Payload, &reason)
 		return reason[0]
 	case msg.Code < baseProtocolLength:
-		                                      
+
 		return msg.Discard()
 	default:
-		                             
+
 		proto, err := p.getProto(msg.Code)
 		if err != nil {
 			return fmt.Errorf("msg code out of range: %v", msg.Code)
@@ -308,7 +265,6 @@ func countMatchingProtocols(protocols []Protocol, caps []Cap) int {
 	return n
 }
 
-                                                                     
 func matchProtocols(protocols []Protocol, caps []Cap, rw MsgReadWriter) map[string]*protoRW {
 	sort.Sort(capsByNameAndVersion(caps))
 	offset := baseProtocolLength
@@ -318,11 +274,11 @@ outer:
 	for _, cap := range caps {
 		for _, proto := range protocols {
 			if proto.Name == cap.Name && proto.Version == cap.Version {
-				                                                
+
 				if old := result[cap.Name]; old != nil {
 					offset -= old.Length
 				}
-				                       
+
 				result[cap.Name] = &protoRW{Protocol: proto, offset: offset, in: make(chan Msg), w: rw}
 				offset += proto.Length
 
@@ -359,8 +315,6 @@ func (p *Peer) startProtocols(writeStart <-chan struct{}, writeErr chan<- error)
 	}
 }
 
-                                                       
-                          
 func (p *Peer) getProto(code uint64) (*protoRW, error) {
 	for _, proto := range p.running {
 		if code >= proto.offset && code < proto.offset+proto.Length {
@@ -372,10 +326,10 @@ func (p *Peer) getProto(code uint64) (*protoRW, error) {
 
 type protoRW struct {
 	Protocol
-	in     chan Msg                                 
-	closed <-chan struct{}                                       
-	wstart <-chan struct{}                                 
-	werr   chan<- error                        
+	in     chan Msg        
+	closed <-chan struct{} 
+	wstart <-chan struct{} 
+	werr   chan<- error    
 	offset uint64
 	w      MsgWriter
 }
@@ -388,10 +342,7 @@ func (rw *protoRW) WriteMsg(msg Msg) (err error) {
 	select {
 	case <-rw.wstart:
 		err = rw.w.WriteMsg(msg)
-		                                                         
-		                                                              
-		                                                              
-		                                             
+
 		rw.werr <- err
 	case <-rw.closed:
 		err = fmt.Errorf("shutting down")
@@ -409,31 +360,27 @@ func (rw *protoRW) ReadMsg() (Msg, error) {
 	}
 }
 
-                                                                                 
-                                                                                 
-                                                               
 type PeerInfo struct {
-	ID      string   `json:"id"`                                                      
-	Name    string   `json:"name"`                                                                     
-	Caps    []string `json:"caps"`                                                    
+	ID      string   `json:"id"`   
+	Name    string   `json:"name"` 
+	Caps    []string `json:"caps"` 
 	Network struct {
-		LocalAddress  string `json:"localAddress"`                                              
-		RemoteAddress string `json:"remoteAddress"`                                              
+		LocalAddress  string `json:"localAddress"`  
+		RemoteAddress string `json:"remoteAddress"` 
 		Inbound       bool   `json:"inbound"`
 		Trusted       bool   `json:"trusted"`
 		Static        bool   `json:"static"`
 	} `json:"network"`
-	Protocols map[string]interface{} `json:"protocols"`                                         
+	Protocols map[string]interface{} `json:"protocols"` 
 }
 
-                                                                        
 func (p *Peer) Info() *PeerInfo {
-	                                   
+
 	var caps []string
 	for _, cap := range p.Caps() {
 		caps = append(caps, cap.String())
 	}
-	                                     
+
 	info := &PeerInfo{
 		ID:        p.ID().String(),
 		Name:      p.Name(),
@@ -446,7 +393,6 @@ func (p *Peer) Info() *PeerInfo {
 	info.Network.Trusted = p.rw.is(trustedConn)
 	info.Network.Static = p.rw.is(staticDialedConn)
 
-	                                        
 	for _, proto := range p.running {
 		protoInfo := interface{}("unknown")
 		if query := proto.Protocol.PeerInfo; query != nil {

@@ -1,25 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                                  
-  
-                                                                      
-                                                                      
-                                                                 
-         
 package discv5
 
 import (
@@ -33,24 +12,22 @@ import (
 )
 
 const (
-	alpha      = 3                                
-	bucketSize = 16                        
+	alpha      = 3  
+	bucketSize = 16 
 	hashBits   = len(common.Hash{}) * 8
-	nBuckets   = hashBits + 1                     
+	nBuckets   = hashBits + 1 
 
 	maxBondingPingPongs = 16
 	maxFindnodeFailures = 5
 )
 
 type Table struct {
-	count         int                                 
-	buckets       [nBuckets]*bucket                                    
-	nodeAddedHook func(*Node)                     
-	self          *Node                                          
+	count         int               
+	buckets       [nBuckets]*bucket 
+	nodeAddedHook func(*Node)       
+	self          *Node             
 }
 
-                                                                   
-                                                                 
 type bucket struct {
 	entries      []*Node
 	replacements []*Node
@@ -67,16 +44,6 @@ func newTable(ourID NodeID, ourAddr *net.UDPAddr) *Table {
 
 const printTable = false
 
-                                                                                
-                                                                              
-                                                                                
-                                          
-  
-                                                                                 
-                                                                                 
-                                                                
-                                                                                  
-                
 func (tab *Table) chooseBucketRefreshTarget() common.Hash {
 	entries := 0
 	if printTable {
@@ -115,12 +82,8 @@ func (tab *Table) chooseBucketRefreshTarget() common.Hash {
 	return target
 }
 
-                                                                   
-                                                                      
-                                                          
 func (tab *Table) readRandomNodes(buf []*Node) (n int) {
-	                                           
-	                                                                     
+
 	var buckets [][]*Node
 	for _, b := range tab.buckets {
 		if len(b.entries) > 0 {
@@ -130,12 +93,12 @@ func (tab *Table) readRandomNodes(buf []*Node) (n int) {
 	if len(buckets) == 0 {
 		return 0
 	}
-	                       
+
 	for i := uint32(len(buckets)) - 1; i > 0; i-- {
 		j := randUint(i)
 		buckets[i], buckets[j] = buckets[j], buckets[i]
 	}
-	                                                                         
+
 	var i, j int
 	for ; i < len(buf); i, j = i+1, (j+1)%len(buckets) {
 		b := buckets[j]
@@ -169,12 +132,8 @@ func randUint64n(max uint64) uint64 {
 	return binary.BigEndian.Uint64(b[:]) % max
 }
 
-                                                                   
-                                            
 func (tab *Table) closest(target common.Hash, nresults int) *nodesByDistance {
-	                                                            
-	                                                                  
-	                                        
+
 	close := &nodesByDistance{target: target}
 	for _, b := range tab.buckets {
 		for _, n := range b.entries {
@@ -184,21 +143,18 @@ func (tab *Table) closest(target common.Hash, nresults int) *nodesByDistance {
 	return close
 }
 
-                                                                      
-                                                                    
-                                                                        
 func (tab *Table) add(n *Node) (contested *Node) {
-	                                                                   
+
 	if n.ID == tab.self.ID {
 		return
 	}
 	b := tab.buckets[logdist(tab.self.sha, n.sha)]
 	switch {
 	case b.bump(n):
-		                 
+
 		return nil
 	case len(b.entries) < bucketSize:
-		                         
+
 		b.addFront(n)
 		tab.count++
 		if tab.nodeAddedHook != nil {
@@ -206,9 +162,7 @@ func (tab *Table) add(n *Node) (contested *Node) {
 		}
 		return nil
 	default:
-		                                                
-		                                 
-		                           
+
 		b.replacements = append(b.replacements, n)
 		if len(b.replacements) > bucketSize {
 			copy(b.replacements, b.replacements[1:])
@@ -218,18 +172,16 @@ func (tab *Table) add(n *Node) (contested *Node) {
 	}
 }
 
-                                                                      
-                             
 func (tab *Table) stuff(nodes []*Node) {
 outer:
 	for _, n := range nodes {
 		if n.ID == tab.self.ID {
-			continue                  
+			continue 
 		}
 		bucket := tab.buckets[logdist(tab.self.sha, n.sha)]
 		for i := range bucket.entries {
 			if bucket.entries[i].ID == n.ID {
-				continue outer                     
+				continue outer 
 			}
 		}
 		if len(bucket.entries) < bucketSize {
@@ -242,10 +194,8 @@ outer:
 	}
 }
 
-                                                                
-                                      
 func (tab *Table) delete(node *Node) {
-	                                                                               
+
 	bucket := tab.buckets[logdist(tab.self.sha, node.sha)]
 	for i := range bucket.entries {
 		if bucket.entries[i].ID == node.ID {
@@ -267,8 +217,7 @@ func (tab *Table) deleteReplace(node *Node) {
 			i++
 		}
 	}
-	                                
-	                               
+
 	if len(b.entries) < bucketSize && len(b.replacements) > 0 {
 		ri := len(b.replacements) - 1
 		b.addFront(b.replacements[ri])
@@ -287,7 +236,7 @@ func (b *bucket) addFront(n *Node) {
 func (b *bucket) bump(n *Node) bool {
 	for i := range b.entries {
 		if b.entries[i].ID == n.ID {
-			                       
+
 			copy(b.entries[1:], b.entries[:i])
 			b.entries[0] = n
 			return true
@@ -296,14 +245,11 @@ func (b *bucket) bump(n *Node) bool {
 	return false
 }
 
-                                                 
-                      
 type nodesByDistance struct {
 	entries []*Node
 	target  common.Hash
 }
 
-                                                                               
 func (h *nodesByDistance) push(n *Node, maxElems int) {
 	ix := sort.Search(len(h.entries), func(i int) bool {
 		return distcmp(h.target, h.entries[i].sha, n.sha) > 0
@@ -312,11 +258,9 @@ func (h *nodesByDistance) push(n *Node, maxElems int) {
 		h.entries = append(h.entries, n)
 	}
 	if ix == len(h.entries) {
-		                                               
-		                                                              
+
 	} else {
-		                                           
-		                                                  
+
 		copy(h.entries[ix+1:], h.entries[ix:])
 		h.entries[ix] = n
 	}

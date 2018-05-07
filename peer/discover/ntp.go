@@ -1,21 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
-
-                                                               
-                                        
 
 package discover
 
@@ -29,20 +11,16 @@ import (
 )
 
 const (
-	ntpPool   = "pool.ntp.org"                                                           
-	ntpChecks = 3                                                                    
+	ntpPool   = "pool.ntp.org" 
+	ntpChecks = 3              
 )
 
-                                                                           
-                               
 type durationSlice []time.Duration
 
 func (s durationSlice) Len() int           { return len(s) }
 func (s durationSlice) Less(i, j int) bool { return s[i] < s[j] }
 func (s durationSlice) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 
-                                                                               
-                                
 func checkClockDrift() {
 	drift, err := sntpDrift(ntpChecks)
 	if err != nil {
@@ -56,28 +34,19 @@ func checkClockDrift() {
 	}
 }
 
-                                                                               
-                                                                               
-                                         
-  
-                                                                               
-                                                           
 func sntpDrift(measurements int) (time.Duration, error) {
-	                                        
+
 	addr, err := net.ResolveUDPAddr("udp", ntpPool+":123")
 	if err != nil {
 		return 0, err
 	}
-	                                                                     
-	                                  
-	                                           
+
 	request := make([]byte, 48)
 	request[0] = 3<<3 | 3
 
-	                                   
 	drifts := []time.Duration{}
 	for i := 0; i < measurements+2; i++ {
-		                                                          
+
 		conn, err := net.DialUDP("udp", nil, addr)
 		if err != nil {
 			return 0, err
@@ -88,7 +57,7 @@ func sntpDrift(measurements int) (time.Duration, error) {
 		if _, err = conn.Write(request); err != nil {
 			return 0, err
 		}
-		                                                    
+
 		conn.SetDeadline(time.Now().Add(5 * time.Second))
 
 		reply := make([]byte, 48)
@@ -97,7 +66,6 @@ func sntpDrift(measurements int) (time.Duration, error) {
 		}
 		elapsed := time.Since(sent)
 
-		                                           
 		sec := uint64(reply[43]) | uint64(reply[42])<<8 | uint64(reply[41])<<16 | uint64(reply[40])<<24
 		frac := uint64(reply[47]) | uint64(reply[46])<<8 | uint64(reply[45])<<16 | uint64(reply[44])<<24
 
@@ -105,10 +73,9 @@ func sntpDrift(measurements int) (time.Duration, error) {
 
 		t := time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC).Add(time.Duration(nanosec)).Local()
 
-		                                                               
 		drifts = append(drifts, sent.Sub(t)+elapsed/2)
 	}
-	                                                                  
+
 	sort.Sort(durationSlice(drifts))
 
 	drift := time.Duration(0)

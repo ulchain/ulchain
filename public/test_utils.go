@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package common
 
@@ -22,7 +7,6 @@ import (
 	"io/ioutil"
 )
 
-                                                            
 func LoadJSON(file string, val interface{}) error {
 	content, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -38,7 +22,6 @@ func LoadJSON(file string, val interface{}) error {
 	return nil
 }
 
-                                                                   
 func findLine(data []byte, offset int64) (line int) {
 	line = 1
 	for i, r := range string(data) {

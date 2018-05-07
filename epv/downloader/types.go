@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package downloader
 
@@ -22,17 +7,14 @@ import (
 	"github.com/epvchain/go-epvchain/kernel/types"
 )
 
-                                                                           
 type peerDropFn func(id string)
 
-                                                                
 type dataPack interface {
 	PeerId() string
 	Items() int
 	Stats() string
 }
 
-                                                             
 type headerPack struct {
 	peerId  string
 	headers []*types.Header
@@ -42,7 +24,6 @@ func (p *headerPack) PeerId() string { return p.peerId }
 func (p *headerPack) Items() int     { return len(p.headers) }
 func (p *headerPack) Stats() string  { return fmt.Sprintf("%d", len(p.headers)) }
 
-                                                          
 type bodyPack struct {
 	peerId       string
 	transactions [][]*types.Transaction
@@ -58,7 +39,6 @@ func (p *bodyPack) Items() int {
 }
 func (p *bodyPack) Stats() string { return fmt.Sprintf("%d:%d", len(p.transactions), len(p.uncles)) }
 
-                                                         
 type receiptPack struct {
 	peerId   string
 	receipts [][]*types.Receipt
@@ -68,7 +48,6 @@ func (p *receiptPack) PeerId() string { return p.peerId }
 func (p *receiptPack) Items() int     { return len(p.receipts) }
 func (p *receiptPack) Stats() string  { return fmt.Sprintf("%d", len(p.receipts)) }
 
-                                                     
 type statePack struct {
 	peerId string
 	states [][]byte

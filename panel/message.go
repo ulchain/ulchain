@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package dashboard
 
@@ -52,19 +37,19 @@ type ChartEntry struct {
 }
 
 type ChainMessage struct {
-	                      
+
 }
 
 type TxPoolMessage struct {
-	                      
+
 }
 
 type NetworkMessage struct {
-	                      
+
 }
 
 type SystemMessage struct {
-	                      
+
 }
 
 type LogsMessage struct {

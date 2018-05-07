@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                                         
 package fetcher
 
 import (
@@ -30,83 +14,67 @@ import (
 )
 
 const (
-	arriveTimeout = 500 * time.Millisecond                                                                    
-	gatherSlack   = 100 * time.Millisecond                                                                  
-	fetchTimeout  = 5 * time.Second                                                                        
-	maxUncleDist  = 7                                                                              
-	maxQueueDist  = 32                                                                             
-	hashLimit     = 256                                                                                
-	blockLimit    = 64                                                                                 
+	arriveTimeout = 500 * time.Millisecond 
+	gatherSlack   = 100 * time.Millisecond 
+	fetchTimeout  = 5 * time.Second        
+	maxUncleDist  = 7                      
+	maxQueueDist  = 32                     
+	hashLimit     = 256                    
+	blockLimit    = 64                     
 )
 
 var (
 	errTerminated = errors.New("terminated")
 )
 
-                                                                                   
 type blockRetrievalFn func(common.Hash) *types.Block
 
-                                                                               
 type headerRequesterFn func(common.Hash) error
 
-                                                                           
 type bodyRequesterFn func([]common.Hash) error
 
-                                                                                       
 type headerVerifierFn func(header *types.Header) error
 
-                                                                                     
 type blockBroadcasterFn func(block *types.Block, propagate bool)
 
-                                                                         
 type chainHeightFn func() uint64
 
-                                                                                     
 type chainInsertFn func(types.Blocks) (int, error)
 
-                                                                           
 type peerDropFn func(id string)
 
-                                                                              
-           
 type announce struct {
-	hash   common.Hash                                       
-	number uint64                                                                           
-	header *types.Header                                                            
-	time   time.Time                                     
+	hash   common.Hash   
+	number uint64        
+	header *types.Header 
+	time   time.Time     
 
-	origin string                                                       
+	origin string 
 
-	fetchHeader headerRequesterFn                                                                 
-	fetchBodies bodyRequesterFn                                                                 
+	fetchHeader headerRequesterFn 
+	fetchBodies bodyRequesterFn   
 }
 
-                                                                            
 type headerFilterTask struct {
-	peer    string                                             
-	headers []*types.Header                                   
-	time    time.Time                                     
+	peer    string          
+	headers []*types.Header 
+	time    time.Time       
 }
 
-                                                                                
-                             
 type bodyFilterTask struct {
-	peer         string                                                   
-	transactions [][]*types.Transaction                                               
-	uncles       [][]*types.Header                                              
-	time         time.Time                                                     
+	peer         string                 
+	transactions [][]*types.Transaction 
+	uncles       [][]*types.Header      
+	time         time.Time              
 }
 
-                                                  
 type inject struct {
 	origin string
 	block  *types.Block
 }
 
-                                                                                 
-                                     
 type Fetcher struct {
-	                         
+
 	notify chan *announce
 	inject chan *inject
 
@@ -117,35 +85,30 @@ type Fetcher struct {
 	done chan common.Hash
 	quit chan struct{}
 
-	                  
-	announces  map[string]int                                                                      
-	announced  map[common.Hash][]*announce                                            
-	fetching   map[common.Hash]*announce                                          
-	fetched    map[common.Hash][]*announce                                                             
-	completing map[common.Hash]*announce                                                    
+	announces  map[string]int              
+	announced  map[common.Hash][]*announce 
+	fetching   map[common.Hash]*announce   
+	fetched    map[common.Hash][]*announce 
+	completing map[common.Hash]*announce   
 
-	              
-	queue  *prque.Prque                                                                           
-	queues map[string]int                                                               
-	queued map[common.Hash]*inject                                                   
+	queue  *prque.Prque            
+	queues map[string]int          
+	queued map[common.Hash]*inject 
 
-	            
-	getBlock       blockRetrievalFn                                            
-	verifyHeader   headerVerifierFn                                                            
-	broadcastBlock blockBroadcasterFn                                         
-	chainHeight    chainHeightFn                                             
-	insertChain    chainInsertFn                                                 
-	dropPeer       peerDropFn                                        
+	getBlock       blockRetrievalFn   
+	verifyHeader   headerVerifierFn   
+	broadcastBlock blockBroadcasterFn 
+	chainHeight    chainHeightFn      
+	insertChain    chainInsertFn      
+	dropPeer       peerDropFn         
 
-	                
-	announceChangeHook func(common.Hash, bool)                                                                        
-	queueChangeHook    func(common.Hash, bool)                                                                        
-	fetchingHook       func([]common.Hash)                                                                              
-	completingHook     func([]common.Hash)                                                                
-	importedHook       func(*types.Block)                                                                             
+	announceChangeHook func(common.Hash, bool) 
+	queueChangeHook    func(common.Hash, bool) 
+	fetchingHook       func([]common.Hash)     
+	completingHook     func([]common.Hash)     
+	importedHook       func(*types.Block)      
 }
 
-                                                                              
 func New(getBlock blockRetrievalFn, verifyHeader headerVerifierFn, broadcastBlock blockBroadcasterFn, chainHeight chainHeightFn, insertChain chainInsertFn, dropPeer peerDropFn) *Fetcher {
 	return &Fetcher{
 		notify:         make(chan *announce),
@@ -172,20 +135,14 @@ func New(getBlock blockRetrievalFn, verifyHeader headerVerifierFn, broadcastBloc
 	}
 }
 
-                                                                               
-                                                                    
 func (f *Fetcher) Start() {
 	go f.loop()
 }
 
-                                                                             
-              
 func (f *Fetcher) Stop() {
 	close(f.quit)
 }
 
-                                                                               
-               
 func (f *Fetcher) Notify(peer string, hash common.Hash, number uint64, time time.Time,
 	headerFetcher headerRequesterFn, bodyFetcher bodyRequesterFn) error {
 	block := &announce{
@@ -204,7 +161,6 @@ func (f *Fetcher) Notify(peer string, hash common.Hash, number uint64, time time
 	}
 }
 
-                                                                    
 func (f *Fetcher) Enqueue(peer string, block *types.Block) error {
 	op := &inject{
 		origin: peer,
@@ -218,12 +174,9 @@ func (f *Fetcher) Enqueue(peer string, block *types.Block) error {
 	}
 }
 
-                                                                                        
-                                                      
 func (f *Fetcher) FilterHeaders(peer string, headers []*types.Header, time time.Time) []*types.Header {
 	log.Trace("Filtering headers", "peer", peer, "headers", len(headers))
 
-	                                         
 	filter := make(chan *headerFilterTask)
 
 	select {
@@ -231,13 +184,13 @@ func (f *Fetcher) FilterHeaders(peer string, headers []*types.Header, time time.
 	case <-f.quit:
 		return nil
 	}
-	                                           
+
 	select {
 	case filter <- &headerFilterTask{peer: peer, headers: headers, time: time}:
 	case <-f.quit:
 		return nil
 	}
-	                                                 
+
 	select {
 	case task := <-filter:
 		return task.headers
@@ -246,12 +199,9 @@ func (f *Fetcher) FilterHeaders(peer string, headers []*types.Header, time time.
 	}
 }
 
-                                                                               
-                                                                   
 func (f *Fetcher) FilterBodies(peer string, transactions [][]*types.Transaction, uncles [][]*types.Header, time time.Time) ([][]*types.Transaction, [][]*types.Header) {
 	log.Trace("Filtering bodies", "peer", peer, "txs", len(transactions), "uncles", len(uncles))
 
-	                                         
 	filter := make(chan *bodyFilterTask)
 
 	select {
@@ -259,13 +209,13 @@ func (f *Fetcher) FilterBodies(peer string, transactions [][]*types.Transaction,
 	case <-f.quit:
 		return nil, nil
 	}
-	                                         
+
 	select {
 	case filter <- &bodyFilterTask{peer: peer, transactions: transactions, uncles: uncles, time: time}:
 	case <-f.quit:
 		return nil, nil
 	}
-	                                                
+
 	select {
 	case task := <-filter:
 		return task.transactions, task.uncles
@@ -274,28 +224,26 @@ func (f *Fetcher) FilterBodies(peer string, transactions [][]*types.Transaction,
 	}
 }
 
-                                                                              
-          
 func (f *Fetcher) loop() {
-	                                                       
+
 	fetchTimer := time.NewTimer(0)
 	completeTimer := time.NewTimer(0)
 
 	for {
-		                                     
+
 		for hash, announce := range f.fetching {
 			if time.Since(announce.time) > fetchTimeout {
 				f.forgetHash(hash)
 			}
 		}
-		                                                      
+
 		height := f.chainHeight()
 		for !f.queue.Empty() {
 			op := f.queue.PopItem().(*inject)
 			if f.queueChangeHook != nil {
 				f.queueChangeHook(op.block.Hash(), false)
 			}
-			                                                    
+
 			number := op.block.NumberU64()
 			if number > height+1 {
 				f.queue.Push(op, -float32(op.block.NumberU64()))
@@ -304,7 +252,7 @@ func (f *Fetcher) loop() {
 				}
 				break
 			}
-			                                                       
+
 			hash := op.block.Hash()
 			if number+maxUncleDist < height || f.getBlock(hash) != nil {
 				f.forgetBlock(hash)
@@ -312,14 +260,14 @@ func (f *Fetcher) loop() {
 			}
 			f.insert(op.origin, op.block)
 		}
-		                                     
+
 		select {
 		case <-f.quit:
-			                                            
+
 			return
 
 		case notification := <-f.notify:
-			                                                            
+
 			propAnnounceInMeter.Mark(1)
 
 			count := f.announces[notification.origin] + 1
@@ -328,7 +276,7 @@ func (f *Fetcher) loop() {
 				propAnnounceDOSMeter.Mark(1)
 				break
 			}
-			                                                                      
+
 			if notification.number > 0 {
 				if dist := int64(notification.number) - int64(f.chainHeight()); dist < -maxUncleDist || dist > maxQueueDist {
 					log.Debug("Peer discarded announcement", "peer", notification.origin, "number", notification.number, "hash", notification.hash, "distance", dist)
@@ -336,7 +284,7 @@ func (f *Fetcher) loop() {
 					break
 				}
 			}
-			                                                                    
+
 			if _, ok := f.fetching[notification.hash]; ok {
 				break
 			}
@@ -353,37 +301,35 @@ func (f *Fetcher) loop() {
 			}
 
 		case op := <-f.inject:
-			                                                                        
+
 			propBroadcastInMeter.Mark(1)
 			f.enqueue(op.origin, op.block)
 
 		case hash := <-f.done:
-			                                                                   
+
 			f.forgetHash(hash)
 			f.forgetBlock(hash)
 
 		case <-fetchTimer.C:
-			                                                                  
+
 			request := make(map[string][]common.Hash)
 
 			for hash, announces := range f.announced {
 				if time.Since(announces[0].time) > arriveTimeout-gatherSlack {
-					                                                        
+
 					announce := announces[rand.Intn(len(announces))]
 					f.forgetHash(hash)
 
-					                                                       
 					if f.getBlock(hash) == nil {
 						request[announce.origin] = append(request[announce.origin], hash)
 						f.fetching[hash] = announce
 					}
 				}
 			}
-			                                     
+
 			for peer, hashes := range request {
 				log.Trace("Fetching scheduled headers", "peer", peer, "list", hashes)
 
-				                                                                
 				fetchHeader, hashes := f.fetching[hashes[0]].fetchHeader, hashes
 				go func() {
 					if f.fetchingHook != nil {
@@ -391,46 +337,42 @@ func (f *Fetcher) loop() {
 					}
 					for _, hash := range hashes {
 						headerFetchMeter.Mark(1)
-						fetchHeader(hash)                                                                  
+						fetchHeader(hash) 
 					}
 				}()
 			}
-			                                                      
+
 			f.rescheduleFetch(fetchTimer)
 
 		case <-completeTimer.C:
-			                                                           
+
 			request := make(map[string][]common.Hash)
 
 			for hash, announces := range f.fetched {
-				                                                        
+
 				announce := announces[rand.Intn(len(announces))]
 				f.forgetHash(hash)
 
-				                                                         
 				if f.getBlock(hash) == nil {
 					request[announce.origin] = append(request[announce.origin], hash)
 					f.completing[hash] = announce
 				}
 			}
-			                                   
+
 			for peer, hashes := range request {
 				log.Trace("Fetching scheduled bodies", "peer", peer, "list", hashes)
 
-				                                                                
 				if f.completingHook != nil {
 					f.completingHook(hashes)
 				}
 				bodyFetchMeter.Mark(int64(len(hashes)))
 				go f.completing[hashes[0]].fetchBodies(hashes)
 			}
-			                                                      
+
 			f.rescheduleComplete(completeTimer)
 
 		case filter := <-f.headerFilter:
-			                                                                         
-			                                                                         
-			                                
+
 			var task *headerFilterTask
 			select {
 			case task = <-filter:
@@ -439,27 +381,23 @@ func (f *Fetcher) loop() {
 			}
 			headerFilterInMeter.Mark(int64(len(task.headers)))
 
-			                                                                          
-			                                                                          
 			unknown, incomplete, complete := []*types.Header{}, []*announce{}, []*types.Block{}
 			for _, header := range task.headers {
 				hash := header.Hash()
 
-				                                                                         
 				if announce := f.fetching[hash]; announce != nil && announce.origin == task.peer && f.fetched[hash] == nil && f.completing[hash] == nil && f.queued[hash] == nil {
-					                                                                                 
+
 					if header.Number.Uint64() != announce.number {
 						log.Trace("Invalid block number fetched", "peer", announce.origin, "hash", header.Hash(), "announced", announce.number, "provided", header.Number)
 						f.dropPeer(announce.origin)
 						f.forgetHash(hash)
 						continue
 					}
-					                                           
+
 					if f.getBlock(hash) == nil {
 						announce.header = header
 						announce.time = task.time
 
-						                                                                                 
 						if header.TxHash == types.DeriveSha(types.Transactions{}) && header.UncleHash == types.CalcUncleHash([]*types.Header{}) {
 							log.Trace("Block empty, skipping body retrieval", "peer", announce.origin, "number", header.Number, "hash", header.Hash())
 
@@ -470,14 +408,14 @@ func (f *Fetcher) loop() {
 							f.completing[hash] = announce
 							continue
 						}
-						                                                         
+
 						incomplete = append(incomplete, announce)
 					} else {
 						log.Trace("Block already imported, discarding header", "peer", announce.origin, "number", header.Number, "hash", header.Hash())
 						f.forgetHash(hash)
 					}
 				} else {
-					                                                        
+
 					unknown = append(unknown, header)
 				}
 			}
@@ -487,7 +425,7 @@ func (f *Fetcher) loop() {
 			case <-f.quit:
 				return
 			}
-			                                                     
+
 			for _, announce := range incomplete {
 				hash := announce.header.Hash()
 				if _, ok := f.completing[hash]; ok {
@@ -498,7 +436,7 @@ func (f *Fetcher) loop() {
 					f.rescheduleComplete(completeTimer)
 				}
 			}
-			                                             
+
 			for _, block := range complete {
 				if announce := f.completing[block.Hash()]; announce != nil {
 					f.enqueue(announce.origin, block)
@@ -506,7 +444,7 @@ func (f *Fetcher) loop() {
 			}
 
 		case filter := <-f.bodyFilter:
-			                                                                                 
+
 			var task *bodyFilterTask
 			select {
 			case task = <-filter:
@@ -517,7 +455,7 @@ func (f *Fetcher) loop() {
 
 			blocks := []*types.Block{}
 			for i := 0; i < len(task.transactions) && i < len(task.uncles); i++ {
-				                                                     
+
 				matched := false
 
 				for hash, announce := range f.completing {
@@ -526,7 +464,7 @@ func (f *Fetcher) loop() {
 						uncleHash := types.CalcUncleHash(task.uncles[i])
 
 						if txnHash == announce.header.TxHash && uncleHash == announce.header.UncleHash && announce.origin == task.peer {
-							                                                     
+
 							matched = true
 
 							if f.getBlock(hash) == nil {
@@ -554,7 +492,7 @@ func (f *Fetcher) loop() {
 			case <-f.quit:
 				return
 			}
-			                                                   
+
 			for _, block := range blocks {
 				if announce := f.completing[block.Hash()]; announce != nil {
 					f.enqueue(announce.origin, block)
@@ -564,13 +502,12 @@ func (f *Fetcher) loop() {
 	}
 }
 
-                                                                                 
 func (f *Fetcher) rescheduleFetch(fetch *time.Timer) {
-	                                           
+
 	if len(f.announced) == 0 {
 		return
 	}
-	                                                    
+
 	earliest := time.Now()
 	for _, announces := range f.announced {
 		if earliest.After(announces[0].time) {
@@ -580,13 +517,12 @@ func (f *Fetcher) rescheduleFetch(fetch *time.Timer) {
 	fetch.Reset(arriveTimeout - time.Since(earliest))
 }
 
-                                                                                      
 func (f *Fetcher) rescheduleComplete(complete *time.Timer) {
-	                                          
+
 	if len(f.fetched) == 0 {
 		return
 	}
-	                                                    
+
 	earliest := time.Now()
 	for _, announces := range f.fetched {
 		if earliest.After(announces[0].time) {
@@ -596,12 +532,9 @@ func (f *Fetcher) rescheduleComplete(complete *time.Timer) {
 	complete.Reset(gatherSlack - time.Since(earliest))
 }
 
-                                                                               
-                         
 func (f *Fetcher) enqueue(peer string, block *types.Block) {
 	hash := block.Hash()
 
-	                                  
 	count := f.queues[peer] + 1
 	if count > blockLimit {
 		log.Debug("Discarded propagated block, exceeded allowance", "peer", peer, "number", block.Number(), "hash", hash, "limit", blockLimit)
@@ -609,14 +542,14 @@ func (f *Fetcher) enqueue(peer string, block *types.Block) {
 		f.forgetHash(hash)
 		return
 	}
-	                                         
+
 	if dist := int64(block.NumberU64()) - int64(f.chainHeight()); dist < -maxUncleDist || dist > maxQueueDist {
 		log.Debug("Discarded propagated block, too far away", "peer", peer, "number", block.Number(), "hash", hash, "distance", dist)
 		propBroadcastDropMeter.Mark(1)
 		f.forgetHash(hash)
 		return
 	}
-	                                          
+
 	if _, ok := f.queued[hash]; !ok {
 		op := &inject{
 			origin: peer,
@@ -632,59 +565,50 @@ func (f *Fetcher) enqueue(peer string, block *types.Block) {
 	}
 }
 
-                                                                                
-                                                                               
-                                
 func (f *Fetcher) insert(peer string, block *types.Block) {
 	hash := block.Hash()
 
-	                                 
 	log.Debug("Importing propagated block", "peer", peer, "number", block.Number(), "hash", hash)
 	go func() {
 		defer func() { f.done <- hash }()
 
-		                                           
 		parent := f.getBlock(block.ParentHash())
 		if parent == nil {
 			log.Debug("Unknown parent of propagated block", "peer", peer, "number", block.Number(), "hash", hash, "parent", block.ParentHash())
 			return
 		}
-		                                                                   
+
 		switch err := f.verifyHeader(block.Header()); err {
 		case nil:
-			                                         
+
 			propBroadcastOutTimer.UpdateSince(block.ReceivedAt)
 			go f.broadcastBlock(block, true)
 
 		case consensus.ErrFutureBlock:
-			                                                        
 
 		default:
-			                                           
+
 			log.Debug("Propagated block verification failed", "peer", peer, "number", block.Number(), "hash", hash, "err", err)
 			f.dropPeer(peer)
 			return
 		}
-		                                           
+
 		if _, err := f.insertChain(types.Blocks{block}); err != nil {
 			log.Debug("Propagated block import failed", "peer", peer, "number", block.Number(), "hash", hash, "err", err)
 			return
 		}
-		                                           
+
 		propAnnounceOutTimer.UpdateSince(block.ReceivedAt)
 		go f.broadcastBlock(block, false)
 
-		                                    
 		if f.importedHook != nil {
 			f.importedHook(block)
 		}
 	}()
 }
 
-                                                                           
-                  
 func (f *Fetcher) forgetHash(hash common.Hash) {
-	                                                          
+
 	for _, announce := range f.announced[hash] {
 		f.announces[announce.origin]--
 		if f.announces[announce.origin] == 0 {
@@ -695,7 +619,7 @@ func (f *Fetcher) forgetHash(hash common.Hash) {
 	if f.announceChangeHook != nil {
 		f.announceChangeHook(hash, false)
 	}
-	                                                            
+
 	if announce := f.fetching[hash]; announce != nil {
 		f.announces[announce.origin]--
 		if f.announces[announce.origin] == 0 {
@@ -704,7 +628,6 @@ func (f *Fetcher) forgetHash(hash common.Hash) {
 		delete(f.fetching, hash)
 	}
 
-	                                                                        
 	for _, announce := range f.fetched[hash] {
 		f.announces[announce.origin]--
 		if f.announces[announce.origin] == 0 {
@@ -713,7 +636,6 @@ func (f *Fetcher) forgetHash(hash common.Hash) {
 	}
 	delete(f.fetched, hash)
 
-	                                                                
 	if announce := f.completing[hash]; announce != nil {
 		f.announces[announce.origin]--
 		if f.announces[announce.origin] == 0 {
@@ -723,8 +645,6 @@ func (f *Fetcher) forgetHash(hash common.Hash) {
 	}
 }
 
-                                                                               
-         
 func (f *Fetcher) forgetBlock(hash common.Hash) {
 	if insert := f.queued[hash]; insert != nil {
 		f.queues[insert.origin]--

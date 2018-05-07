@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package rpc
 
@@ -48,7 +33,6 @@ type httpConn struct {
 	closed    chan struct{}
 }
 
-                                           
 func (hc *httpConn) LocalAddr() net.Addr              { return nullAddr }
 func (hc *httpConn) RemoteAddr() net.Addr             { return nullAddr }
 func (hc *httpConn) SetReadDeadline(time.Time) error  { return nil }
@@ -66,8 +50,6 @@ func (hc *httpConn) Close() error {
 	return nil
 }
 
-                                                                                       
-                                  
 func DialHTTPWithClient(endpoint string, client *http.Client) (*Client, error) {
 	req, err := http.NewRequest(http.MethodPost, endpoint, nil)
 	if err != nil {
@@ -82,7 +64,6 @@ func DialHTTPWithClient(endpoint string, client *http.Client) (*Client, error) {
 	})
 }
 
-                                                                              
 func DialHTTP(endpoint string) (*Client, error) {
 	return DialHTTPWithClient(endpoint, new(http.Client))
 }
@@ -135,30 +116,24 @@ func (hc *httpConn) doRequest(ctx context.Context, msg interface{}) (io.ReadClos
 	return resp.Body, nil
 }
 
-                                                                                  
 type httpReadWriteNopCloser struct {
 	io.Reader
 	io.Writer
 }
 
-                                            
 func (t *httpReadWriteNopCloser) Close() error {
 	return nil
 }
 
-                                                                      
-  
-                                             
 func NewHTTPServer(cors []string, vhosts []string, srv *Server) *http.Server {
-	                                              
+
 	handler := newCorsHandler(srv, cors)
 	handler = newVHostHandler(vhosts, handler)
 	return &http.Server{Handler: handler}
 }
 
-                                                
 func (srv *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	                                                            
+
 	if r.Method == http.MethodGet && r.ContentLength == 0 && r.URL.RawQuery == "" {
 		return
 	}
@@ -166,9 +141,7 @@ func (srv *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), code)
 		return
 	}
-	                                                                            
-	                                                                          
-	                  
+
 	codec := NewJSONCodec(&httpReadWriteNopCloser{r.Body, w})
 	defer codec.Close()
 
@@ -176,8 +149,6 @@ func (srv *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	srv.ServeSingleRequest(codec, OptionMethodInvocation)
 }
 
-                                                                            
-                      
 func validateRequest(r *http.Request) (int, error) {
 	if r.Method == http.MethodPut || r.Method == http.MethodDelete {
 		return http.StatusMethodNotAllowed, errors.New("method not allowed")
@@ -195,7 +166,7 @@ func validateRequest(r *http.Request) (int, error) {
 }
 
 func newCorsHandler(srv *Server, allowedOrigins []string) http.Handler {
-	                                                                             
+
 	if len(allowedOrigins) == 0 {
 		return srv
 	}
@@ -208,34 +179,29 @@ func newCorsHandler(srv *Server, allowedOrigins []string) http.Handler {
 	return c.Handler(srv)
 }
 
-                                                                                        
-                                                                                               
-                                                                                               
-                                                                
 type virtualHostHandler struct {
 	vhosts map[string]struct{}
 	next   http.Handler
 }
 
-                                                                        
 func (h *virtualHostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	                                                                                          
+
 	if r.Host == "" {
 		h.next.ServeHTTP(w, r)
 		return
 	}
 	host, _, err := net.SplitHostPort(r.Host)
 	if err != nil {
-		                                                        
+
 		host = r.Host
 	}
 	if ipAddr := net.ParseIP(host); ipAddr != nil {
-		                                        
+
 		h.next.ServeHTTP(w, r)
 		return
 
 	}
-	                                                      
+
 	if _, exist := h.vhosts["*"]; exist {
 		h.next.ServeHTTP(w, r)
 		return

@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package light
 
@@ -26,8 +11,6 @@ import (
 	"github.com/epvchain/go-epvchain/process"
 )
 
-                                                                               
-                                            
 type NodeSet struct {
 	nodes map[string][]byte
 	order []string
@@ -36,14 +19,12 @@ type NodeSet struct {
 	lock     sync.RWMutex
 }
 
-                                       
 func NewNodeSet() *NodeSet {
 	return &NodeSet{
 		nodes: make(map[string][]byte),
 	}
 }
 
-                                   
 func (db *NodeSet) Put(key []byte, value []byte) error {
 	db.lock.Lock()
 	defer db.lock.Unlock()
@@ -60,7 +41,6 @@ func (db *NodeSet) Put(key []byte, value []byte) error {
 	return nil
 }
 
-                            
 func (db *NodeSet) Get(key []byte) ([]byte, error) {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
@@ -71,13 +51,11 @@ func (db *NodeSet) Get(key []byte) ([]byte, error) {
 	return nil, errors.New("not found")
 }
 
-                                                          
 func (db *NodeSet) Has(key []byte) (bool, error) {
 	_, err := db.Get(key)
 	return err == nil, nil
 }
 
-                                                  
 func (db *NodeSet) KeyCount() int {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
@@ -85,7 +63,6 @@ func (db *NodeSet) KeyCount() int {
 	return len(db.nodes)
 }
 
-                                                                
 func (db *NodeSet) DataSize() int {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
@@ -93,7 +70,6 @@ func (db *NodeSet) DataSize() int {
 	return db.dataSize
 }
 
-                                               
 func (db *NodeSet) NodeList() NodeList {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
@@ -105,7 +81,6 @@ func (db *NodeSet) NodeList() NodeList {
 	return values
 }
 
-                                                             
 func (db *NodeSet) Store(target epvdb.Putter) {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
@@ -115,30 +90,25 @@ func (db *NodeSet) Store(target epvdb.Putter) {
 	}
 }
 
-                                                                             
 type NodeList []rlp.RawValue
 
-                                                              
 func (n NodeList) Store(db epvdb.Putter) {
 	for _, node := range n {
 		db.Put(crypto.Keccak256(node), node)
 	}
 }
 
-                                              
 func (n NodeList) NodeSet() *NodeSet {
 	db := NewNodeSet()
 	n.Store(db)
 	return db
 }
 
-                                               
 func (n *NodeList) Put(key []byte, value []byte) error {
 	*n = append(*n, value)
 	return nil
 }
 
-                                                                 
 func (n NodeList) DataSize() int {
 	var size int
 	for _, node := range n {

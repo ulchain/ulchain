@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 // +build darwin,!ios freebsd linux,!arm64 netbsd solaris
 
@@ -41,9 +26,6 @@ func newWatcher(ac *accountCache) *watcher {
 	}
 }
 
-                                             
-                                                                       
-                                
 func (w *watcher) start() {
 	if w.starting || w.running {
 		return
@@ -77,15 +59,12 @@ func (w *watcher) loop() {
 	w.running = true
 	w.ac.mu.Unlock()
 
-	                                          
-	                                                                 
-	                                                               
 	var (
 		debounceDuration = 500 * time.Millisecond
 		rescanTriggered  = false
 		debounce         = time.NewTimer(0)
 	)
-	                         
+
 	if !debounce.Stop() {
 		<-debounce.C
 	}
@@ -95,7 +74,7 @@ func (w *watcher) loop() {
 		case <-w.quit:
 			return
 		case <-w.ev:
-			                                                          
+
 			if !rescanTriggered {
 				debounce.Reset(debounceDuration)
 				rescanTriggered = true

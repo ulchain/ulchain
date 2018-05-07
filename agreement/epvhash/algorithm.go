@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package epvhash
 
@@ -34,26 +19,21 @@ import (
 )
 
 const (
-	datasetInitBytes   = 1 << 30                               
-	datasetGrowthBytes = 1 << 23                            
-	cacheInitBytes     = 1 << 24                             
-	cacheGrowthBytes   = 1 << 17                          
-	epochLength        = 30000                      
-	mixBytes           = 128                    
-	hashBytes          = 64                             
-	hashWords          = 16                                        
-	datasetParents     = 256                                                 
-	cacheRounds        = 3                                              
-	loopAccesses       = 64                                             
+	datasetInitBytes   = 1 << 30 
+	datasetGrowthBytes = 1 << 23 
+	cacheInitBytes     = 1 << 24 
+	cacheGrowthBytes   = 1 << 17 
+	epochLength        = 30000   
+	mixBytes           = 128     
+	hashBytes          = 64      
+	hashWords          = 16      
+	datasetParents     = 256     
+	cacheRounds        = 3       
+	loopAccesses       = 64      
 )
 
-                                                                             
-                                                                        
 type hasher func(dest []byte, data []byte)
 
-                                                                                 
-                                                                              
-                                            
 func makeHasher(h hash.Hash) hasher {
 	return func(dest []byte, data []byte) {
 		h.Write(data)
@@ -62,8 +42,6 @@ func makeHasher(h hash.Hash) hasher {
 	}
 }
 
-                                                                                 
-           
 func seedHash(block uint64) []byte {
 	seed := make([]byte, 32)
 	if block < epochLength {
@@ -76,14 +54,8 @@ func seedHash(block uint64) []byte {
 	return seed
 }
 
-                                                                                
-                                                                               
-                                                                            
-                                                                              
-                                
-                                                                 
 func generateCache(dest []uint32, epoch uint64, seed []byte) {
-	                                                             
+
 	logger := log.New("epoch", epoch)
 
 	start := time.Now()
@@ -96,17 +68,15 @@ func generateCache(dest []uint32, epoch uint64, seed []byte) {
 		}
 		logFn("Generated epvhash verification cache", "elapsed", common.PrettyDuration(elapsed))
 	}()
-	                                                 
+
 	header := *(*reflect.SliceHeader)(unsafe.Pointer(&dest))
 	header.Len *= 4
 	header.Cap *= 4
 	cache := *(*[]byte)(unsafe.Pointer(&header))
 
-	                                                                                   
 	size := uint64(len(cache))
 	rows := int(size) / hashBytes
 
-	                                                                     
 	var progress uint32
 
 	done := make(chan struct{})
@@ -122,16 +92,15 @@ func generateCache(dest []uint32, epoch uint64, seed []byte) {
 			}
 		}
 	}()
-	                                               
+
 	keccak512 := makeHasher(sha3.NewKeccak512())
 
-	                                           
 	keccak512(cache, seed)
 	for offset := uint64(hashBytes); offset < size; offset += hashBytes {
 		keccak512(cache[offset:], cache[offset-hashBytes:offset])
 		atomic.AddUint32(&progress, 1)
 	}
-	                                          
+
 	temp := make([]byte, hashBytes)
 
 	for i := 0; i < cacheRounds; i++ {
@@ -147,50 +116,38 @@ func generateCache(dest []uint32, epoch uint64, seed []byte) {
 			atomic.AddUint32(&progress, 1)
 		}
 	}
-	                                                       
+
 	if !isLittleEndian() {
 		swap(cache)
 	}
 }
 
-                                                                              
 func swap(buffer []byte) {
 	for i := 0; i < len(buffer); i += 4 {
 		binary.BigEndian.PutUint32(buffer[i:], binary.LittleEndian.Uint32(buffer[i:]))
 	}
 }
 
-                                                                                    
-                                                                                   
-                                                                           
 func prepare(dest []uint32, src []byte) {
 	for i := 0; i < len(dest); i++ {
 		dest[i] = binary.LittleEndian.Uint32(src[i*4:])
 	}
 }
 
-                                                                               
-                                                                             
-                                                                              
-                                       
 func fnv(a, b uint32) uint32 {
 	return a*0x01000193 ^ b
 }
 
-                                                               
 func fnvHash(mix []uint32, data []uint32) {
 	for i := 0; i < len(mix); i++ {
 		mix[i] = mix[i]*0x01000193 ^ data[i]
 	}
 }
 
-                                                                                  
-                                                    
 func generateDatasetItem(cache []uint32, index uint32, keccak512 hasher) []byte {
-	                                                                           
+
 	rows := uint32(len(cache) / hashWords)
 
-	                     
 	mix := make([]byte, hashBytes)
 
 	binary.LittleEndian.PutUint32(mix, cache[(index%rows)*hashWords]^index)
@@ -199,17 +156,16 @@ func generateDatasetItem(cache []uint32, index uint32, keccak512 hasher) []byte 
 	}
 	keccak512(mix, mix)
 
-	                                                            
 	intMix := make([]uint32, hashWords)
 	for i := 0; i < len(intMix); i++ {
 		intMix[i] = binary.LittleEndian.Uint32(mix[i*4:])
 	}
-	                                                         
+
 	for i := uint32(0); i < datasetParents; i++ {
 		parent := fnv(index^i, intMix[i%16]) % rows
 		fnvHash(intMix, cache[parent*hashWords:])
 	}
-	                                                      
+
 	for i, val := range intMix {
 		binary.LittleEndian.PutUint32(mix[i*4:], val)
 	}
@@ -217,10 +173,8 @@ func generateDatasetItem(cache []uint32, index uint32, keccak512 hasher) []byte 
 	return mix
 }
 
-                                                                   
-                                                                 
 func generateDataset(dest []uint32, epoch uint64, cache []uint32) {
-	                                                             
+
 	logger := log.New("epoch", epoch)
 
 	start := time.Now()
@@ -234,16 +188,13 @@ func generateDataset(dest []uint32, epoch uint64, cache []uint32) {
 		logFn("Generated epvhash verification cache", "elapsed", common.PrettyDuration(elapsed))
 	}()
 
-	                                                                  
 	swapped := !isLittleEndian()
 
-	                                                 
 	header := *(*reflect.SliceHeader)(unsafe.Pointer(&dest))
 	header.Len *= 4
 	header.Cap *= 4
 	dataset := *(*[]byte)(unsafe.Pointer(&header))
 
-	                                                                 
 	threads := runtime.NumCPU()
 	size := uint64(len(dataset))
 
@@ -255,17 +206,15 @@ func generateDataset(dest []uint32, epoch uint64, cache []uint32) {
 		go func(id int) {
 			defer pend.Done()
 
-			                                               
 			keccak512 := makeHasher(sha3.NewKeccak512())
 
-			                                                         
 			batch := uint32((size + hashBytes*uint64(threads) - 1) / (hashBytes * uint64(threads)))
 			first := uint32(id) * batch
 			limit := first + batch
 			if limit > uint32(size/hashBytes) {
 				limit = uint32(size / hashBytes)
 			}
-			                                
+
 			percent := uint32(size / hashBytes / 100)
 			for index := first; index < limit; index++ {
 				item := generateDatasetItem(cache, index, keccak512)
@@ -280,17 +229,14 @@ func generateDataset(dest []uint32, epoch uint64, cache []uint32) {
 			}
 		}(i)
 	}
-	                                                   
+
 	pend.Wait()
 }
 
-                                                                                
-                                                
 func hashimoto(hash []byte, nonce uint64, size uint64, lookup func(index uint32) []uint32) ([]byte, []byte) {
-	                                                                           
+
 	rows := uint32(size / mixBytes)
 
-	                                           
 	seed := make([]byte, 40)
 	copy(seed, hash)
 	binary.LittleEndian.PutUint64(seed[32:], nonce)
@@ -298,12 +244,11 @@ func hashimoto(hash []byte, nonce uint64, size uint64, lookup func(index uint32)
 	seed = crypto.Keccak512(seed)
 	seedHead := binary.LittleEndian.Uint32(seed)
 
-	                                     
 	mix := make([]uint32, mixBytes/4)
 	for i := 0; i < len(mix); i++ {
 		mix[i] = binary.LittleEndian.Uint32(seed[i%16*4:])
 	}
-	                              
+
 	temp := make([]uint32, len(mix))
 
 	for i := 0; i < loopAccesses; i++ {
@@ -313,7 +258,7 @@ func hashimoto(hash []byte, nonce uint64, size uint64, lookup func(index uint32)
 		}
 		fnvHash(mix, temp)
 	}
-	               
+
 	for i := 0; i < len(mix); i += 4 {
 		mix[i/4] = fnv(fnv(fnv(mix[i], mix[i+1]), mix[i+2]), mix[i+3])
 	}
@@ -326,9 +271,6 @@ func hashimoto(hash []byte, nonce uint64, size uint64, lookup func(index uint32)
 	return digest, crypto.Keccak256(append(seed, digest...))
 }
 
-                                                                           
-                                                                               
-                  
 func hashimotoLight(size uint64, cache []uint32, hash []byte, nonce uint64) ([]byte, []byte) {
 	keccak512 := makeHasher(sha3.NewKeccak512())
 
@@ -344,9 +286,6 @@ func hashimotoLight(size uint64, cache []uint32, hash []byte, nonce uint64) ([]b
 	return hashimoto(hash, nonce, size, lookup)
 }
 
-                                                                                
-                                                                                
-         
 func hashimotoFull(dataset []uint32, hash []byte, nonce uint64) ([]byte, []byte) {
 	lookup := func(index uint32) []uint32 {
 		offset := index * hashWords
@@ -357,8 +296,6 @@ func hashimotoFull(dataset []uint32, hash []byte, nonce uint64) ([]byte, []byte)
 
 const maxEpoch = 2048
 
-                                                                                 
-                                 
 var datasetSizes = [maxEpoch]uint64{
 	1073739904, 1082130304, 1090514816, 1098906752, 1107293056,
 	1115684224, 1124070016, 1132461952, 1140849536, 1149232768,
@@ -771,8 +708,6 @@ var datasetSizes = [maxEpoch]uint64{
 	18186498944, 18194886784, 18203275648, 18211666048, 18220048768,
 	18228444544, 18236833408, 18245220736}
 
-                                                                               
-                                            
 var cacheSizes = [maxEpoch]uint64{
 	16776896, 16907456, 17039296, 17170112, 17301056, 17432512, 17563072,
 	17693888, 17824192, 17955904, 18087488, 18218176, 18349504, 18481088,

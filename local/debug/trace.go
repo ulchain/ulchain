@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 //+build go1.5
 
@@ -26,7 +11,6 @@ import (
 	"github.com/epvchain/go-epvchain/book"
 )
 
-                                                            
 func (h *HandlerT) StartGoTrace(file string) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -47,7 +31,6 @@ func (h *HandlerT) StartGoTrace(file string) error {
 	return nil
 }
 
-                                    
 func (h *HandlerT) StopGoTrace() error {
 	h.mu.Lock()
 	defer h.mu.Unlock()

@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package event
 
@@ -24,28 +9,11 @@ import (
 	"github.com/epvchain/go-epvchain/public/mclock"
 )
 
-                                                                                       
-                                            
-  
-                                                                                   
-                                                                                    
-                                                                                         
-        
-  
-                                                                                     
-                                                                             
-  
-                                                                                         
-                                                                                     
-                              
 type Subscription interface {
-	Err() <-chan error                             
-	Unsubscribe()                                                             
+	Err() <-chan error 
+	Unsubscribe()      
 }
 
-                                                                                     
-                                                                                       
-                                                         
 func NewSubscription(producer func(<-chan struct{}) error) Subscription {
 	s := &funcSub{unsub: make(chan struct{}), err: make(chan error, 1)}
 	go func() {
@@ -79,7 +47,7 @@ func (s *funcSub) Unsubscribe() {
 	s.unsubscribed = true
 	close(s.unsub)
 	s.mu.Unlock()
-	                              
+
 	<-s.err
 }
 
@@ -87,13 +55,6 @@ func (s *funcSub) Err() <-chan error {
 	return s.err
 }
 
-                                                                               
-                                                                                         
-                                                                              
-                
-  
-                                                                                     
-                                                             
 func Resubscribe(backoffMax time.Duration, fn ResubscribeFunc) Subscription {
 	s := &resubscribeSub{
 		waitTime:   backoffMax / 10,
@@ -106,7 +67,6 @@ func Resubscribe(backoffMax time.Duration, fn ResubscribeFunc) Subscription {
 	return s
 }
 
-                                                          
 type ResubscribeFunc func(context.Context) (Subscription, error)
 
 type resubscribeSub struct {
@@ -158,7 +118,7 @@ retry:
 		case err := <-subscribed:
 			cancel()
 			if err != nil {
-				                                                          
+
 				if s.backoffWait() {
 					return nil
 				}
@@ -205,13 +165,6 @@ func (s *resubscribeSub) backoffWait() bool {
 	}
 }
 
-                                                                                       
-  
-                                                                                       
-                                                                                          
-                  
-  
-                                  
 type SubscriptionScope struct {
 	mu     sync.Mutex
 	subs   map[*scopeSub]struct{}
@@ -223,9 +176,6 @@ type scopeSub struct {
 	s  Subscription
 }
 
-                                                                                       
-                                                                                    
-         
 func (sc *SubscriptionScope) Track(s Subscription) Subscription {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
@@ -240,8 +190,6 @@ func (sc *SubscriptionScope) Track(s Subscription) Subscription {
 	return ss
 }
 
-                                                                                         
-                                                          
 func (sc *SubscriptionScope) Close() {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
@@ -255,8 +203,6 @@ func (sc *SubscriptionScope) Close() {
 	sc.subs = nil
 }
 
-                                                     
-                                        
 func (sc *SubscriptionScope) Count() int {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()

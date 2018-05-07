@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package downloader
 
@@ -30,33 +15,27 @@ import (
 	"github.com/epvchain/go-epvchain/fast"
 )
 
-                                                                             
-                                          
 type stateReq struct {
-	items    []common.Hash                                                      
-	tasks    map[common.Hash]*stateTask                                             
-	timeout  time.Duration                                                             
-	timer    *time.Timer                                                             
-	peer     *peerConnection                                              
-	response [][]byte                                                                  
-	dropped  bool                                                                 
+	items    []common.Hash              
+	tasks    map[common.Hash]*stateTask 
+	timeout  time.Duration              
+	timer    *time.Timer                
+	peer     *peerConnection            
+	response [][]byte                   
+	dropped  bool                       
 }
 
-                                              
 func (req *stateReq) timedOut() bool {
 	return req.response == nil
 }
 
-                                                                                 
-                                                           
 type stateSyncStats struct {
-	processed  uint64                                     
-	duplicate  uint64                                            
-	unexpected uint64                                                  
-	pending    uint64                                         
+	processed  uint64 
+	duplicate  uint64 
+	unexpected uint64 
+	pending    uint64 
 }
 
-                                                               
 func (d *Downloader) syncState(root common.Hash) *stateSync {
 	s := newStateSync(d, root)
 	select {
@@ -68,8 +47,6 @@ func (d *Downloader) syncState(root common.Hash) *stateSync {
 	return s
 }
 
-                                                                  
-                 
 func (d *Downloader) stateFetcher() {
 	for {
 		select {
@@ -78,40 +55,36 @@ func (d *Downloader) stateFetcher() {
 				next = d.runStateSync(next)
 			}
 		case <-d.stateCh:
-			                                                   
+
 		case <-d.quitCh:
 			return
 		}
 	}
 }
 
-                                                                               
-                                            
 func (d *Downloader) runStateSync(s *stateSync) *stateSync {
 	var (
-		active   = make(map[string]*stateReq)                                
-		finished []*stateReq                                                 
-		timeout  = make(chan *stateReq)                                   
+		active   = make(map[string]*stateReq) 
+		finished []*stateReq                  
+		timeout  = make(chan *stateReq)       
 	)
 	defer func() {
-		                                                                          
-		                               
+
 		for _, req := range active {
 			req.timer.Stop()
 			req.peer.SetNodeDataIdle(len(req.items))
 		}
 	}()
-	                      
+
 	go s.run()
 	defer s.Cancel()
 
-	                                                            
 	peerDrop := make(chan *peerConnection, 1024)
 	peerSub := s.d.peers.SubscribePeerDrops(peerDrop)
 	defer peerSub.Unsubscribe()
 
 	for {
-		                                                                
+
 		var (
 			deliverReq   *stateReq
 			deliverReqCh chan *stateReq
@@ -122,85 +95,71 @@ func (d *Downloader) runStateSync(s *stateSync) *stateSync {
 		}
 
 		select {
-		                           
+
 		case next := <-d.stateSyncStart:
 			return next
 
 		case <-s.done:
 			return nil
 
-		                                                      
 		case deliverReqCh <- deliverReq:
-			                                                                           
+
 			copy(finished, finished[1:])
 			finished[len(finished)-1] = nil
 			finished = finished[:len(finished)-1]
 
-		                               
 		case pack := <-d.stateCh:
-			                                                           
+
 			req := active[pack.PeerId()]
 			if req == nil {
 				log.Debug("Unrequested node data", "peer", pack.PeerId(), "len", pack.Items())
 				continue
 			}
-			                                                   
+
 			req.timer.Stop()
 			req.response = pack.(*statePack).states
 
 			finished = append(finished, req)
 			delete(active, pack.PeerId())
 
-			                                   
 		case p := <-peerDrop:
-			                                          
+
 			req := active[p.id]
 			if req == nil {
 				continue
 			}
-			                                                   
+
 			req.timer.Stop()
 			req.dropped = true
 
 			finished = append(finished, req)
 			delete(active, p.id)
 
-		                             
 		case req := <-timeout:
-			                                                                              
-			                                                                            
-			                                    
+
 			if active[req.peer.id] != req {
 				continue
 			}
-			                                                       
+
 			finished = append(finished, req)
 			delete(active, req.peer.id)
 
-		                                 
 		case req := <-d.trackStateReq:
-			                                                                           
-			                                                                           
-			                                                                            
-			                                                                              
-			                                                                            
-			                                                             
+
 			if old := active[req.peer.id]; old != nil {
 				log.Warn("Busy peer assigned new state fetch", "peer", old.peer.id)
 
-				                                                      
 				old.timer.Stop()
 				old.dropped = true
 
 				finished = append(finished, old)
 			}
-			                                                             
+
 			req.timer = time.AfterFunc(req.timeout, func() {
 				select {
 				case timeout <- req:
 				case <-s.done:
-					                                                                   
-					                                                   
+
 				}
 			})
 			active[req.peer.id] = req
@@ -208,33 +167,27 @@ func (d *Downloader) runStateSync(s *stateSync) *stateSync {
 	}
 }
 
-                                                                               
-                         
 type stateSync struct {
-	d *Downloader                                                            
+	d *Downloader 
 
-	sched  *trie.TrieSync                                                            
-	keccak hash.Hash                                                               
-	tasks  map[common.Hash]*stateTask                                               
+	sched  *trie.TrieSync             
+	keccak hash.Hash                  
+	tasks  map[common.Hash]*stateTask 
 
 	numUncommitted   int
 	bytesUncommitted int
 
-	deliver    chan *stateReq                                                
-	cancel     chan struct{}                                            
-	cancelOnce sync.Once                                                  
-	done       chan struct{}                                             
-	err        error                                                              
+	deliver    chan *stateReq 
+	cancel     chan struct{}  
+	cancelOnce sync.Once      
+	done       chan struct{}  
+	err        error          
 }
 
-                                                                             
-                                                                            
 type stateTask struct {
 	attempts map[string]struct{}
 }
 
-                                                                                 
-                                                              
 func newStateSync(d *Downloader, root common.Hash) *stateSync {
 	return &stateSync{
 		d:       d,
@@ -247,48 +200,35 @@ func newStateSync(d *Downloader, root common.Hash) *stateSync {
 	}
 }
 
-                                                                              
-                                                                            
-          
 func (s *stateSync) run() {
 	s.err = s.loop()
 	close(s.done)
 }
 
-                                                  
 func (s *stateSync) Wait() error {
 	<-s.done
 	return s.err
 }
 
-                                                            
 func (s *stateSync) Cancel() error {
 	s.cancelOnce.Do(func() { close(s.cancel) })
 	return s.Wait()
 }
 
-                                                                              
-                                                                             
-                                                                            
-                                                                              
-                                                                            
-                
 func (s *stateSync) loop() error {
-	                                                     
+
 	newPeer := make(chan *peerConnection, 1024)
 	peerSub := s.d.peers.SubscribeNewPeers(newPeer)
 	defer peerSub.Unsubscribe()
 
-	                                                              
 	for s.sched.Pending() > 0 {
 		if err := s.commit(false); err != nil {
 			return err
 		}
 		s.assignTasks()
-		                                               
+
 		select {
 		case <-newPeer:
-			                                                    
 
 		case <-s.cancel:
 			return errCancelStateFetch
@@ -297,15 +237,14 @@ func (s *stateSync) loop() error {
 			return errCancelStateFetch
 
 		case req := <-s.deliver:
-			                                                                       
+
 			log.Trace("Received node data response", "peer", req.peer.id, "count", len(req.response), "dropped", req.dropped, "timeout", !req.dropped && req.timedOut())
 			if len(req.items) <= 2 && !req.dropped && req.timedOut() {
-				                                                                             
-				                           
+
 				log.Warn("Stalling state sync, dropping peer", "peer", req.peer.id)
 				s.d.dropPeer(req.peer.id)
 			}
-			                                                              
+
 			if err := s.process(req); err != nil {
 				log.Warn("Node data write error", "err", err)
 				return err
@@ -332,18 +271,15 @@ func (s *stateSync) commit(force bool) error {
 	return nil
 }
 
-                                                                              
-                                                                                 
 func (s *stateSync) assignTasks() {
-	                                                                   
+
 	peers, _ := s.d.peers.NodeDataIdlePeers()
 	for _, p := range peers {
-		                                                                            
+
 		cap := p.NodeDataCapacity(s.d.requestRTT())
 		req := &stateReq{peer: p, timeout: s.d.requestTTL()}
 		s.fillTasks(cap, req)
 
-		                                                                    
 		if len(req.items) > 0 {
 			req.peer.log.Trace("Requesting new batch of data", "type", "state", "count", len(req.items))
 			select {
@@ -356,29 +292,27 @@ func (s *stateSync) assignTasks() {
 	}
 }
 
-                                                                              
-                                    
 func (s *stateSync) fillTasks(n int, req *stateReq) {
-	                                             
+
 	if len(s.tasks) < n {
 		new := s.sched.Missing(n - len(s.tasks))
 		for _, hash := range new {
 			s.tasks[hash] = &stateTask{make(map[string]struct{})}
 		}
 	}
-	                                                              
+
 	req.items = make([]common.Hash, 0, n)
 	req.tasks = make(map[common.Hash]*stateTask, n)
 	for hash, t := range s.tasks {
-		                                           
+
 		if len(req.items) == n {
 			break
 		}
-		                                                       
+
 		if _, ok := t.attempts[req.peer.id]; ok {
 			continue
 		}
-		                                  
+
 		t.attempts[req.peer.id] = struct{}{}
 		req.items = append(req.items, hash)
 		req.tasks[hash] = t
@@ -386,11 +320,8 @@ func (s *stateSync) fillTasks(n int, req *stateReq) {
 	}
 }
 
-                                                                             
-                                                                              
-             
 func (s *stateSync) process(req *stateReq) error {
-	                                                                          
+
 	duplicate, unexpected := 0, 0
 
 	defer func(start time.Time) {
@@ -399,7 +330,6 @@ func (s *stateSync) process(req *stateReq) error {
 		}
 	}(time.Now())
 
-	                                                                          
 	progress := false
 
 	for _, blob := range req.response {
@@ -420,29 +350,23 @@ func (s *stateSync) process(req *stateReq) error {
 			delete(req.tasks, hash)
 		}
 	}
-	                                                  
+
 	npeers := s.d.peers.Len()
 	for hash, task := range req.tasks {
-		                                                                            
-		                                                                           
-		                                                                     
+
 		if len(req.response) > 0 || req.timedOut() {
 			delete(task.attempts, req.peer.id)
 		}
-		                                                                            
-		                                               
+
 		if len(task.attempts) >= npeers {
 			return fmt.Errorf("state node %s failed with all peers (%d tries, %d peers)", hash.TerminalString(), len(task.attempts), npeers)
 		}
-		                                            
+
 		s.tasks[hash] = task
 	}
 	return nil
 }
 
-                                                                                
-                                                                                 
-                  
 func (s *stateSync) processNodeData(blob []byte) (bool, common.Hash, error) {
 	res := trie.SyncResult{Data: blob}
 	s.keccak.Reset()
@@ -452,8 +376,6 @@ func (s *stateSync) processNodeData(blob []byte) (bool, common.Hash, error) {
 	return committed, res.Hash, err
 }
 
-                                                                                
-                               
 func (s *stateSync) updateStats(written, duplicate, unexpected int, duration time.Duration) {
 	s.d.syncStatsLock.Lock()
 	defer s.d.syncStatsLock.Unlock()

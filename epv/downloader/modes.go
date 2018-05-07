@@ -1,37 +1,20 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package downloader
 
 import "fmt"
 
-                                                                  
 type SyncMode int
 
 const (
-	FullSync  SyncMode = iota                                                              
-	FastSync                                                                                   
-	LightSync                                                                      
+	FullSync  SyncMode = iota 
+	FastSync                  
+	LightSync                 
 )
 
 func (mode SyncMode) IsValid() bool {
 	return mode >= FullSync && mode <= LightSync
 }
 
-                                            
 func (mode SyncMode) String() string {
 	switch mode {
 	case FullSync:

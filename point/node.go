@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package node
 
@@ -36,47 +21,44 @@ import (
 	"github.com/prometheus/prometheus/util/flock"
 )
 
-                                                           
 type Node struct {
-	eventmux *event.TypeMux                                                          
+	eventmux *event.TypeMux 
 	config   *Config
 	accman   *accounts.Manager
 
-	ephemeralKeystore string                                                                        
-	instanceDirLock   flock.Releaser                                                 
+	ephemeralKeystore string         
+	instanceDirLock   flock.Releaser 
 
 	serverConfig p2p.Config
-	server       *p2p.Server                                          
+	server       *p2p.Server 
 
-	serviceFuncs []ServiceConstructor                                                  
-	services     map[reflect.Type]Service                              
+	serviceFuncs []ServiceConstructor     
+	services     map[reflect.Type]Service 
 
-	rpcAPIs       []rpc.API                                                 
-	inprocHandler *rpc.Server                                                              
+	rpcAPIs       []rpc.API   
+	inprocHandler *rpc.Server 
 
-	ipcEndpoint string                                                          
-	ipcListener net.Listener                                                 
-	ipcHandler  *rpc.Server                                                        
+	ipcEndpoint string       
+	ipcListener net.Listener 
+	ipcHandler  *rpc.Server  
 
-	httpEndpoint  string                                                                               
-	httpWhitelist []string                                                       
-	httpListener  net.Listener                                                   
-	httpHandler   *rpc.Server                                                         
+	httpEndpoint  string       
+	httpWhitelist []string     
+	httpListener  net.Listener 
+	httpHandler   *rpc.Server  
 
-	wsEndpoint string                                                                                         
-	wsListener net.Listener                                                        
-	wsHandler  *rpc.Server                                                              
+	wsEndpoint string       
+	wsListener net.Listener 
+	wsHandler  *rpc.Server  
 
-	stop chan struct{}                                                 
+	stop chan struct{} 
 	lock sync.RWMutex
 
 	log log.Logger
 }
 
-                                                               
 func New(conf *Config) (*Node, error) {
-	                                                                       
-	                                           
+
 	confCopy := *conf
 	conf = &confCopy
 	if conf.DataDir != "" {
@@ -86,8 +68,7 @@ func New(conf *Config) (*Node, error) {
 		}
 		conf.DataDir = absdatadir
 	}
-	                                                                   
-	                                     
+
 	if strings.ContainsAny(conf.Name, `/\`) {
 		return nil, errors.New(`Config.Name must not contain '/' or '\'`)
 	}
@@ -97,8 +78,7 @@ func New(conf *Config) (*Node, error) {
 	if strings.HasSuffix(conf.Name, ".ipc") {
 		return nil, errors.New(`Config.Name cannot end in ".ipc"`)
 	}
-	                                                                           
-	                               
+
 	am, ephemeralKeystore, err := makeAccountManager(conf)
 	if err != nil {
 		return nil, err
@@ -106,8 +86,7 @@ func New(conf *Config) (*Node, error) {
 	if conf.Logger == nil {
 		conf.Logger = log.New()
 	}
-	                                                                  
-	                                                                      
+
 	return &Node{
 		accman:            am,
 		ephemeralKeystore: ephemeralKeystore,
@@ -121,8 +100,6 @@ func New(conf *Config) (*Node, error) {
 	}, nil
 }
 
-                                                                               
-                                                                                 
 func (n *Node) Register(constructor ServiceConstructor) error {
 	n.lock.Lock()
 	defer n.lock.Unlock()
@@ -134,12 +111,10 @@ func (n *Node) Register(constructor ServiceConstructor) error {
 	return nil
 }
 
-                                                      
 func (n *Node) Start() error {
 	n.lock.Lock()
 	defer n.lock.Unlock()
 
-	                                              
 	if n.server != nil {
 		return ErrNodeRunning
 	}
@@ -147,8 +122,6 @@ func (n *Node) Start() error {
 		return err
 	}
 
-	                                                           
-	                       
 	n.serverConfig = n.config.P2P
 	n.serverConfig.PrivateKey = n.config.NodeKey()
 	n.serverConfig.Name = n.config.NodeName()
@@ -165,20 +138,19 @@ func (n *Node) Start() error {
 	running := &p2p.Server{Config: n.serverConfig}
 	n.log.Info("Starting peer-to-peer node", "instance", n.serverConfig.Name)
 
-	                                                      
 	services := make(map[reflect.Type]Service)
 	for _, constructor := range n.serviceFuncs {
-		                                                  
+
 		ctx := &ServiceContext{
 			config:         n.config,
 			services:       make(map[reflect.Type]Service),
 			EventMux:       n.eventmux,
 			AccountManager: n.accman,
 		}
-		for kind, s := range services {                                   
+		for kind, s := range services { 
 			ctx.services[kind] = s
 		}
-		                                 
+
 		service, err := constructor(ctx)
 		if err != nil {
 			return err
@@ -189,17 +161,17 @@ func (n *Node) Start() error {
 		}
 		services[kind] = service
 	}
-	                                                                  
+
 	for _, service := range services {
 		running.Protocols = append(running.Protocols, service.Protocols()...)
 	}
 	if err := running.Start(); err != nil {
 		return convertFileLockError(err)
 	}
-	                             
+
 	started := []reflect.Type{}
 	for kind, service := range services {
-		                                                             
+
 		if err := service.Start(running); err != nil {
 			for _, kind := range started {
 				services[kind].Stop()
@@ -208,10 +180,10 @@ func (n *Node) Start() error {
 
 			return err
 		}
-		                                                 
+
 		started = append(started, kind)
 	}
-	                                             
+
 	if err := n.startRPC(services); err != nil {
 		for _, service := range services {
 			service.Stop()
@@ -219,7 +191,7 @@ func (n *Node) Start() error {
 		running.Stop()
 		return err
 	}
-	                                  
+
 	n.services = services
 	n.server = running
 	n.stop = make(chan struct{})
@@ -229,15 +201,14 @@ func (n *Node) Start() error {
 
 func (n *Node) openDataDir() error {
 	if n.config.DataDir == "" {
-		return nil             
+		return nil 
 	}
 
 	instdir := filepath.Join(n.config.DataDir, n.config.name())
 	if err := os.MkdirAll(instdir, 0700); err != nil {
 		return err
 	}
-	                                                                                       
-	                                                          
+
 	release, _, err := flock.New(filepath.Join(instdir, "LOCK"))
 	if err != nil {
 		return convertFileLockError(err)
@@ -246,16 +217,13 @@ func (n *Node) openDataDir() error {
 	return nil
 }
 
-                                                                                
-                                                                                  
-                                           
 func (n *Node) startRPC(services map[reflect.Type]Service) error {
-	                                          
+
 	apis := n.apis()
 	for _, service := range services {
 		apis = append(apis, service.APIs()...)
 	}
-	                                                                     
+
 	if err := n.startInProc(apis); err != nil {
 		return err
 	}
@@ -274,14 +242,13 @@ func (n *Node) startRPC(services map[reflect.Type]Service) error {
 		n.stopInProc()
 		return err
 	}
-	                                         
+
 	n.rpcAPIs = apis
 	return nil
 }
 
-                                                      
 func (n *Node) startInProc(apis []rpc.API) error {
-	                                                
+
 	handler := rpc.NewServer()
 	for _, api := range apis {
 		if err := handler.RegisterName(api.Namespace, api.Service); err != nil {
@@ -293,7 +260,6 @@ func (n *Node) startInProc(apis []rpc.API) error {
 	return nil
 }
 
-                                                     
 func (n *Node) stopInProc() {
 	if n.inprocHandler != nil {
 		n.inprocHandler.Stop()
@@ -301,13 +267,12 @@ func (n *Node) stopInProc() {
 	}
 }
 
-                                                        
 func (n *Node) startIPC(apis []rpc.API) error {
-	                                                        
+
 	if n.ipcEndpoint == "" {
 		return nil
 	}
-	                                                
+
 	handler := rpc.NewServer()
 	for _, api := range apis {
 		if err := handler.RegisterName(api.Namespace, api.Service); err != nil {
@@ -315,7 +280,7 @@ func (n *Node) startIPC(apis []rpc.API) error {
 		}
 		n.log.Debug("IPC registered", "service", api.Service, "namespace", api.Namespace)
 	}
-	                                              
+
 	var (
 		listener net.Listener
 		err      error
@@ -329,28 +294,27 @@ func (n *Node) startIPC(apis []rpc.API) error {
 		for {
 			conn, err := listener.Accept()
 			if err != nil {
-				                                       
+
 				n.lock.RLock()
 				closed := n.ipcListener == nil
 				n.lock.RUnlock()
 				if closed {
 					return
 				}
-				                                                   
+
 				n.log.Error("IPC accept failed", "err", err)
 				continue
 			}
 			go handler.ServeCodec(rpc.NewJSONCodec(conn), rpc.OptionMethodInvocation|rpc.OptionSubscriptions)
 		}
 	}()
-	                                    
+
 	n.ipcListener = listener
 	n.ipcHandler = handler
 
 	return nil
 }
 
-                                           
 func (n *Node) stopIPC() {
 	if n.ipcListener != nil {
 		n.ipcListener.Close()
@@ -364,18 +328,17 @@ func (n *Node) stopIPC() {
 	}
 }
 
-                                                          
 func (n *Node) startHTTP(endpoint string, apis []rpc.API, modules []string, cors []string, vhosts []string) error {
-	                                                         
+
 	if endpoint == "" {
 		return nil
 	}
-	                                                      
+
 	whitelist := make(map[string]bool)
 	for _, module := range modules {
 		whitelist[module] = true
 	}
-	                                                
+
 	handler := rpc.NewServer()
 	for _, api := range apis {
 		if whitelist[api.Namespace] || (len(whitelist) == 0 && api.Public) {
@@ -385,7 +348,7 @@ func (n *Node) startHTTP(endpoint string, apis []rpc.API, modules []string, cors
 			n.log.Debug("HTTP registered", "service", api.Service, "namespace", api.Namespace)
 		}
 	}
-	                                               
+
 	var (
 		listener net.Listener
 		err      error
@@ -395,7 +358,7 @@ func (n *Node) startHTTP(endpoint string, apis []rpc.API, modules []string, cors
 	}
 	go rpc.NewHTTPServer(cors, vhosts, handler).Serve(listener)
 	n.log.Info("HTTP endpoint opened", "url", fmt.Sprintf("http://%s", endpoint), "cors", strings.Join(cors, ","), "vhosts", strings.Join(vhosts, ","))
-	                                    
+
 	n.httpEndpoint = endpoint
 	n.httpListener = listener
 	n.httpHandler = handler
@@ -403,7 +366,6 @@ func (n *Node) startHTTP(endpoint string, apis []rpc.API, modules []string, cors
 	return nil
 }
 
-                                             
 func (n *Node) stopHTTP() {
 	if n.httpListener != nil {
 		n.httpListener.Close()
@@ -417,18 +379,17 @@ func (n *Node) stopHTTP() {
 	}
 }
 
-                                                             
 func (n *Node) startWS(endpoint string, apis []rpc.API, modules []string, wsOrigins []string, exposeAll bool) error {
-	                                                       
+
 	if endpoint == "" {
 		return nil
 	}
-	                                                      
+
 	whitelist := make(map[string]bool)
 	for _, module := range modules {
 		whitelist[module] = true
 	}
-	                                                
+
 	handler := rpc.NewServer()
 	for _, api := range apis {
 		if exposeAll || whitelist[api.Namespace] || (len(whitelist) == 0 && api.Public) {
@@ -438,7 +399,7 @@ func (n *Node) startWS(endpoint string, apis []rpc.API, modules []string, wsOrig
 			n.log.Debug("WebSocket registered", "service", api.Service, "namespace", api.Namespace)
 		}
 	}
-	                                               
+
 	var (
 		listener net.Listener
 		err      error
@@ -449,7 +410,6 @@ func (n *Node) startWS(endpoint string, apis []rpc.API, modules []string, wsOrig
 	go rpc.NewWSServer(wsOrigins, handler).Serve(listener)
 	n.log.Info("WebSocket endpoint opened", "url", fmt.Sprintf("ws://%s", listener.Addr()))
 
-	                                    
 	n.wsEndpoint = endpoint
 	n.wsListener = listener
 	n.wsHandler = handler
@@ -457,7 +417,6 @@ func (n *Node) startWS(endpoint string, apis []rpc.API, modules []string, wsOrig
 	return nil
 }
 
-                                                
 func (n *Node) stopWS() {
 	if n.wsListener != nil {
 		n.wsListener.Close()
@@ -471,18 +430,14 @@ func (n *Node) stopWS() {
 	}
 }
 
-                                                                               
-                                     
 func (n *Node) Stop() error {
 	n.lock.Lock()
 	defer n.lock.Unlock()
 
-	                                          
 	if n.server == nil {
 		return ErrNodeStopped
 	}
 
-	                                                  
 	n.stopWS()
 	n.stopHTTP()
 	n.stopIPC()
@@ -499,7 +454,6 @@ func (n *Node) Stop() error {
 	n.services = nil
 	n.server = nil
 
-	                                   
 	if n.instanceDirLock != nil {
 		if err := n.instanceDirLock.Release(); err != nil {
 			n.log.Error("Can't release datadir lock", "err", err)
@@ -507,10 +461,8 @@ func (n *Node) Stop() error {
 		n.instanceDirLock = nil
 	}
 
-	                 
 	close(n.stop)
 
-	                                                     
 	var keystoreErr error
 	if n.ephemeralKeystore != "" {
 		keystoreErr = os.RemoveAll(n.ephemeralKeystore)
@@ -525,8 +477,6 @@ func (n *Node) Stop() error {
 	return nil
 }
 
-                                                                               
-                                                             
 func (n *Node) Wait() {
 	n.lock.RLock()
 	if n.server == nil {
@@ -539,8 +489,6 @@ func (n *Node) Wait() {
 	<-stop
 }
 
-                                                                                
-                                            
 func (n *Node) Restart() error {
 	if err := n.Stop(); err != nil {
 		return err
@@ -551,7 +499,6 @@ func (n *Node) Restart() error {
 	return nil
 }
 
-                                                                      
 func (n *Node) Attach() (*rpc.Client, error) {
 	n.lock.RLock()
 	defer n.lock.RUnlock()
@@ -562,7 +509,6 @@ func (n *Node) Attach() (*rpc.Client, error) {
 	return rpc.DialInProc(n.inprocHandler), nil
 }
 
-                                                         
 func (n *Node) RPCHandler() (*rpc.Server, error) {
 	n.lock.RLock()
 	defer n.lock.RUnlock()
@@ -573,9 +519,6 @@ func (n *Node) RPCHandler() (*rpc.Server, error) {
 	return n.inprocHandler, nil
 }
 
-                                                                                 
-                                                                                
-                                      
 func (n *Node) Server() *p2p.Server {
 	n.lock.RLock()
 	defer n.lock.RUnlock()
@@ -583,16 +526,14 @@ func (n *Node) Server() *p2p.Server {
 	return n.server
 }
 
-                                                                               
 func (n *Node) Service(service interface{}) error {
 	n.lock.RLock()
 	defer n.lock.RUnlock()
 
-	                                          
 	if n.server == nil {
 		return ErrNodeStopped
 	}
-	                                              
+
 	element := reflect.ValueOf(service).Elem()
 	if running, ok := n.services[element.Type()]; ok {
 		element.Set(reflect.ValueOf(running))
@@ -601,46 +542,34 @@ func (n *Node) Service(service interface{}) error {
 	return ErrServiceUnknown
 }
 
-                                                                    
-                                                                                    
 func (n *Node) DataDir() string {
 	return n.config.DataDir
 }
 
-                                                                           
 func (n *Node) InstanceDir() string {
 	return n.config.instanceDir()
 }
 
-                                                                           
 func (n *Node) AccountManager() *accounts.Manager {
 	return n.accman
 }
 
-                                                                             
 func (n *Node) IPCEndpoint() string {
 	return n.ipcEndpoint
 }
 
-                                                                               
 func (n *Node) HTTPEndpoint() string {
 	return n.httpEndpoint
 }
 
-                                                                           
 func (n *Node) WSEndpoint() string {
 	return n.wsEndpoint
 }
 
-                                                                               
-                              
 func (n *Node) EventMux() *event.TypeMux {
 	return n.eventmux
 }
 
-                                                                                    
-                                                                                   
-                                            
 func (n *Node) OpenDatabase(name string, cache, handles int) (epvdb.Database, error) {
 	if n.config.DataDir == "" {
 		return epvdb.NewMemDatabase()
@@ -648,12 +577,10 @@ func (n *Node) OpenDatabase(name string, cache, handles int) (epvdb.Database, er
 	return epvdb.NewLDBDatabase(n.config.resolvePath(name), cache, handles)
 }
 
-                                                                                 
 func (n *Node) ResolvePath(x string) string {
 	return n.config.resolvePath(x)
 }
 
-                                                                   
 func (n *Node) apis() []rpc.API {
 	return []rpc.API{
 		{

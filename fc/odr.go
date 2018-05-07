@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package les
 
@@ -25,7 +10,6 @@ import (
 	"github.com/epvchain/go-epvchain/book"
 )
 
-                                     
 type LesOdr struct {
 	db                                         epvdb.Database
 	chtIndexer, bloomTrieIndexer, bloomIndexer *core.ChainIndexer
@@ -44,27 +28,22 @@ func NewLesOdr(db epvdb.Database, chtIndexer, bloomTrieIndexer, bloomIndexer *co
 	}
 }
 
-                                      
 func (odr *LesOdr) Stop() {
 	close(odr.stop)
 }
 
-                                        
 func (odr *LesOdr) Database() epvdb.Database {
 	return odr.db
 }
 
-                                           
 func (odr *LesOdr) ChtIndexer() *core.ChainIndexer {
 	return odr.chtIndexer
 }
 
-                                                        
 func (odr *LesOdr) BloomTrieIndexer() *core.ChainIndexer {
 	return odr.bloomTrieIndexer
 }
 
-                                                   
 func (odr *LesOdr) BloomIndexer() *core.ChainIndexer {
 	return odr.bloomIndexer
 }
@@ -79,15 +58,12 @@ const (
 	MsgHelperTrieProofs
 )
 
-                                                                   
 type Msg struct {
 	MsgType int
 	ReqID   uint64
 	Obj     interface{}
 }
 
-                                                          
-                                                                             
 func (odr *LesOdr) Retrieve(ctx context.Context, req light.OdrRequest) (err error) {
 	lreq := LesRequest(req)
 
@@ -109,7 +85,7 @@ func (odr *LesOdr) Retrieve(ctx context.Context, req light.OdrRequest) (err erro
 	}
 
 	if err = odr.retriever.retrieve(ctx, reqID, rq, func(p distPeer, msg *Msg) error { return lreq.Validate(odr.db, msg) }, odr.stop); err == nil {
-		                                      
+
 		req.StoreResult(odr.db)
 	} else {
 		log.Debug("Failed to retrieve data from network", "err", err)

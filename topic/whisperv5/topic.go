@@ -1,20 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
-
-                                               
 
 package whisperv5
 
@@ -23,9 +6,6 @@ import (
 	"github.com/epvchain/go-epvchain/public/hexutil"
 )
 
-                                                                     
-                                                                              
-                                                                                
 type TopicType [TopicLength]byte
 
 func BytesToTopic(b []byte) (t TopicType) {
@@ -39,17 +19,14 @@ func BytesToTopic(b []byte) (t TopicType) {
 	return t
 }
 
-                                                                 
 func (t *TopicType) String() string {
 	return common.ToHex(t[:])
 }
 
-                                                   
 func (t TopicType) MarshalText() ([]byte, error) {
 	return hexutil.Bytes(t[:]).MarshalText()
 }
 
-                                                        
 func (t *TopicType) UnmarshalText(input []byte) error {
 	return hexutil.UnmarshalFixedText("Topic", input, t[:])
 }

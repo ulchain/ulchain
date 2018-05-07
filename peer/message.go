@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package p2p
 
@@ -32,24 +17,13 @@ import (
 	"github.com/epvchain/go-epvchain/process"
 )
 
-                                              
-  
-                                                                    
-                                                                  
-                                                               
-                                                               
-                                                             
 type Msg struct {
 	Code       uint64
-	Size       uint32                      
+	Size       uint32 
 	Payload    io.Reader
 	ReceivedAt time.Time
 }
 
-                                                  
-                                            
-  
-                                                  
 func (msg Msg) Decode(val interface{}) error {
 	s := rlp.NewStream(msg.Payload, uint64(msg.Size))
 	if err := s.Decode(val); err != nil {
@@ -62,7 +36,6 @@ func (msg Msg) String() string {
 	return fmt.Sprintf("msg #%v (%v bytes)", msg.Code, msg.Size)
 }
 
-                                                              
 func (msg Msg) Discard() error {
 	_, err := io.Copy(ioutil.Discard, msg.Payload)
 	return err
@@ -73,24 +46,15 @@ type MsgReader interface {
 }
 
 type MsgWriter interface {
-	                                                              
-	                                              
-	  
-	                                                         
-	                             
+
 	WriteMsg(Msg) error
 }
 
-                                                                  
-                                                                 
-                                                  
 type MsgReadWriter interface {
 	MsgReader
 	MsgWriter
 }
 
-                                                          
-                                     
 func Send(w MsgWriter, msgcode uint64, data interface{}) error {
 	size, r, err := rlp.EncodeToReader(data)
 	if err != nil {
@@ -99,21 +63,10 @@ func Send(w MsgWriter, msgcode uint64, data interface{}) error {
 	return w.WriteMsg(Msg{Code: msgcode, Size: uint32(size), Payload: r})
 }
 
-                                                                 
-                      
-  
-                                    
-  
-                                                                
-  
-                  
-  
 func SendItems(w MsgWriter, msgcode uint64, elems ...interface{}) error {
 	return Send(w, msgcode, elems)
 }
 
-                                                     
-                                                     
 type netWrapper struct {
 	rmu, wmu sync.Mutex
 
@@ -136,17 +89,12 @@ func (rw *netWrapper) WriteMsg(msg Msg) error {
 	return rw.wrapped.WriteMsg(msg)
 }
 
-                                                                  
-                                                                      
-                  
 type eofSignal struct {
 	wrapped io.Reader
-	count   uint32                        
+	count   uint32 
 	eof     chan<- struct{}
 }
 
-                                                                 
-                                                                   
 func (r *eofSignal) Read(buf []byte) (int, error) {
 	if r.count == 0 {
 		if r.eof != nil {
@@ -163,15 +111,12 @@ func (r *eofSignal) Read(buf []byte) (int, error) {
 	n, err := r.wrapped.Read(buf[:max])
 	r.count -= uint32(n)
 	if (err != nil || r.count == 0) && r.eof != nil {
-		r.eof <- struct{}{}                                        
+		r.eof <- struct{}{} 
 		r.eof = nil
 	}
 	return n, err
 }
 
-                                                               
-                                                               
-                           
 func MsgPipe() (*MsgPipeRW, *MsgPipeRW) {
 	var (
 		c1, c2  = make(chan Msg), make(chan Msg)
@@ -183,11 +128,8 @@ func MsgPipe() (*MsgPipeRW, *MsgPipeRW) {
 	return rw1, rw2
 }
 
-                                                           
-                        
 var ErrPipeClosed = errors.New("p2p: read or write on closed message pipe")
 
-                                                    
 type MsgPipeRW struct {
 	w       chan<- Msg
 	r       <-chan Msg
@@ -195,8 +137,6 @@ type MsgPipeRW struct {
 	closed  *int32
 }
 
-                                         
-                                                                 
 func (p *MsgPipeRW) WriteMsg(msg Msg) error {
 	if atomic.LoadInt32(p.closed) == 0 {
 		consumed := make(chan struct{}, 1)
@@ -204,7 +144,7 @@ func (p *MsgPipeRW) WriteMsg(msg Msg) error {
 		select {
 		case p.w <- msg:
 			if msg.Size > 0 {
-				                                   
+
 				select {
 				case <-consumed:
 				case <-p.closing:
@@ -217,7 +157,6 @@ func (p *MsgPipeRW) WriteMsg(msg Msg) error {
 	return ErrPipeClosed
 }
 
-                                                               
 func (p *MsgPipeRW) ReadMsg() (Msg, error) {
 	if atomic.LoadInt32(p.closed) == 0 {
 		select {
@@ -229,22 +168,16 @@ func (p *MsgPipeRW) ReadMsg() (Msg, error) {
 	return Msg{}, ErrPipeClosed
 }
 
-                                                                     
-                                                          
-                                               
 func (p *MsgPipeRW) Close() error {
 	if atomic.AddInt32(p.closed, 1) != 1 {
-		                                  
-		atomic.StoreInt32(p.closed, 1)                  
+
+		atomic.StoreInt32(p.closed, 1) 
 		return nil
 	}
 	close(p.closing)
 	return nil
 }
 
-                                                         
-                                                          
-                                                                
 func ExpectMsg(r MsgReader, code uint64, content interface{}) error {
 	msg, err := r.ReadMsg()
 	if err != nil {
@@ -274,8 +207,6 @@ func ExpectMsg(r MsgReader, code uint64, content interface{}) error {
 	return nil
 }
 
-                                                                               
-              
 type msgEventer struct {
 	MsgReadWriter
 
@@ -284,8 +215,6 @@ type msgEventer struct {
 	Protocol string
 }
 
-                                                                             
-       
 func newMsgEventer(rw MsgReadWriter, feed *event.Feed, peerID discover.NodeID, proto string) *msgEventer {
 	return &msgEventer{
 		MsgReadWriter: rw,
@@ -295,8 +224,6 @@ func newMsgEventer(rw MsgReadWriter, feed *event.Feed, peerID discover.NodeID, p
 	}
 }
 
-                                                                        
-                           
 func (self *msgEventer) ReadMsg() (Msg, error) {
 	msg, err := self.MsgReadWriter.ReadMsg()
 	if err != nil {
@@ -312,8 +239,6 @@ func (self *msgEventer) ReadMsg() (Msg, error) {
 	return msg, nil
 }
 
-                                                                        
-                       
 func (self *msgEventer) WriteMsg(msg Msg) error {
 	err := self.MsgReadWriter.WriteMsg(msg)
 	if err != nil {
@@ -329,8 +254,6 @@ func (self *msgEventer) WriteMsg(msg Msg) error {
 	return nil
 }
 
-                                                                           
-            
 func (self *msgEventer) Close() error {
 	if v, ok := self.MsgReadWriter.(io.Closer); ok {
 		return v.Close()

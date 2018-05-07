@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package p2p
 
@@ -47,35 +32,26 @@ import (
 const (
 	maxUint24 = ^uint32(0) >> 8
 
-	sskLen = 16                                        
-	sigLen = 65                 
-	pubLen = 64                                                                     
-	shaLen = 32                               
+	sskLen = 16 
+	sigLen = 65 
+	pubLen = 64 
+	shaLen = 32 
 
 	authMsgLen  = sigLen + shaLen + pubLen + shaLen + 1
 	authRespLen = pubLen + shaLen + 1
 
-	eciesOverhead = 65              + 16          + 32          
+	eciesOverhead = 65  + 16  + 32 
 
-	encAuthMsgLen  = authMsgLen + eciesOverhead                                                    
-	encAuthRespLen = authRespLen + eciesOverhead                                               
+	encAuthMsgLen  = authMsgLen + eciesOverhead  
+	encAuthRespLen = authRespLen + eciesOverhead 
 
-	                                                      
-	                                
 	handshakeTimeout = 5 * time.Second
 
-	                                                         
-	                                                               
-	                                                       
 	discWriteTimeout = 1 * time.Second
 )
 
-                                                                               
-                                             
 var errPlainMessageTooLarge = errors.New("message length >= 16MB")
 
-                                                                        
-                                                                  
 type rlpx struct {
 	fd net.Conn
 
@@ -105,7 +81,7 @@ func (t *rlpx) WriteMsg(msg Msg) error {
 func (t *rlpx) close(err error) {
 	t.wmu.Lock()
 	defer t.wmu.Unlock()
-	                                                           
+
 	if t.rw != nil {
 		if r, ok := err.(DiscReason); ok && r != DiscNetworkError {
 			t.fd.SetWriteDeadline(time.Now().Add(discWriteTimeout))
@@ -115,25 +91,18 @@ func (t *rlpx) close(err error) {
 	t.fd.Close()
 }
 
-                                                                 
-                                                                      
-                                                                      
-                                                      
 func (t *rlpx) doProtoHandshake(our *protoHandshake) (their *protoHandshake, err error) {
-	                                                        
-	                                                         
-	                                                                
-	                                               
+
 	werr := make(chan error, 1)
 	go func() { werr <- Send(t.rw, handshakeMsg, our) }()
 	if their, err = readProtocolHandshake(t.rw, our); err != nil {
-		<-werr                                      
+		<-werr 
 		return nil, err
 	}
 	if err := <-werr; err != nil {
 		return nil, fmt.Errorf("write error: %v", err)
 	}
-	                                                                        
+
 	t.rw.snappy = their.Version >= snappyProtocolVersion
 
 	return their, nil
@@ -148,10 +117,7 @@ func readProtocolHandshake(rw MsgReader, our *protoHandshake) (*protoHandshake, 
 		return nil, fmt.Errorf("message too big")
 	}
 	if msg.Code == discMsg {
-		                                                                 
-		                                                               
-		                                                                    
-		                                               
+
 		var reason [1]DiscReason
 		rlp.Decode(msg.Payload, &reason)
 		return nil, reason[0]
@@ -188,19 +154,16 @@ func (t *rlpx) doEncHandshake(prv *ecdsa.PrivateKey, dial *discover.Node) (disco
 	return sec.RemoteID, nil
 }
 
-                                                               
 type encHandshake struct {
 	initiator bool
 	remoteID  discover.NodeID
 
-	remotePub            *ecies.PublicKey                
-	initNonce, respNonce []byte                    
-	randomPrivKey        *ecies.PrivateKey                
-	remoteRandomPub      *ecies.PublicKey                      
+	remotePub            *ecies.PublicKey  
+	initNonce, respNonce []byte            
+	randomPrivKey        *ecies.PrivateKey 
+	remoteRandomPub      *ecies.PublicKey  
 }
 
-                                            
-                                                        
 type secrets struct {
 	RemoteID              discover.NodeID
 	AES, MAC              []byte
@@ -208,38 +171,31 @@ type secrets struct {
 	Token                 []byte
 }
 
-                                             
 type authMsgV4 struct {
-	gotPlain bool                                         
+	gotPlain bool 
 
 	Signature       [sigLen]byte
 	InitiatorPubkey [pubLen]byte
 	Nonce           [shaLen]byte
 	Version         uint
 
-	                                                   
 	Rest []rlp.RawValue `rlp:"tail"`
 }
 
-                                                 
 type authRespV4 struct {
 	RandomPubkey [pubLen]byte
 	Nonce        [shaLen]byte
 	Version      uint
 
-	                                                   
 	Rest []rlp.RawValue `rlp:"tail"`
 }
 
-                                                      
-                                                                
 func (h *encHandshake) secrets(auth, authResp []byte) (secrets, error) {
 	ecdheSecret, err := h.randomPrivKey.GenerateShared(h.remoteRandomPub, sskLen, sskLen)
 	if err != nil {
 		return secrets{}, err
 	}
 
-	                                                   
 	sharedSecret := crypto.Keccak256(ecdheSecret, crypto.Keccak256(h.respNonce, h.initNonce))
 	aesSecret := crypto.Keccak256(ecdheSecret, sharedSecret)
 	s := secrets{
@@ -248,7 +204,6 @@ func (h *encHandshake) secrets(auth, authResp []byte) (secrets, error) {
 		MAC:      crypto.Keccak256(ecdheSecret, aesSecret),
 	}
 
-	                                    
 	mac1 := sha3.NewKeccak256()
 	mac1.Write(xor(s.MAC, h.respNonce))
 	mac1.Write(auth)
@@ -264,16 +219,10 @@ func (h *encHandshake) secrets(auth, authResp []byte) (secrets, error) {
 	return s, nil
 }
 
-                                                                  
-                                                                 
 func (h *encHandshake) staticSharedSecret(prv *ecdsa.PrivateKey) ([]byte, error) {
 	return ecies.ImportECDSA(prv).GenerateShared(h.remotePub, sskLen, sskLen)
 }
 
-                                                            
-                                                             
-  
-                                         
 func initiatorEncHandshake(conn io.ReadWriter, prv *ecdsa.PrivateKey, remoteID discover.NodeID, token []byte) (s secrets, err error) {
 	h := &encHandshake{initiator: true, remoteID: remoteID}
 	authMsg, err := h.makeAuthMsg(prv, token)
@@ -299,25 +248,23 @@ func initiatorEncHandshake(conn io.ReadWriter, prv *ecdsa.PrivateKey, remoteID d
 	return h.secrets(authPacket, authRespPacket)
 }
 
-                                                       
 func (h *encHandshake) makeAuthMsg(prv *ecdsa.PrivateKey, token []byte) (*authMsgV4, error) {
 	rpub, err := h.remoteID.Pubkey()
 	if err != nil {
 		return nil, fmt.Errorf("bad remoteID: %v", err)
 	}
 	h.remotePub = ecies.ImportECDSAPublic(rpub)
-	                                   
+
 	h.initNonce = make([]byte, shaLen)
 	if _, err := rand.Read(h.initNonce); err != nil {
 		return nil, err
 	}
-	                                       
+
 	h.randomPrivKey, err = ecies.GenerateKey(rand.Reader, crypto.S256(), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	                                                   
 	token, err = h.staticSharedSecret(prv)
 	if err != nil {
 		return nil, err
@@ -342,11 +289,6 @@ func (h *encHandshake) handleAuthResp(msg *authRespV4) (err error) {
 	return err
 }
 
-                                                           
-                                                               
-  
-                                         
-                                                             
 func receiverEncHandshake(conn io.ReadWriter, prv *ecdsa.PrivateKey, token []byte) (s secrets, err error) {
 	authMsg := new(authMsgV4)
 	authPacket, err := readHandshakeMsg(authMsg, encAuthMsgLen, prv, conn)
@@ -378,7 +320,7 @@ func receiverEncHandshake(conn io.ReadWriter, prv *ecdsa.PrivateKey, token []byt
 }
 
 func (h *encHandshake) handleAuthMsg(msg *authMsgV4, prv *ecdsa.PrivateKey) error {
-	                              
+
 	h.initNonce = msg.Nonce[:]
 	h.remoteID = msg.InitiatorPubkey
 	rpub, err := h.remoteID.Pubkey()
@@ -387,8 +329,6 @@ func (h *encHandshake) handleAuthMsg(msg *authMsgV4, prv *ecdsa.PrivateKey) erro
 	}
 	h.remotePub = ecies.ImportECDSAPublic(rpub)
 
-	                                    
-	                                                                                   
 	if h.randomPrivKey == nil {
 		h.randomPrivKey, err = ecies.GenerateKey(rand.Reader, crypto.S256(), nil)
 		if err != nil {
@@ -396,7 +336,6 @@ func (h *encHandshake) handleAuthMsg(msg *authMsgV4, prv *ecdsa.PrivateKey) erro
 		}
 	}
 
-	                       
 	token, err := h.staticSharedSecret(prv)
 	if err != nil {
 		return err
@@ -411,7 +350,7 @@ func (h *encHandshake) handleAuthMsg(msg *authMsgV4, prv *ecdsa.PrivateKey) erro
 }
 
 func (h *encHandshake) makeAuthResp() (msg *authRespV4, err error) {
-	                         
+
 	h.respNonce = make([]byte, shaLen)
 	if _, err = rand.Read(h.respNonce); err != nil {
 		return nil, err
@@ -430,13 +369,13 @@ func (msg *authMsgV4) sealPlain(h *encHandshake) ([]byte, error) {
 	n += copy(buf[n:], crypto.Keccak256(exportPubkey(&h.randomPrivKey.PublicKey)))
 	n += copy(buf[n:], msg.InitiatorPubkey[:])
 	n += copy(buf[n:], msg.Nonce[:])
-	buf[n] = 0              
+	buf[n] = 0 
 	return ecies.Encrypt(rand.Reader, h.remotePub, buf, nil, nil)
 }
 
 func (msg *authMsgV4) decodePlain(input []byte) {
 	n := copy(msg.Signature[:], input)
-	n += shaLen                                       
+	n += shaLen 
 	n += copy(msg.InitiatorPubkey[:], input[n:])
 	copy(msg.Nonce[:], input[n:])
 	msg.Version = 4
@@ -463,8 +402,7 @@ func sealEIP8(msg interface{}, h *encHandshake) ([]byte, error) {
 	if err := rlp.Encode(buf, msg); err != nil {
 		return nil, err
 	}
-	                                                                                    
-	                                                         
+
 	pad := padSpace[:mrand.Intn(len(padSpace)-100)+100]
 	buf.Write(pad)
 	prefix := make([]byte, 2)
@@ -483,13 +421,13 @@ func readHandshakeMsg(msg plainDecoder, plainSize int, prv *ecdsa.PrivateKey, r 
 	if _, err := io.ReadFull(r, buf); err != nil {
 		return buf, err
 	}
-	                                             
+
 	key := ecies.ImportECDSA(prv)
 	if dec, err := key.Decrypt(rand.Reader, buf, nil, nil); err == nil {
 		msg.decodePlain(dec)
 		return buf, nil
 	}
-	                                   
+
 	prefix := buf[:2]
 	size := binary.BigEndian.Uint16(prefix)
 	if size < uint16(plainSize) {
@@ -503,25 +441,23 @@ func readHandshakeMsg(msg plainDecoder, plainSize int, prv *ecdsa.PrivateKey, r 
 	if err != nil {
 		return buf, err
 	}
-	                                                    
-	                                         
+
 	s := rlp.NewStream(bytes.NewReader(dec), 0)
 	return buf, s.Decode(msg)
 }
 
-                                                  
 func importPublicKey(pubKey []byte) (*ecies.PublicKey, error) {
 	var pubKey65 []byte
 	switch len(pubKey) {
 	case 64:
-		                              
+
 		pubKey65 = append([]byte{0x04}, pubKey...)
 	case 65:
 		pubKey65 = pubKey
 	default:
 		return nil, fmt.Errorf("invalid public key length %v (expect 64/65)", len(pubKey))
 	}
-	                                    
+
 	pub := crypto.ToECDSAPub(pubKey65)
 	if pub.X == nil {
 		return nil, fmt.Errorf("invalid public key")
@@ -545,18 +481,12 @@ func xor(one, other []byte) (xor []byte) {
 }
 
 var (
-	                                                     
-	                                                               
+
 	zeroHeader = []byte{0xC2, 0x80, 0x80}
-	                     
+
 	zero16 = make([]byte, 16)
 )
 
-                                                               
-                                                                  
-              
-  
-                                                                       
 type rlpxFrameRW struct {
 	conn io.ReadWriter
 	enc  cipher.Stream
@@ -578,8 +508,7 @@ func newRLPXFrameRW(conn io.ReadWriter, s secrets) *rlpxFrameRW {
 	if err != nil {
 		panic("invalid AES secret: " + err.Error())
 	}
-	                                                       
-	                               
+
 	iv := make([]byte, encc.BlockSize())
 	return &rlpxFrameRW{
 		conn:       conn,
@@ -594,7 +523,6 @@ func newRLPXFrameRW(conn io.ReadWriter, s secrets) *rlpxFrameRW {
 func (rw *rlpxFrameRW) WriteMsg(msg Msg) error {
 	ptype, _ := rlp.EncodeToBytes(msg.Code)
 
-	                                             
 	if rw.snappy {
 		if msg.Size > maxUint24 {
 			return errPlainMessageTooLarge
@@ -605,24 +533,21 @@ func (rw *rlpxFrameRW) WriteMsg(msg Msg) error {
 		msg.Payload = bytes.NewReader(payload)
 		msg.Size = uint32(len(payload))
 	}
-	               
+
 	headbuf := make([]byte, 32)
 	fsize := uint32(len(ptype)) + msg.Size
 	if fsize > maxUint24 {
 		return errors.New("message size overflows uint24")
 	}
-	putInt24(fsize, headbuf)                        
+	putInt24(fsize, headbuf) 
 	copy(headbuf[3:], zeroHeader)
-	rw.enc.XORKeyStream(headbuf[:16], headbuf[:16])                               
+	rw.enc.XORKeyStream(headbuf[:16], headbuf[:16]) 
 
-	                   
 	copy(headbuf[16:], updateMAC(rw.egressMAC, rw.macCipher, headbuf[:16]))
 	if _, err := rw.conn.Write(headbuf); err != nil {
 		return err
 	}
 
-	                                                           
-	                            
 	tee := cipher.StreamWriter{S: rw.enc, W: io.MultiWriter(rw.conn, rw.egressMAC)}
 	if _, err := tee.Write(ptype); err != nil {
 		return err
@@ -636,8 +561,6 @@ func (rw *rlpxFrameRW) WriteMsg(msg Msg) error {
 		}
 	}
 
-	                                                         
-	                                           
 	fmacseed := rw.egressMAC.Sum(nil)
 	mac := updateMAC(rw.egressMAC, rw.macCipher, fmacseed)
 	_, err := rw.conn.Write(mac)
@@ -645,22 +568,20 @@ func (rw *rlpxFrameRW) WriteMsg(msg Msg) error {
 }
 
 func (rw *rlpxFrameRW) ReadMsg() (msg Msg, err error) {
-	                  
+
 	headbuf := make([]byte, 32)
 	if _, err := io.ReadFull(rw.conn, headbuf); err != nil {
 		return msg, err
 	}
-	                    
+
 	shouldMAC := updateMAC(rw.ingressMAC, rw.macCipher, headbuf[:16])
 	if !hmac.Equal(shouldMAC, headbuf[16:]) {
 		return msg, errors.New("bad header MAC")
 	}
-	rw.dec.XORKeyStream(headbuf[:16], headbuf[:16])                               
+	rw.dec.XORKeyStream(headbuf[:16], headbuf[:16]) 
 	fsize := readInt24(headbuf)
-	                               
 
-	                         
-	var rsize = fsize                                             
+	var rsize = fsize 
 	if padding := fsize % 16; padding > 0 {
 		rsize += 16 - padding
 	}
@@ -669,7 +590,6 @@ func (rw *rlpxFrameRW) ReadMsg() (msg Msg, err error) {
 		return msg, err
 	}
 
-	                                                               
 	rw.ingressMAC.Write(framebuf)
 	fmacseed := rw.ingressMAC.Sum(nil)
 	if _, err := io.ReadFull(rw.conn, headbuf[:16]); err != nil {
@@ -680,10 +600,8 @@ func (rw *rlpxFrameRW) ReadMsg() (msg Msg, err error) {
 		return msg, errors.New("bad frame MAC")
 	}
 
-	                        
 	rw.dec.XORKeyStream(framebuf, framebuf)
 
-	                      
 	content := bytes.NewReader(framebuf[:fsize])
 	if err := rlp.Decode(content, &msg.Code); err != nil {
 		return msg, err
@@ -691,7 +609,6 @@ func (rw *rlpxFrameRW) ReadMsg() (msg Msg, err error) {
 	msg.Size = uint32(content.Len())
 	msg.Payload = content
 
-	                                                      
 	if rw.snappy {
 		payload, err := ioutil.ReadAll(msg.Payload)
 		if err != nil {
@@ -713,8 +630,6 @@ func (rw *rlpxFrameRW) ReadMsg() (msg Msg, err error) {
 	return msg, nil
 }
 
-                                                        
-                                                               
 func updateMAC(mac hash.Hash, block cipher.Block, seed []byte) []byte {
 	aesbuf := make([]byte, aes.BlockSize)
 	block.Encrypt(aesbuf, mac.Sum(nil))

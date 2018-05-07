@@ -1,22 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
-
-                                                                                 
-                                                                           
-                                                            
 
 package usbwallet
 
@@ -36,35 +17,25 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-                                                                               
-                                                                               
-                      
 var ErrTrezorPINNeeded = errors.New("trezor: pin needed")
 
-                                                                                      
-                                                                                 
-                      
 var errTrezorReplyInvalidHeader = errors.New("trezor: invalid reply header")
 
-                                                                           
 type trezorDriver struct {
-	device  io.ReadWriter                                                
-	version [3]uint32                                              
-	label   string                                                     
-	pinwait bool                                                              
-	failure error                                                           
-	log     log.Logger                                                      
+	device  io.ReadWriter 
+	version [3]uint32     
+	label   string        
+	pinwait bool          
+	failure error         
+	log     log.Logger    
 }
 
-                                                                          
 func newTrezorDriver(logger log.Logger) driver {
 	return &trezorDriver{
 		log: logger,
 	}
 }
 
-                                                                                 
-                                                     
 func (w *trezorDriver) Status() (string, error) {
 	if w.failure != nil {
 		return fmt.Sprintf("Failed: %v", w.failure), w.failure
@@ -78,25 +49,15 @@ func (w *trezorDriver) Status() (string, error) {
 	return fmt.Sprintf("Trezor v%d.%d.%d '%s' online", w.version[0], w.version[1], w.version[2], w.label), w.failure
 }
 
-                                                                               
-                                                                                
-                                                                           
-                                                                              
-                                                                               
-                                                                  
-                                                                              
-                                                                               
-                                                                      
 func (w *trezorDriver) Open(device io.ReadWriter, passphrase string) error {
 	w.device, w.failure = device, nil
 
-	                                                                          
 	if passphrase == "" {
-		                                                         
+
 		if w.pinwait {
 			return ErrTrezorPINNeeded
 		}
-		                                        
+
 		features := new(trezor.Features)
 		if _, err := w.trezorExchange(&trezor.Initialize{}, features); err != nil {
 			return err
@@ -104,20 +65,19 @@ func (w *trezorDriver) Open(device io.ReadWriter, passphrase string) error {
 		w.version = [3]uint32{features.GetMajorVersion(), features.GetMinorVersion(), features.GetPatchVersion()}
 		w.label = features.GetLabel()
 
-		                                                          
 		askPin := true
 		res, err := w.trezorExchange(&trezor.Ping{PinProtection: &askPin}, new(trezor.PinMatrixRequest), new(trezor.Success))
 		if err != nil {
 			return err
 		}
-		                                                                      
+
 		if res == 1 {
-			return nil                                        
+			return nil 
 		}
 		w.pinwait = true
 		return ErrTrezorPINNeeded
 	}
-	                                          
+
 	w.pinwait = false
 
 	if _, err := w.trezorExchange(&trezor.PinMatrixAck{Pin: &passphrase}, new(trezor.Success)); err != nil {
@@ -127,15 +87,11 @@ func (w *trezorDriver) Open(device io.ReadWriter, passphrase string) error {
 	return nil
 }
 
-                                                                                
-                     
 func (w *trezorDriver) Close() error {
 	w.version, w.label, w.pinwait = [3]uint32{}, "", false
 	return nil
 }
 
-                                                                               
-                                      
 func (w *trezorDriver) Heartbeat() error {
 	if _, err := w.trezorExchange(&trezor.Ping{}, new(trezor.Success)); err != nil {
 		w.failure = err
@@ -144,14 +100,10 @@ func (w *trezorDriver) Heartbeat() error {
 	return nil
 }
 
-                                                                                 
-                                                                      
 func (w *trezorDriver) Derive(path accounts.DerivationPath) (common.Address, error) {
 	return w.trezorDerive(path)
 }
 
-                                                                                
-                                                           
 func (w *trezorDriver) SignTx(path accounts.DerivationPath, tx *types.Transaction, chainID *big.Int) (common.Address, *types.Transaction, error) {
 	if w.device == nil {
 		return common.Address{}, nil, accounts.ErrWalletClosed
@@ -159,8 +111,6 @@ func (w *trezorDriver) SignTx(path accounts.DerivationPath, tx *types.Transactio
 	return w.trezorSign(path, tx, chainID)
 }
 
-                                                                               
-                                         
 func (w *trezorDriver) trezorDerive(derivationPath []uint32) (common.Address, error) {
 	address := new(trezor.EPVchainAddress)
 	if _, err := w.trezorExchange(&trezor.EPVchainGetAddress{AddressN: derivationPath}, address); err != nil {
@@ -169,10 +119,8 @@ func (w *trezorDriver) trezorDerive(derivationPath []uint32) (common.Address, er
 	return common.BytesToAddress(address.GetAddress()), nil
 }
 
-                                                                                
-                                      
 func (w *trezorDriver) trezorSign(derivationPath []uint32, tx *types.Transaction, chainID *big.Int) (common.Address, *types.Transaction, error) {
-	                                            
+
 	data := tx.Data()
 	length := uint32(len(data))
 
@@ -185,18 +133,18 @@ func (w *trezorDriver) trezorSign(derivationPath []uint32, tx *types.Transaction
 		DataLength: &length,
 	}
 	if to := tx.To(); to != nil {
-		request.To = (*to)[:]                                                 
+		request.To = (*to)[:] 
 	}
-	if length > 1024 {                                               
+	if length > 1024 { 
 		request.DataInitialChunk, data = data[:1024], data[1024:]
 	} else {
 		request.DataInitialChunk, data = data, nil
 	}
-	if chainID != nil {                                                                             
+	if chainID != nil { 
 		id := uint32(chainID.Int64())
 		request.ChainId = &id
 	}
-	                                                                               
+
 	response := new(trezor.EPVchainTxRequest)
 	if _, err := w.trezorExchange(request, response); err != nil {
 		return common.Address{}, nil, err
@@ -209,13 +157,12 @@ func (w *trezorDriver) trezorSign(derivationPath []uint32, tx *types.Transaction
 			return common.Address{}, nil, err
 		}
 	}
-	                                                            
+
 	if len(response.GetSignatureR()) == 0 || len(response.GetSignatureS()) == 0 || response.GetSignatureV() == 0 {
 		return common.Address{}, nil, errors.New("reply lacks signature")
 	}
 	signature := append(append(response.GetSignatureR(), response.GetSignatureS()...), byte(response.GetSignatureV()))
 
-	                                                                          
 	var signer types.Signer
 	if chainID == nil {
 		signer = new(types.HomesteadSigner)
@@ -223,7 +170,7 @@ func (w *trezorDriver) trezorSign(derivationPath []uint32, tx *types.Transaction
 		signer = types.NewEIP155Signer(chainID)
 		signature[64] = signature[64] - byte(chainID.Uint64()*2+35)
 	}
-	                                                                              
+
 	signed, err := tx.WithSignature(signer, signature)
 	if err != nil {
 		return common.Address{}, nil, err
@@ -235,11 +182,8 @@ func (w *trezorDriver) trezorSign(derivationPath []uint32, tx *types.Transaction
 	return sender, signed, nil
 }
 
-                                                                               
-                                                                               
-                                                                    
 func (w *trezorDriver) trezorExchange(req proto.Message, results ...proto.Message) (int, error) {
-	                                                     
+
 	data, err := proto.Marshal(req)
 	if err != nil {
 		return 0, err
@@ -250,12 +194,11 @@ func (w *trezorDriver) trezorExchange(req proto.Message, results ...proto.Messag
 	binary.BigEndian.PutUint32(payload[4:], uint32(len(data)))
 	copy(payload[8:], data)
 
-	                                      
 	chunk := make([]byte, 64)
-	chunk[0] = 0x3f                          
+	chunk[0] = 0x3f 
 
 	for len(payload) > 0 {
-		                                                                     
+
 		if len(payload) > 63 {
 			copy(chunk[1:], payload[:63])
 			payload = payload[63:]
@@ -264,29 +207,28 @@ func (w *trezorDriver) trezorExchange(req proto.Message, results ...proto.Messag
 			copy(chunk[1+len(payload):], make([]byte, 63-len(payload)))
 			payload = nil
 		}
-		                          
+
 		w.log.Trace("Data chunk sent to the Trezor", "chunk", hexutil.Bytes(chunk))
 		if _, err := w.device.Write(chunk); err != nil {
 			return 0, err
 		}
 	}
-	                                                          
+
 	var (
 		kind  uint16
 		reply []byte
 	)
 	for {
-		                                             
+
 		if _, err := io.ReadFull(w.device, chunk); err != nil {
 			return 0, err
 		}
 		w.log.Trace("Data chunk received from the Trezor", "chunk", hexutil.Bytes(chunk))
 
-		                                         
 		if chunk[0] != 0x3f || (len(reply) == 0 && (chunk[1] != 0x23 || chunk[2] != 0x23)) {
 			return 0, errTrezorReplyInvalidHeader
 		}
-		                                                                                    
+
 		var payload []byte
 
 		if len(reply) == 0 {
@@ -296,7 +238,7 @@ func (w *trezorDriver) trezorExchange(req proto.Message, results ...proto.Messag
 		} else {
 			payload = chunk[1:]
 		}
-		                                              
+
 		if left := cap(reply) - len(reply); left > len(payload) {
 			reply = append(reply, payload...)
 		} else {
@@ -304,9 +246,9 @@ func (w *trezorDriver) trezorExchange(req proto.Message, results ...proto.Messag
 			break
 		}
 	}
-	                                                          
+
 	if kind == uint16(trezor.MessageType_MessageType_Failure) {
-		                                                            
+
 		failure := new(trezor.Failure)
 		if err := proto.Unmarshal(reply, failure); err != nil {
 			return 0, err
@@ -314,7 +256,7 @@ func (w *trezorDriver) trezorExchange(req proto.Message, results ...proto.Messag
 		return 0, errors.New("trezor: " + failure.GetMessage())
 	}
 	if kind == uint16(trezor.MessageType_MessageType_ButtonRequest) {
-		                                                                             
+
 		return w.trezorExchange(&trezor.ButtonAck{}, results...)
 	}
 	for i, res := range results {

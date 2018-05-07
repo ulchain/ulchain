@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package build
 
@@ -24,7 +9,7 @@ import (
 )
 
 var (
-	                                            
+
 	GitCommitFlag   = flag.String("git-commit", "", `Overrides git commit hash embedded into executables`)
 	GitBranchFlag   = flag.String("git-branch", "", `Overrides git branch being built`)
 	GitTagFlag      = flag.String("git-tag", "", `Overrides git tag being built`)
@@ -33,11 +18,10 @@ var (
 	CronJobFlag     = flag.Bool("cron-job", false, `Overrides cron job status of the build`)
 )
 
-                                                                   
 type Environment struct {
-	Name                string                           
-	Repo                string                       
-	Commit, Branch, Tag string            
+	Name                string 
+	Repo                string 
+	Commit, Branch, Tag string 
 	Buildnum            string
 	IsPullRequest       bool
 	IsCronJob           bool
@@ -48,8 +32,6 @@ func (env Environment) String() string {
 		env.Name, env.Commit, env.Branch, env.Tag, env.Buildnum, env.IsPullRequest)
 }
 
-                                                                                  
-                        
 func Env() Environment {
 	switch {
 	case os.Getenv("CI") == "true" && os.Getenv("TRAVIS") == "true":
@@ -79,7 +61,6 @@ func Env() Environment {
 	}
 }
 
-                                                                 
 func LocalEnv() Environment {
 	env := applyEnvFlags(Environment{Name: "local", Repo: "epvchain/go-epvchain"})
 

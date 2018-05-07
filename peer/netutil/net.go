@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                          
 package netutil
 
 import (
@@ -29,29 +13,27 @@ import (
 var lan4, lan6, special4, special6 Netlist
 
 func init() {
-	                                 
-	                                                               
-	lan4.Add("0.0.0.0/8")                               
-	lan4.Add("10.0.0.0/8")                           
-	lan4.Add("172.16.0.0/12")                        
-	lan4.Add("192.168.0.0/16")                       
-	lan6.Add("fe80::/10")                           
-	lan6.Add("fc00::/7")                              
-	special4.Add("192.0.0.0/29")                                 
-	special4.Add("192.0.0.9/32")                     
-	special4.Add("192.0.0.170/32")                             
-	special4.Add("192.0.0.171/32")                             
-	special4.Add("192.0.2.0/24")                    
-	special4.Add("192.31.196.0/24")            
-	special4.Add("192.52.193.0/24")          
-	special4.Add("192.88.99.0/24")                          
-	special4.Add("192.175.48.0/24")            
-	special4.Add("198.18.0.0/15")                                 
-	special4.Add("198.51.100.0/24")                 
-	special4.Add("203.0.113.0/24")                  
-	special4.Add("255.255.255.255/32")                     
 
-	                                                              
+	lan4.Add("0.0.0.0/8")              
+	lan4.Add("10.0.0.0/8")             
+	lan4.Add("172.16.0.0/12")          
+	lan4.Add("192.168.0.0/16")         
+	lan6.Add("fe80::/10")              
+	lan6.Add("fc00::/7")               
+	special4.Add("192.0.0.0/29")       
+	special4.Add("192.0.0.9/32")       
+	special4.Add("192.0.0.170/32")     
+	special4.Add("192.0.0.171/32")     
+	special4.Add("192.0.2.0/24")       
+	special4.Add("192.31.196.0/24")    
+	special4.Add("192.52.193.0/24")    
+	special4.Add("192.88.99.0/24")     
+	special4.Add("192.175.48.0/24")    
+	special4.Add("198.18.0.0/15")      
+	special4.Add("198.51.100.0/24")    
+	special4.Add("203.0.113.0/24")     
+	special4.Add("255.255.255.255/32") 
+
 	special6.Add("100::/64")
 	special6.Add("2001::/32")
 	special6.Add("2001:1::1/128")
@@ -65,11 +47,8 @@ func init() {
 	special6.Add("2002::/16")
 }
 
-                                    
 type Netlist []net.IPNet
 
-                                                            
-                                           
 func ParseNetlist(s string) (*Netlist, error) {
 	ws := strings.NewReplacer(" ", "", "\n", "", "\t", "")
 	masks := strings.Split(ws.Replace(s), ",")
@@ -87,7 +66,6 @@ func ParseNetlist(s string) (*Netlist, error) {
 	return &l, nil
 }
 
-                                            
 func (l Netlist) MarshalTOML() interface{} {
 	list := make([]string, 0, len(l))
 	for _, net := range l {
@@ -96,7 +74,6 @@ func (l Netlist) MarshalTOML() interface{} {
 	return list
 }
 
-                                                
 func (l *Netlist) UnmarshalTOML(fn func(interface{}) error) error {
 	var masks []string
 	if err := fn(&masks); err != nil {
@@ -112,8 +89,6 @@ func (l *Netlist) UnmarshalTOML(fn func(interface{}) error) error {
 	return nil
 }
 
-                                                                                        
-                                                   
 func (l *Netlist) Add(cidr string) {
 	_, n, err := net.ParseCIDR(cidr)
 	if err != nil {
@@ -122,7 +97,6 @@ func (l *Netlist) Add(cidr string) {
 	*l = append(*l, *n)
 }
 
-                                                                  
 func (l *Netlist) Contains(ip net.IP) bool {
 	if l == nil {
 		return false
@@ -135,7 +109,6 @@ func (l *Netlist) Contains(ip net.IP) bool {
 	return false
 }
 
-                                                          
 func IsLAN(ip net.IP) bool {
 	if ip.IsLoopback() {
 		return true
@@ -146,8 +119,6 @@ func IsLAN(ip net.IP) bool {
 	return lan6.Contains(ip)
 }
 
-                                                                                   
-                                                                  
 func IsSpecialNetwork(ip net.IP) bool {
 	if ip.IsMulticast() {
 		return true
@@ -166,14 +137,6 @@ var (
 	errLAN         = errors.New("LAN address from WAN host")
 )
 
-                                                                      
-                                
-  
-                        
-                                                 
-                                                               
-                                                     
-                                                 
 func CheckRelayIP(sender, addr net.IP) error {
 	if len(addr) != net.IPv4len && len(addr) != net.IPv6len {
 		return errInvalid
@@ -193,7 +156,6 @@ func CheckRelayIP(sender, addr net.IP) error {
 	return nil
 }
 
-                                                                                         
 func SameNet(bits uint, ip, other net.IP) bool {
 	ip4, other4 := ip.To4(), other.To4()
 	switch {
@@ -215,18 +177,14 @@ func sameNet(bits uint, ip, other net.IP) bool {
 	return nb <= len(ip) && bytes.Equal(ip[:nb], other[:nb])
 }
 
-                                                             
-                                    
 type DistinctNetSet struct {
-	Subnet uint                                
-	Limit  uint                                        
+	Subnet uint 
+	Limit  uint 
 
 	members map[string]uint
 	buf     net.IP
 }
 
-                                                                                      
-                                                                 
 func (s *DistinctNetSet) Add(ip net.IP) bool {
 	key := s.key(ip)
 	n := s.members[string(key)]
@@ -237,7 +195,6 @@ func (s *DistinctNetSet) Add(ip net.IP) bool {
 	return false
 }
 
-                                     
 func (s *DistinctNetSet) Remove(ip net.IP) {
 	key := s.key(ip)
 	if n, ok := s.members[string(key)]; ok {
@@ -249,14 +206,12 @@ func (s *DistinctNetSet) Remove(ip net.IP) {
 	}
 }
 
-                                                         
 func (s DistinctNetSet) Contains(ip net.IP) bool {
 	key := s.key(ip)
 	_, ok := s.members[string(key)]
 	return ok
 }
 
-                                         
 func (s DistinctNetSet) Len() int {
 	n := uint(0)
 	for _, i := range s.members {
@@ -265,17 +220,13 @@ func (s DistinctNetSet) Len() int {
 	return int(n)
 }
 
-                                                                  
-  
-                                                                              
-                                                                       
 func (s *DistinctNetSet) key(ip net.IP) net.IP {
-	                             
+
 	if s.members == nil {
 		s.members = make(map[string]uint)
 		s.buf = make(net.IP, 17)
 	}
-	                            
+
 	typ := byte('6')
 	if ip4 := ip.To4(); ip4 != nil {
 		typ, ip = '4', ip4
@@ -284,7 +235,7 @@ func (s *DistinctNetSet) key(ip net.IP) net.IP {
 	if bits > uint(len(ip)*8) {
 		bits = uint(len(ip) * 8)
 	}
-	                                
+
 	nb := int(bits / 8)
 	mask := ^byte(0xFF >> (bits % 8))
 	s.buf[0] = typ
@@ -295,7 +246,6 @@ func (s *DistinctNetSet) key(ip net.IP) net.IP {
 	return buf
 }
 
-                                 
 func (s DistinctNetSet) String() string {
 	var buf bytes.Buffer
 	buf.WriteString("{")

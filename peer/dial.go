@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package p2p
 
@@ -30,44 +15,30 @@ import (
 )
 
 const (
-	                                                      
-	                            
+
 	dialHistoryExpiration = 30 * time.Second
 
-	                                                   
-	                          
 	lookupInterval = 4 * time.Second
 
-	                                                                           
-	                             
 	fallbackInterval = 20 * time.Second
 
-	                                                         
 	initialResolveDelay = 60 * time.Second
 	maxResolveDelay     = time.Hour
 )
 
-                                                                            
-                                                            
 type NodeDialer interface {
 	Dial(*discover.Node) (net.Conn, error)
 }
 
-                                                                         
-                                                 
 type TCPDialer struct {
 	*net.Dialer
 }
 
-                                            
 func (t TCPDialer) Dial(dest *discover.Node) (net.Conn, error) {
 	addr := &net.TCPAddr{IP: dest.IP, Port: int(dest.TCP)}
 	return t.Dialer.Dial("tcp", addr.String())
 }
 
-                                                   
-                                                            
-                                  
 type dialstate struct {
 	maxDynDials int
 	ntab        discoverTable
@@ -75,13 +46,13 @@ type dialstate struct {
 
 	lookupRunning bool
 	dialing       map[discover.NodeID]connFlag
-	lookupBuf     []*discover.Node                                    
-	randomNodes   []*discover.Node                     
+	lookupBuf     []*discover.Node 
+	randomNodes   []*discover.Node 
 	static        map[discover.NodeID]*dialTask
 	hist          *dialHistory
 
-	start     time.Time                                              
-	bootnodes []*discover.Node                                         
+	start     time.Time        
+	bootnodes []*discover.Node 
 }
 
 type discoverTable interface {
@@ -92,10 +63,8 @@ type discoverTable interface {
 	ReadRandomNodes([]*discover.Node) int
 }
 
-                                           
 type dialHistory []pastDial
 
-                                            
 type pastDial struct {
 	id  discover.NodeID
 	exp time.Time
@@ -105,8 +74,6 @@ type task interface {
 	Do(*Server)
 }
 
-                                                            
-                                                       
 type dialTask struct {
 	flags        connFlag
 	dest         *discover.Node
@@ -114,15 +81,10 @@ type dialTask struct {
 	resolveDelay time.Duration
 }
 
-                                                
-                                               
-                                            
 type discoverTask struct {
 	results []*discover.Node
 }
 
-                                                            
-                                          
 type waitExpireTask struct {
 	time.Duration
 }
@@ -146,13 +108,12 @@ func newDialState(static []*discover.Node, bootnodes []*discover.Node, ntab disc
 }
 
 func (s *dialstate) addStatic(n *discover.Node) {
-	                                                          
-	                                                                    
+
 	s.static[n.ID] = &dialTask{flags: staticDialedConn, dest: n}
 }
 
 func (s *dialstate) removeStatic(n *discover.Node) {
-	                                                                      
+
 	delete(s.static, n.ID)
 }
 
@@ -172,7 +133,6 @@ func (s *dialstate) newTasks(nRunning int, peers map[discover.NodeID]*Peer, now 
 		return true
 	}
 
-	                                                           
 	needDynDials := s.maxDynDials
 	for _, p := range peers {
 		if p.rw.is(dynDialedConn) {
@@ -185,10 +145,8 @@ func (s *dialstate) newTasks(nRunning int, peers map[discover.NodeID]*Peer, now 
 		}
 	}
 
-	                                               
 	s.hist.expire(now)
 
-	                                                           
 	for id, t := range s.static {
 		err := s.checkDial(t.dest, peers)
 		switch err {
@@ -200,9 +158,7 @@ func (s *dialstate) newTasks(nRunning int, peers map[discover.NodeID]*Peer, now 
 			newtasks = append(newtasks, t)
 		}
 	}
-	                                                                             
-	                                                                                
-	                                                                             
+
 	if len(peers) == 0 && len(s.bootnodes) > 0 && needDynDials > 0 && now.Sub(s.start) > fallbackInterval {
 		bootnode := s.bootnodes[0]
 		s.bootnodes = append(s.bootnodes[:0], s.bootnodes[1:]...)
@@ -212,8 +168,7 @@ func (s *dialstate) newTasks(nRunning int, peers map[discover.NodeID]*Peer, now 
 			needDynDials--
 		}
 	}
-	                                                            
-	                 
+
 	randomCandidates := needDynDials / 2
 	if randomCandidates > 0 {
 		n := s.ntab.ReadRandomNodes(s.randomNodes)
@@ -223,8 +178,7 @@ func (s *dialstate) newTasks(nRunning int, peers map[discover.NodeID]*Peer, now 
 			}
 		}
 	}
-	                                                                  
-	                                
+
 	i := 0
 	for ; i < len(s.lookupBuf) && needDynDials > 0; i++ {
 		if addDial(dynDialedConn, s.lookupBuf[i]) {
@@ -232,16 +186,12 @@ func (s *dialstate) newTasks(nRunning int, peers map[discover.NodeID]*Peer, now 
 		}
 	}
 	s.lookupBuf = s.lookupBuf[:copy(s.lookupBuf, s.lookupBuf[i:])]
-	                                                           
+
 	if len(s.lookupBuf) < needDynDials && !s.lookupRunning {
 		s.lookupRunning = true
 		newtasks = append(newtasks, &discoverTask{})
 	}
 
-	                                                            
-	                                                              
-	                                                                 
-	                                       
 	if nRunning == 0 && len(newtasks) == 0 && s.hist.Len() > 0 {
 		t := &waitExpireTask{s.hist.min().exp.Sub(now)}
 		newtasks = append(newtasks, t)
@@ -294,7 +244,7 @@ func (t *dialTask) Do(srv *Server) {
 	err := t.dial(srv, t.dest)
 	if err != nil {
 		log.Trace("Dial error", "task", t, "err", err)
-		                                                          
+
 		if _, ok := err.(*dialError); ok && t.flags&staticDialedConn != 0 {
 			if t.resolve(srv) {
 				t.dial(srv, t.dest)
@@ -303,12 +253,6 @@ func (t *dialTask) Do(srv *Server) {
 	}
 }
 
-                                                                    
-                   
-  
-                                                                      
-                                                                     
-                                                   
 func (t *dialTask) resolve(srv *Server) bool {
 	if srv.ntab == nil {
 		log.Debug("Can't resolve node", "id", t.dest.ID, "err", "discovery is disabled")
@@ -330,7 +274,7 @@ func (t *dialTask) resolve(srv *Server) bool {
 		log.Debug("Resolving node failed", "id", t.dest.ID, "newdelay", t.resolveDelay)
 		return false
 	}
-	                      
+
 	t.resolveDelay = initialResolveDelay
 	t.dest = resolved
 	log.Debug("Resolved node", "id", t.dest.ID, "addr", &net.TCPAddr{IP: t.dest.IP, Port: int(t.dest.TCP)})
@@ -341,7 +285,6 @@ type dialError struct {
 	error
 }
 
-                                               
 func (t *dialTask) dial(srv *Server, dest *discover.Node) error {
 	fd, err := srv.Dialer.Dial(dest)
 	if err != nil {
@@ -356,9 +299,7 @@ func (t *dialTask) String() string {
 }
 
 func (t *discoverTask) Do(srv *Server) {
-	                                                              
-	                                                           
-	                             
+
 	next := srv.lastLookup.Add(lookupInterval)
 	if now := time.Now(); now.Before(next) {
 		time.Sleep(next.Sub(now))
@@ -384,7 +325,6 @@ func (t waitExpireTask) String() string {
 	return fmt.Sprintf("wait for dial hist expire (%v)", t.Duration)
 }
 
-                                                          
 func (h dialHistory) min() pastDial {
 	return h[0]
 }
@@ -405,7 +345,6 @@ func (h *dialHistory) expire(now time.Time) {
 	}
 }
 
-                             
 func (h dialHistory) Len() int           { return len(h) }
 func (h dialHistory) Less(i, j int) bool { return h[i].exp.Before(h[j].exp) }
 func (h dialHistory) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }

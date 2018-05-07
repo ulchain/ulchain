@@ -1,19 +1,4 @@
-                                                      
-                                                     
-                                                 
 
-                                                                                      
-  
-                                                                           
-                                                                             
-                                                                                       
-                                                                               
-                      
-  
-                                                                              
-                                        
-                                                                             
-                                                   
 package bn256
 
 import (
@@ -22,16 +7,10 @@ import (
 	"math/big"
 )
 
-                                                      
-                                                      
-
-                                                                            
-                                                          
 type G1 struct {
 	p *curvePoint
 }
 
-                                                                                  
 func RandomG1(r io.Reader) (*big.Int, *G1, error) {
 	var k *big.Int
 	var err error
@@ -53,13 +32,10 @@ func (g *G1) String() string {
 	return "bn256.G1" + g.p.String()
 }
 
-                                                      
 func (e *G1) CurvePoints() (*big.Int, *big.Int, *big.Int, *big.Int) {
 	return e.p.x, e.p.y, e.p.z, e.p.t
 }
 
-                                                                         
-                  
 func (e *G1) ScalarBaseMult(k *big.Int) *G1 {
 	if e.p == nil {
 		e.p = newCurvePoint(nil)
@@ -68,7 +44,6 @@ func (e *G1) ScalarBaseMult(k *big.Int) *G1 {
 	return e
 }
 
-                                               
 func (e *G1) ScalarMult(a *G1, k *big.Int) *G1 {
 	if e.p == nil {
 		e.p = newCurvePoint(nil)
@@ -77,8 +52,6 @@ func (e *G1) ScalarMult(a *G1, k *big.Int) *G1 {
 	return e
 }
 
-                                        
-                                                       
 func (e *G1) Add(a, b *G1) *G1 {
 	if e.p == nil {
 		e.p = newCurvePoint(nil)
@@ -87,7 +60,6 @@ func (e *G1) Add(a, b *G1) *G1 {
 	return e
 }
 
-                                       
 func (e *G1) Neg(a *G1) *G1 {
 	if e.p == nil {
 		e.p = newCurvePoint(nil)
@@ -96,14 +68,12 @@ func (e *G1) Neg(a *G1) *G1 {
 	return e
 }
 
-                                      
 func (n *G1) Marshal() []byte {
 	n.p.MakeAffine(nil)
 
 	xBytes := new(big.Int).Mod(n.p.x, P).Bytes()
 	yBytes := new(big.Int).Mod(n.p.y, P).Bytes()
 
-	                                  
 	const numBytes = 256 / 8
 
 	ret := make([]byte, numBytes*2)
@@ -113,10 +83,8 @@ func (n *G1) Marshal() []byte {
 	return ret
 }
 
-                                                                               
-                                      
 func (e *G1) Unmarshal(m []byte) (*G1, bool) {
-	                                  
+
 	const numBytes = 256 / 8
 
 	if len(m) != 2*numBytes {
@@ -131,7 +99,7 @@ func (e *G1) Unmarshal(m []byte) (*G1, bool) {
 	e.p.y.SetBytes(m[1*numBytes : 2*numBytes])
 
 	if e.p.x.Sign() == 0 && e.p.y.Sign() == 0 {
-		                                 
+
 		e.p.y.SetInt64(1)
 		e.p.z.SetInt64(0)
 		e.p.t.SetInt64(0)
@@ -147,13 +115,10 @@ func (e *G1) Unmarshal(m []byte) (*G1, bool) {
 	return e, true
 }
 
-                                                                            
-                                                          
 type G2 struct {
 	p *twistPoint
 }
 
-                                                                                  
 func RandomG2(r io.Reader) (*big.Int, *G2, error) {
 	var k *big.Int
 	var err error
@@ -175,14 +140,10 @@ func (g *G2) String() string {
 	return "bn256.G2" + g.p.String()
 }
 
-                                                                    
-                                          
 func (e *G2) CurvePoints() (*gfP2, *gfP2, *gfP2, *gfP2) {
 	return e.p.x, e.p.y, e.p.z, e.p.t
 }
 
-                                                                         
-                    
 func (e *G2) ScalarBaseMult(k *big.Int) *G2 {
 	if e.p == nil {
 		e.p = newTwistPoint(nil)
@@ -191,7 +152,6 @@ func (e *G2) ScalarBaseMult(k *big.Int) *G2 {
 	return e
 }
 
-                                               
 func (e *G2) ScalarMult(a *G2, k *big.Int) *G2 {
 	if e.p == nil {
 		e.p = newTwistPoint(nil)
@@ -200,8 +160,6 @@ func (e *G2) ScalarMult(a *G2, k *big.Int) *G2 {
 	return e
 }
 
-                                        
-                                                       
 func (e *G2) Add(a, b *G2) *G2 {
 	if e.p == nil {
 		e.p = newTwistPoint(nil)
@@ -210,7 +168,6 @@ func (e *G2) Add(a, b *G2) *G2 {
 	return e
 }
 
-                                        
 func (n *G2) Marshal() []byte {
 	n.p.MakeAffine(nil)
 
@@ -219,7 +176,6 @@ func (n *G2) Marshal() []byte {
 	yxBytes := new(big.Int).Mod(n.p.y.x, P).Bytes()
 	yyBytes := new(big.Int).Mod(n.p.y.y, P).Bytes()
 
-	                                  
 	const numBytes = 256 / 8
 
 	ret := make([]byte, numBytes*4)
@@ -231,10 +187,8 @@ func (n *G2) Marshal() []byte {
 	return ret
 }
 
-                                                                               
-                                      
 func (e *G2) Unmarshal(m []byte) (*G2, bool) {
-	                                  
+
 	const numBytes = 256 / 8
 
 	if len(m) != 4*numBytes {
@@ -254,7 +208,7 @@ func (e *G2) Unmarshal(m []byte) (*G2, bool) {
 		e.p.x.y.Sign() == 0 &&
 		e.p.y.x.Sign() == 0 &&
 		e.p.y.y.Sign() == 0 {
-		                                 
+
 		e.p.y.SetOne()
 		e.p.z.SetZero()
 		e.p.t.SetZero()
@@ -270,8 +224,6 @@ func (e *G2) Unmarshal(m []byte) (*G2, bool) {
 	return e, true
 }
 
-                                                                            
-                                                          
 type GT struct {
 	p *gfP12
 }
@@ -280,7 +232,6 @@ func (g *GT) String() string {
 	return "bn256.GT" + g.p.String()
 }
 
-                                               
 func (e *GT) ScalarMult(a *GT, k *big.Int) *GT {
 	if e.p == nil {
 		e.p = newGFp12(nil)
@@ -289,7 +240,6 @@ func (e *GT) ScalarMult(a *GT, k *big.Int) *GT {
 	return e
 }
 
-                                        
 func (e *GT) Add(a, b *GT) *GT {
 	if e.p == nil {
 		e.p = newGFp12(nil)
@@ -298,7 +248,6 @@ func (e *GT) Add(a, b *GT) *GT {
 	return e
 }
 
-                                       
 func (e *GT) Neg(a *GT) *GT {
 	if e.p == nil {
 		e.p = newGFp12(nil)
@@ -307,7 +256,6 @@ func (e *GT) Neg(a *GT) *GT {
 	return e
 }
 
-                                        
 func (n *GT) Marshal() []byte {
 	n.p.Minimal()
 
@@ -324,7 +272,6 @@ func (n *GT) Marshal() []byte {
 	yzxBytes := n.p.y.z.x.Bytes()
 	yzyBytes := n.p.y.z.y.Bytes()
 
-	                                  
 	const numBytes = 256 / 8
 
 	ret := make([]byte, numBytes*12)
@@ -344,10 +291,8 @@ func (n *GT) Marshal() []byte {
 	return ret
 }
 
-                                                                               
-                                      
 func (e *GT) Unmarshal(m []byte) (*GT, bool) {
-	                                  
+
 	const numBytes = 256 / 8
 
 	if len(m) != 12*numBytes {
@@ -374,12 +319,10 @@ func (e *GT) Unmarshal(m []byte) (*GT, bool) {
 	return e, true
 }
 
-                                          
 func Pair(g1 *G1, g2 *G2) *GT {
 	return &GT{optimalAte(g2.p, g1.p, new(bnPool))}
 }
 
-                                                                       
 func PairingCheck(a []*G1, b []*G2) bool {
 	pool := new(bnPool)
 
@@ -398,8 +341,6 @@ func PairingCheck(a []*G1, b []*G2) bool {
 	return ret.IsOne()
 }
 
-                                                                               
-                                                
 type bnPool struct {
 	bns   []*big.Int
 	count int

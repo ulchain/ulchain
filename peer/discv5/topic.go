@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package discv5
 
@@ -50,7 +35,6 @@ type topicInfo struct {
 	wcl                waitControlLoop
 }
 
-                                     
 func (t *topicInfo) getFifoTail() *topicEntry {
 	for t.entries[t.fifoTail] == nil {
 		t.fifoTail++
@@ -63,7 +47,7 @@ func (t *topicInfo) getFifoTail() *topicEntry {
 type nodeInfo struct {
 	entries                          map[Topic]*topicEntry
 	lastIssuedTicket, lastUsedTicket uint32
-	                                                                                          
+
 	noRegUntil mclock.AbsTime
 }
 
@@ -121,7 +105,7 @@ func (t *topicTable) checkDeleteTopic(topic Topic) {
 func (t *topicTable) getOrNewNode(node *Node) *nodeInfo {
 	n := t.nodes[node]
 	if n == nil {
-		                                                                   
+
 		var issued, used uint32
 		if t.db != nil {
 			issued, used = t.db.fetchTopicRegTickets(node.ID)
@@ -138,7 +122,7 @@ func (t *topicTable) getOrNewNode(node *Node) *nodeInfo {
 
 func (t *topicTable) checkDeleteNode(node *Node) {
 	if n, ok := t.nodes[node]; ok && len(n.entries) == 0 && n.noRegUntil < mclock.Now() {
-		                                                                      
+
 		delete(t.nodes, node)
 	}
 }
@@ -170,11 +154,11 @@ func (t *topicTable) getEntries(topic Topic) []*Node {
 
 func (t *topicTable) addEntry(node *Node, topic Topic) {
 	n := t.getOrNewNode(node)
-	                                          
+
 	for _, e := range n.entries {
 		t.deleteEntry(e)
 	}
-	      
+
 	n = t.getOrNewNode(node)
 
 	tm := mclock.Now()
@@ -185,7 +169,7 @@ func (t *topicTable) addEntry(node *Node, topic Topic) {
 	}
 
 	if t.globalEntries == maxEntries {
-		t.deleteEntry(t.leastRequested())                                       
+		t.deleteEntry(t.leastRequested()) 
 	}
 
 	fifoIdx := te.fifoHead
@@ -205,7 +189,6 @@ func (t *topicTable) addEntry(node *Node, topic Topic) {
 	te.wcl.registered(tm)
 }
 
-                                                
 func (t *topicTable) leastRequested() *topicEntry {
 	for t.requested.Len() > 0 && t.topics[t.requested[0].topic] == nil {
 		heap.Pop(&t.requested)
@@ -216,7 +199,6 @@ func (t *topicTable) leastRequested() *topicEntry {
 	return t.topics[t.requested[0].topic].getFifoTail()
 }
 
-                     
 func (t *topicTable) deleteEntry(e *topicEntry) {
 	if printTestImgLogs {
 		fmt.Printf("*- %d %v %016x %016x\n", mclock.Now()/1000000, e.topic, t.self.sha[:8], e.node.sha[:8])
@@ -234,10 +216,9 @@ func (t *topicTable) deleteEntry(e *topicEntry) {
 	t.globalEntries--
 }
 
-                                                                  
 func (t *topicTable) useTicket(node *Node, serialNo uint32, topics []Topic, idx int, issueTime uint64, waitPeriods []uint32) (registered bool) {
 	log.Trace("Using discovery ticket", "serial", serialNo, "topics", topics, "waits", waitPeriods)
-	                                                         
+
 	t.collectGarbage()
 
 	n := t.getOrNewNode(node)
@@ -258,11 +239,11 @@ func (t *topicTable) useTicket(node *Node, serialNo uint32, topics []Topic, idx 
 	currTime := uint64(tm / mclock.AbsTime(time.Second))
 	regTime := issueTime + uint64(waitPeriods[idx])
 	relTime := int64(currTime - regTime)
-	if relTime >= -1 && relTime <= regTimeWindow+1 {                                                      
+	if relTime >= -1 && relTime <= regTimeWindow+1 { 
 		if e := n.entries[topics[idx]]; e == nil {
 			t.addEntry(node, topics[idx])
 		} else {
-			                                                                                           
+
 			e.expire = tm + mclock.AbsTime(fallbackRegistrationExpiry)
 		}
 		return true
@@ -324,15 +305,14 @@ func (t *topicTable) collectGarbage() {
 
 const (
 	minWaitPeriod   = time.Minute
-	regTimeWindow   = 10           
+	regTimeWindow   = 10 
 	avgnoRegTimeout = time.Minute * 10
-	                                                           
+
 	wcTargetRegInterval = time.Minute * 10 / maxEntriesPerTopic
-	  
+
 	wcTimeConst = time.Minute * 10
 )
 
-                                                                                  
 type waitControlLoop struct {
 	lastIncoming mclock.AbsTime
 	waitPeriod   time.Duration
@@ -370,7 +350,6 @@ type topicRequestQueueItem struct {
 	index    int
 }
 
-                                                                                  
 type topicRequestQueue []*topicRequestQueueItem
 
 func (tq topicRequestQueue) Len() int { return len(tq) }

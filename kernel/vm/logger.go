@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package vm
 
@@ -40,18 +25,15 @@ func (self Storage) Copy() Storage {
 	return cpy
 }
 
-                                                                        
 type LogConfig struct {
-	DisableMemory  bool                          
-	DisableStack   bool                         
-	DisableStorage bool                           
-	Limit          int                                                       
+	DisableMemory  bool 
+	DisableStack   bool 
+	DisableStorage bool 
+	Limit          int  
 }
 
-                                                                                                
+//go:generate gencodec -type StructLog -field-override structLogMarshaling -out gen_structlog.go
 
-                                                                                                    
-                                           
 type StructLog struct {
 	Pc         uint64                      `json:"pc"`
 	Op         OpCode                      `json:"op"`
@@ -65,14 +47,13 @@ type StructLog struct {
 	Err        error                       `json:"-"`
 }
 
-                         
 type structLogMarshaling struct {
 	Stack       []*math.HexOrDecimal256
 	Gas         math.HexOrDecimal64
 	GasCost     math.HexOrDecimal64
 	Memory      hexutil.Bytes
-	OpName      string `json:"opName"`                                        
-	ErrorString string `json:"error"`                                              
+	OpName      string `json:"opName"` 
+	ErrorString string `json:"error"`  
 }
 
 func (s *StructLog) OpName() string {
@@ -86,11 +67,6 @@ func (s *StructLog) ErrorString() string {
 	return ""
 }
 
-                                                                     
-                                                                     
-                    
-                                                                       
-                                                      
 type Tracer interface {
 	CaptureStart(from common.Address, to common.Address, call bool, input []byte, gas uint64, value *big.Int) error
 	CaptureState(env *EVM, pc uint64, op OpCode, gas, cost uint64, memory *Memory, stack *Stack, contract *Contract, depth int, err error) error
@@ -98,11 +74,6 @@ type Tracer interface {
 	CaptureEnd(output []byte, gasUsed uint64, t time.Duration, err error) error
 }
 
-                                                             
-  
-                                                                                     
-                                                                                 
-                          
 type StructLogger struct {
 	cfg LogConfig
 
@@ -112,7 +83,6 @@ type StructLogger struct {
 	err           error
 }
 
-                                       
 func NewStructLogger(cfg *LogConfig) *StructLogger {
 	logger := &StructLogger{
 		changedValues: make(map[common.Address]Storage),
@@ -127,23 +97,16 @@ func (l *StructLogger) CaptureStart(from common.Address, to common.Address, crea
 	return nil
 }
 
-                                                                                      
-  
-                                                             
 func (l *StructLogger) CaptureState(env *EVM, pc uint64, op OpCode, gas, cost uint64, memory *Memory, stack *Stack, contract *Contract, depth int, err error) error {
-	                                                            
+
 	if l.cfg.Limit != 0 && l.cfg.Limit <= len(l.logs) {
 		return ErrTraceLimitReached
 	}
 
-	                                                                    
-	                  
 	if l.changedValues[contract.Address()] == nil {
 		l.changedValues[contract.Address()] = make(Storage)
 	}
 
-	                                                                   
-	                                     
 	if op == SSTORE && stack.len() >= 2 {
 		var (
 			value   = common.BigToHash(stack.data[stack.len()-2])
@@ -151,13 +114,13 @@ func (l *StructLogger) CaptureState(env *EVM, pc uint64, op OpCode, gas, cost ui
 		)
 		l.changedValues[contract.Address()][address] = value
 	}
-	                                                              
+
 	var mem []byte
 	if !l.cfg.DisableMemory {
 		mem = make([]byte, len(memory.Data()))
 		copy(mem, memory.Data())
 	}
-	                                                             
+
 	var stck []*big.Int
 	if !l.cfg.DisableStack {
 		stck = make([]*big.Int, len(stack.Data()))
@@ -165,12 +128,12 @@ func (l *StructLogger) CaptureState(env *EVM, pc uint64, op OpCode, gas, cost ui
 			stck[i] = new(big.Int).Set(item)
 		}
 	}
-	                                                            
+
 	var storage Storage
 	if !l.cfg.DisableStorage {
 		storage = l.changedValues[contract.Address()].Copy()
 	}
-	                                     
+
 	log := StructLog{pc, op, gas, cost, mem, memory.Len(), stck, storage, depth, err}
 
 	l.logs = append(l.logs, log)
@@ -187,16 +150,12 @@ func (l *StructLogger) CaptureEnd(output []byte, gasUsed uint64, t time.Duration
 	return nil
 }
 
-                                               
 func (l *StructLogger) StructLogs() []StructLog { return l.logs }
 
-                                                    
 func (l *StructLogger) Error() error { return l.err }
 
-                                                            
 func (l *StructLogger) Output() []byte { return l.output }
 
-                                                          
 func WriteTrace(writer io.Writer, logs []StructLog) {
 	for _, log := range logs {
 		fmt.Fprintf(writer, "%-16spc=%08d gas=%v cost=%v", log.Op, log.Pc, log.Gas, log.GasCost)
@@ -225,7 +184,6 @@ func WriteTrace(writer io.Writer, logs []StructLog) {
 	}
 }
 
-                                                                    
 func WriteLogs(writer io.Writer, logs []*types.Log) {
 	for _, log := range logs {
 		fmt.Fprintf(writer, "LOG%d: %x bn=%d txi=%x\n", len(log.Topics), log.Address, log.BlockNumber, log.TxIndex)

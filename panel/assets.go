@@ -1,7 +1,3 @@
-                                             
-           
-                        
-                   
 
 package dashboard
 
@@ -47,7 +43,6 @@ func (fi bindataFileInfo) Sys() interface{} {
 	return nil
 }
 
-                 
 var _dashboardHtml = []byte(`<!DOCTYPE html>
 <html lang="en" style="height: 100%">
     <head>
@@ -88,7 +83,6 @@ func dashboardHtml() (*asset, error) {
 	return a, nil
 }
 
-                 
 var _bundleJs = []byte((((((((((`!function(modules) {
     function __webpack_require__(moduleId) {
         if (installedModules[moduleId]) return installedModules[moduleId].exports;
@@ -38404,9 +38398,6 @@ func bundleJs() (*asset, error) {
 	return a, nil
 }
 
-                                                        
-                                                         
-                       
 func Asset(name string) ([]byte, error) {
 	canonicalName := strings.Replace(name, "\\", "/", -1)
 	if f, ok := _bindata[canonicalName]; ok {
@@ -38419,14 +38410,11 @@ func Asset(name string) ([]byte, error) {
 	return nil, fmt.Errorf("Asset %s not found", name)
 }
 
-                                                                            
 func AssetString(name string) (string, error) {
 	data, err := Asset(name)
 	return string(data), err
 }
 
-                                                                       
-                                                         
 func MustAsset(name string) []byte {
 	a, err := Asset(name)
 	if err != nil {
@@ -38436,15 +38424,10 @@ func MustAsset(name string) []byte {
 	return a
 }
 
-                                                                            
-                                                                
 func MustAssetString(name string) string {
 	return string(MustAsset(name))
 }
 
-                                                                 
-                                                         
-                       
 func AssetInfo(name string) (os.FileInfo, error) {
 	canonicalName := strings.Replace(name, "\\", "/", -1)
 	if f, ok := _bindata[canonicalName]; ok {
@@ -38457,8 +38440,6 @@ func AssetInfo(name string) (os.FileInfo, error) {
 	return nil, fmt.Errorf("AssetInfo %s not found", name)
 }
 
-                                                                                
-                                                                           
 func AssetDigest(name string) ([sha256.Size]byte, error) {
 	canonicalName := strings.Replace(name, "\\", "/", -1)
 	if f, ok := _bindata[canonicalName]; ok {
@@ -38471,7 +38452,6 @@ func AssetDigest(name string) ([sha256.Size]byte, error) {
 	return [sha256.Size]byte{}, fmt.Errorf("AssetDigest %s not found", name)
 }
 
-                                                                
 func Digests() (map[string][sha256.Size]byte, error) {
 	mp := make(map[string][sha256.Size]byte, len(_bindata))
 	for name := range _bindata {
@@ -38484,7 +38464,6 @@ func Digests() (map[string][sha256.Size]byte, error) {
 	return mp, nil
 }
 
-                                              
 func AssetNames() []string {
 	names := make([]string, 0, len(_bindata))
 	for name := range _bindata {
@@ -38493,26 +38472,12 @@ func AssetNames() []string {
 	return names
 }
 
-                                                                         
 var _bindata = map[string]func() (*asset, error){
 	"dashboard.html": dashboardHtml,
 
 	"bundle.js": bundleJs,
 }
 
-                                                  
-                                                
-                                                                      
-                       
-            
-                
-             
-                
-                
-                                                                 
-                                                                
-                                                                          
-                                             
 func AssetDir(name string) ([]string, error) {
 	node := _bintree
 	if len(name) != 0 {
@@ -38545,7 +38510,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	"dashboard.html": {dashboardHtml, map[string]*bintree{}},
 }}
 
-                                                            
 func RestoreAsset(dir, name string) error {
 	data, err := Asset(name)
 	if err != nil {
@@ -38566,14 +38530,13 @@ func RestoreAsset(dir, name string) error {
 	return os.Chtimes(_filePath(dir, name), info.ModTime(), info.ModTime())
 }
 
-                                                                         
 func RestoreAssets(dir, name string) error {
 	children, err := AssetDir(name)
-	       
+
 	if err != nil {
 		return RestoreAsset(dir, name)
 	}
-	      
+
 	for _, child := range children {
 		err = RestoreAssets(dir, filepath.Join(name, child))
 		if err != nil {

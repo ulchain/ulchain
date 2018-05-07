@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package math
 
@@ -22,7 +7,7 @@ import (
 )
 
 const (
-	                        
+
 	MaxInt8   = 1<<7 - 1
 	MinInt8   = -1 << 7
 	MaxInt16  = 1<<15 - 1
@@ -37,10 +22,8 @@ const (
 	MaxUint64 = 1<<64 - 1
 )
 
-                                                    
 type HexOrDecimal64 uint64
 
-                                                     
 func (i *HexOrDecimal64) UnmarshalText(input []byte) error {
 	int, ok := ParseUint64(string(input))
 	if !ok {
@@ -50,13 +33,10 @@ func (i *HexOrDecimal64) UnmarshalText(input []byte) error {
 	return nil
 }
 
-                                                 
 func (i HexOrDecimal64) MarshalText() ([]byte, error) {
 	return []byte(fmt.Sprintf("%#x", uint64(i))), nil
 }
 
-                                                                       
-                                                               
 func ParseUint64(s string) (uint64, bool) {
 	if s == "" {
 		return 0, true
@@ -69,7 +49,6 @@ func ParseUint64(s string) (uint64, bool) {
 	return v, err == nil
 }
 
-                                                                              
 func MustParseUint64(s string) uint64 {
 	v, ok := ParseUint64(s)
 	if !ok {
@@ -78,19 +57,14 @@ func MustParseUint64(s string) uint64 {
 	return v
 }
 
-                                                                                    
-
-                                                                    
 func SafeSub(x, y uint64) (uint64, bool) {
 	return x - y, x < y
 }
 
-                                                            
 func SafeAdd(x, y uint64) (uint64, bool) {
 	return x + y, y > MaxUint64-x
 }
 
-                                                                       
 func SafeMul(x, y uint64) (uint64, bool) {
 	if x == 0 || y == 0 {
 		return 0, false

@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package whisperv5
 
@@ -33,7 +18,7 @@ import (
 )
 
 const (
-	filterTimeout = 300                                                                  
+	filterTimeout = 300 
 )
 
 var (
@@ -45,16 +30,13 @@ var (
 	ErrNoTopics             = errors.New("missing topic(s)")
 )
 
-                                                                
-                                              
 type PublicWhisperAPI struct {
 	w *Whisper
 
 	mu       sync.Mutex
-	lastUsed map[string]time.Time                                                           
+	lastUsed map[string]time.Time 
 }
 
-                                                        
 func NewPublicWhisperAPI(w *Whisper) *PublicWhisperAPI {
 	api := &PublicWhisperAPI{
 		w:        w,
@@ -65,8 +47,6 @@ func NewPublicWhisperAPI(w *Whisper) *PublicWhisperAPI {
 	return api
 }
 
-                          
-                                                                        
 func (api *PublicWhisperAPI) run() {
 	timeout := time.NewTicker(2 * time.Minute)
 	for {
@@ -86,20 +66,17 @@ func (api *PublicWhisperAPI) run() {
 	}
 }
 
-                                                    
 func (api *PublicWhisperAPI) Version(ctx context.Context) string {
 	return ProtocolVersionStr
 }
 
-                                        
 type Info struct {
-	Memory         int     `json:"memory"`                                                          
-	Messages       int     `json:"messages"`                                      
-	MinPow         float64 `json:"minPow"`                                
-	MaxMessageSize uint32  `json:"maxMessageSize"`                                 
+	Memory         int     `json:"memory"`         
+	Messages       int     `json:"messages"`       
+	MinPow         float64 `json:"minPow"`         
+	MaxMessageSize uint32  `json:"maxMessageSize"` 
 }
 
-                                                              
 func (api *PublicWhisperAPI) Info(ctx context.Context) Info {
 	stats := api.w.Stats()
 	return Info{
@@ -110,19 +87,14 @@ func (api *PublicWhisperAPI) Info(ctx context.Context) Info {
 	}
 }
 
-                                                                    
-                                                      
 func (api *PublicWhisperAPI) SetMaxMessageSize(ctx context.Context, size uint32) (bool, error) {
 	return true, api.w.SetMaxMessageSize(size)
 }
 
-                                                                      
 func (api *PublicWhisperAPI) SetMinPoW(ctx context.Context, pow float64) (bool, error) {
 	return true, api.w.SetMinimumPoW(pow)
 }
 
-                                                                                                   
-                                                                                   
 func (api *PublicWhisperAPI) MarkTrustedPeer(ctx context.Context, enode string) (bool, error) {
 	n, err := discover.ParseNode(enode)
 	if err != nil {
@@ -131,13 +103,10 @@ func (api *PublicWhisperAPI) MarkTrustedPeer(ctx context.Context, enode string) 
 	return true, api.w.AllowP2PMessagesFromPeer(n.ID[:])
 }
 
-                                                                                                
-                                                             
 func (api *PublicWhisperAPI) NewKeyPair(ctx context.Context) (string, error) {
 	return api.w.NewKeyPair()
 }
 
-                                               
 func (api *PublicWhisperAPI) AddPrivateKey(ctx context.Context, privateKey hexutil.Bytes) (string, error) {
 	key, err := crypto.ToECDSA(privateKey)
 	if err != nil {
@@ -146,7 +115,6 @@ func (api *PublicWhisperAPI) AddPrivateKey(ctx context.Context, privateKey hexut
 	return api.w.AddKeyPair(key)
 }
 
-                                                                 
 func (api *PublicWhisperAPI) DeleteKeyPair(ctx context.Context, key string) (bool, error) {
 	if ok := api.w.DeleteKeyPair(key); ok {
 		return true, nil
@@ -154,13 +122,10 @@ func (api *PublicWhisperAPI) DeleteKeyPair(ctx context.Context, key string) (boo
 	return false, fmt.Errorf("key pair %s not found", key)
 }
 
-                                                                                                    
 func (api *PublicWhisperAPI) HasKeyPair(ctx context.Context, id string) bool {
 	return api.w.HasKeyPair(id)
 }
 
-                                                                                        
-                                                                                        
 func (api *PublicWhisperAPI) GetPublicKey(ctx context.Context, id string) (hexutil.Bytes, error) {
 	key, err := api.w.GetPrivateKey(id)
 	if err != nil {
@@ -169,8 +134,6 @@ func (api *PublicWhisperAPI) GetPublicKey(ctx context.Context, id string) (hexut
 	return crypto.FromECDSAPub(&key.PublicKey), nil
 }
 
-                                                                                         
-                                                                                        
 func (api *PublicWhisperAPI) GetPrivateKey(ctx context.Context, id string) (hexutil.Bytes, error) {
 	key, err := api.w.GetPrivateKey(id)
 	if err != nil {
@@ -179,43 +142,32 @@ func (api *PublicWhisperAPI) GetPrivateKey(ctx context.Context, id string) (hexu
 	return crypto.FromECDSA(key), nil
 }
 
-                                             
-                                                         
-                                                                                         
 func (api *PublicWhisperAPI) NewSymKey(ctx context.Context) (string, error) {
 	return api.w.GenerateSymKey()
 }
 
-                                    
-                                                         
-                                                                                         
 func (api *PublicWhisperAPI) AddSymKey(ctx context.Context, key hexutil.Bytes) (string, error) {
 	return api.w.AddSymKeyDirect([]byte(key))
 }
 
-                                                                                                  
 func (api *PublicWhisperAPI) GenerateSymKeyFromPassword(ctx context.Context, passwd string) (string, error) {
 	return api.w.AddSymKeyFromPassword(passwd)
 }
 
-                                                                                                 
 func (api *PublicWhisperAPI) HasSymKey(ctx context.Context, id string) bool {
 	return api.w.HasSymKey(id)
 }
 
-                                                                    
 func (api *PublicWhisperAPI) GetSymKey(ctx context.Context, id string) (hexutil.Bytes, error) {
 	return api.w.GetSymKey(id)
 }
 
-                                                                               
 func (api *PublicWhisperAPI) DeleteSymKey(ctx context.Context, id string) bool {
 	return api.w.DeleteSymKey(id)
 }
 
-                                                                                                      
+//go:generate gencodec -type NewMessage -field-override newMessageOverride -out gen_newmessage_json.go
 
-                                                                              
 type NewMessage struct {
 	SymKeyID   string    `json:"symKeyID"`
 	PublicKey  []byte    `json:"pubKey"`
@@ -235,7 +187,6 @@ type newMessageOverride struct {
 	Padding   hexutil.Bytes
 }
 
-                                         
 func (api *PublicWhisperAPI) Post(ctx context.Context, req NewMessage) (bool, error) {
 	var (
 		symKeyGiven = len(req.SymKeyID) > 0
@@ -243,7 +194,6 @@ func (api *PublicWhisperAPI) Post(ctx context.Context, req NewMessage) (bool, er
 		err         error
 	)
 
-	                                                            
 	if (symKeyGiven && pubKeyGiven) || (!symKeyGiven && !pubKeyGiven) {
 		return false, ErrSymAsym
 	}
@@ -257,16 +207,14 @@ func (api *PublicWhisperAPI) Post(ctx context.Context, req NewMessage) (bool, er
 		Topic:    req.Topic,
 	}
 
-	                                           
 	if len(req.Sig) > 0 {
 		if params.Src, err = api.w.GetPrivateKey(req.Sig); err != nil {
 			return false, err
 		}
 	}
 
-	                                                        
 	if symKeyGiven {
-		if params.Topic == (TopicType{}) {                                                  
+		if params.Topic == (TopicType{}) { 
 			return false, ErrNoTopics
 		}
 		if params.KeySym, err = api.w.GetSymKey(req.SymKeyID); err != nil {
@@ -277,7 +225,6 @@ func (api *PublicWhisperAPI) Post(ctx context.Context, req NewMessage) (bool, er
 		}
 	}
 
-	                                                         
 	if pubKeyGiven {
 		params.Dst = crypto.ToECDSAPub(req.PublicKey)
 		if !ValidatePublicKey(params.Dst) {
@@ -285,7 +232,6 @@ func (api *PublicWhisperAPI) Post(ctx context.Context, req NewMessage) (bool, er
 		}
 	}
 
-	                           
 	whisperMsg, err := NewSentMessage(params)
 	if err != nil {
 		return false, err
@@ -296,7 +242,6 @@ func (api *PublicWhisperAPI) Post(ctx context.Context, req NewMessage) (bool, er
 		return false, err
 	}
 
-	                                         
 	if len(req.TargetPeer) > 0 {
 		n, err := discover.ParseNode(req.TargetPeer)
 		if err != nil {
@@ -305,7 +250,6 @@ func (api *PublicWhisperAPI) Post(ctx context.Context, req NewMessage) (bool, er
 		return true, api.w.SendP2PMessage(n.ID[:], env)
 	}
 
-	                                                                    
 	if req.PowTarget < api.w.MinPow() {
 		return false, ErrTooLowPoW
 	}
@@ -313,9 +257,8 @@ func (api *PublicWhisperAPI) Post(ctx context.Context, req NewMessage) (bool, er
 	return true, api.w.Send(env)
 }
 
-                                                                                                
+//go:generate gencodec -type Criteria -field-override criteriaOverride -out gen_criteria_json.go
 
-                                                              
 type Criteria struct {
 	SymKeyID     string      `json:"symKeyID"`
 	PrivateKeyID string      `json:"privateKeyID"`
@@ -329,8 +272,6 @@ type criteriaOverride struct {
 	Sig hexutil.Bytes
 }
 
-                                                                                   
-                             
 func (api *PublicWhisperAPI) Messages(ctx context.Context, crit Criteria) (*rpc.Subscription, error) {
 	var (
 		symKeyGiven = len(crit.SymKeyID) > 0
@@ -338,13 +279,11 @@ func (api *PublicWhisperAPI) Messages(ctx context.Context, crit Criteria) (*rpc.
 		err         error
 	)
 
-	                                                        
 	notifier, supported := rpc.NotifierFromContext(ctx)
 	if !supported {
 		return nil, rpc.ErrNotificationsUnsupported
 	}
 
-	                                                            
 	if (symKeyGiven && pubKeyGiven) || (!symKeyGiven && !pubKeyGiven) {
 		return nil, ErrSymAsym
 	}
@@ -369,7 +308,6 @@ func (api *PublicWhisperAPI) Messages(ctx context.Context, crit Criteria) (*rpc.
 		filter.Topics = append(filter.Topics, bt[:])
 	}
 
-	                                                                     
 	if symKeyGiven {
 		if len(filter.Topics) == 0 {
 			return nil, ErrNoTopics
@@ -385,7 +323,6 @@ func (api *PublicWhisperAPI) Messages(ctx context.Context, crit Criteria) (*rpc.
 		filter.SymKeyHash = crypto.Keccak256Hash(filter.KeySym)
 	}
 
-	                                                                   
 	if pubKeyGiven {
 		filter.KeyAsym, err = api.w.GetPrivateKey(crit.PrivateKeyID)
 		if err != nil || filter.KeyAsym == nil {
@@ -398,10 +335,9 @@ func (api *PublicWhisperAPI) Messages(ctx context.Context, crit Criteria) (*rpc.
 		return nil, err
 	}
 
-	                                                           
 	rpcSub := notifier.CreateSubscription()
 	go func() {
-		                                                                         
+
 		ticker := time.NewTicker(250 * time.Millisecond)
 		defer ticker.Stop()
 
@@ -428,9 +364,8 @@ func (api *PublicWhisperAPI) Messages(ctx context.Context, crit Criteria) (*rpc.
 	return rpcSub, nil
 }
 
-                                                                                             
+//go:generate gencodec -type Message -field-override messageOverride -out gen_message_json.go
 
-                                                          
 type Message struct {
 	Sig       []byte    `json:"sig,omitempty"`
 	TTL       uint32    `json:"ttl"`
@@ -451,7 +386,6 @@ type messageOverride struct {
 	Dst     hexutil.Bytes
 }
 
-                                                                     
 func ToWhisperMessage(message *ReceivedMessage) *Message {
 	msg := Message{
 		Payload:   message.Payload,
@@ -480,7 +414,6 @@ func ToWhisperMessage(message *ReceivedMessage) *Message {
 	return &msg
 }
 
-                                                                  
 func toMessage(messages []*ReceivedMessage) []*Message {
 	msgs := make([]*Message, len(messages))
 	for i, msg := range messages {
@@ -489,8 +422,6 @@ func toMessage(messages []*ReceivedMessage) []*Message {
 	return msgs
 }
 
-                                                                            
-                                              
 func (api *PublicWhisperAPI) GetFilterMessages(id string) ([]*Message, error) {
 	api.mu.Lock()
 	f := api.w.GetFilter(id)
@@ -510,7 +441,6 @@ func (api *PublicWhisperAPI) GetFilterMessages(id string) ([]*Message, error) {
 	return messages, nil
 }
 
-                                        
 func (api *PublicWhisperAPI) DeleteMessageFilter(id string) (bool, error) {
 	api.mu.Lock()
 	defer api.mu.Unlock()
@@ -519,8 +449,6 @@ func (api *PublicWhisperAPI) DeleteMessageFilter(id string) (bool, error) {
 	return true, api.w.Unsubscribe(id)
 }
 
-                                                                     
-                                                  
 func (api *PublicWhisperAPI) NewMessageFilter(req Criteria) (string, error) {
 	var (
 		src     *ecdsa.PublicKey
@@ -534,7 +462,6 @@ func (api *PublicWhisperAPI) NewMessageFilter(req Criteria) (string, error) {
 		err error
 	)
 
-	                                                            
 	if (symKeyGiven && asymKeyGiven) || (!symKeyGiven && !asymKeyGiven) {
 		return "", ErrSymAsym
 	}

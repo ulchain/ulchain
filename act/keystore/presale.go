@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package keystore
 
@@ -31,7 +16,6 @@ import (
 	"golang.org/x/crypto/pbkdf2"
 )
 
-                                                                                       
 func importPreSaleKey(keyStore keyStore, keyJSON []byte, password string) (accounts.Account, *Key, error) {
 	key, err := decryptPreSaleKey(keyJSON, password)
 	if err != nil {
@@ -78,7 +62,7 @@ func decryptPreSaleKey(fileContent []byte, password string) (key *Key, err error
 		Address:    crypto.PubkeyToAddress(ecKey.PublicKey),
 		PrivateKey: ecKey,
 	}
-	derivedAddr := hex.EncodeToString(key.Address.Bytes())                                            
+	derivedAddr := hex.EncodeToString(key.Address.Bytes()) 
 	expectedAddr := preSaleKeyStruct.EPVAddr
 	if derivedAddr != expectedAddr {
 		err = fmt.Errorf("decrypted addr '%s' not equal to expected addr '%s'", derivedAddr, expectedAddr)
@@ -87,7 +71,7 @@ func decryptPreSaleKey(fileContent []byte, password string) (key *Key, err error
 }
 
 func aesCTRXOR(key, inText, iv []byte) ([]byte, error) {
-	                                                 
+
 	aesBlock, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -113,7 +97,6 @@ func aesCBCDecrypt(key, cipherText, iv []byte) ([]byte, error) {
 	return plaintext, err
 }
 
-                                                                         
 func pkcs7Unpad(in []byte) []byte {
 	if len(in) == 0 {
 		return nil

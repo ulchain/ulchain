@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package vm
 
@@ -22,8 +7,6 @@ var checkVal = big.NewInt(-42)
 
 const poolLimit = 256
 
-                                         
-                                            
 type intPool struct {
 	pool *Stack
 }
@@ -44,8 +27,7 @@ func (p *intPool) put(is ...*big.Int) {
 	}
 
 	for _, i := range is {
-		                                                                         
-		                                                              
+
 		if verifyPool {
 			i.Set(checkVal)
 		}

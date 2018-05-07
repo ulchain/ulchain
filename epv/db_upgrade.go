@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                
 package epv
 
 import (
@@ -30,12 +14,8 @@ import (
 
 var deduplicateData = []byte("dbUpgrade_20170714deduplicateData")
 
-                                                               
-                                                             
-                                                            
-                       
 func upgradeDeduplicateData(db epvdb.Database) func() error {
-	                                                          
+
 	data, _ := db.Get(deduplicateData)
 	if len(data) > 0 && data[0] == 42 {
 		return nil
@@ -44,12 +24,12 @@ func upgradeDeduplicateData(db epvdb.Database) func() error {
 		db.Put(deduplicateData, []byte{42})
 		return nil
 	}
-	                                                     
+
 	log.Warn("Upgrading database to use lookup entries")
 	stop := make(chan chan error)
 
 	go func() {
-		                                                                               
+
 		it := db.(*epvdb.LDBDatabase).NewIterator()
 		defer func() {
 			if it != nil {
@@ -62,12 +42,12 @@ func upgradeDeduplicateData(db epvdb.Database) func() error {
 			failed    error
 		)
 		for failed == nil && it.Next() {
-			                                                                                  
+
 			key := it.Key()
 			if len(key) != common.HashLength+1 || key[common.HashLength] != 0x01 {
 				continue
 			}
-			                                                                                                       
+
 			var meta struct {
 				BlockHash  common.Hash
 				BlockIndex uint64
@@ -76,27 +56,26 @@ func upgradeDeduplicateData(db epvdb.Database) func() error {
 			if err := rlp.DecodeBytes(it.Value(), &meta); err != nil {
 				continue
 			}
-			                                                                                        
+
 			hash := key[:common.HashLength]
 
 			if hash[0] == byte('l') {
-				                                                                      
+
 				if tx, _, _, _ := core.GetTransaction(db, common.BytesToHash(hash)); tx == nil || !bytes.Equal(tx.Hash().Bytes(), hash) {
 					continue
 				}
 			}
-			                                                                        
-			if failed = db.Put(append([]byte("l"), hash...), it.Value()); failed == nil {                             
-				if failed = db.Delete(hash); failed == nil {                                         
-					if failed = db.Delete(append([]byte("receipts-"), hash...)); failed == nil {                                     
-						if failed = db.Delete(key); failed != nil {                                       
+
+			if failed = db.Put(append([]byte("l"), hash...), it.Value()); failed == nil { 
+				if failed = db.Delete(hash); failed == nil { 
+					if failed = db.Delete(append([]byte("receipts-"), hash...)); failed == nil { 
+						if failed = db.Delete(key); failed != nil { 
 							break
 						}
 					}
 				}
 			}
-			                                                                         
-			                                     
+
 			converted++
 			if converted%100000 == 0 {
 				it.Release()
@@ -105,7 +84,7 @@ func upgradeDeduplicateData(db epvdb.Database) func() error {
 
 				log.Info("Deduplicating database entries", "deduped", converted)
 			}
-			                                                              
+
 			select {
 			case errc := <-stop:
 				errc <- nil
@@ -113,7 +92,7 @@ func upgradeDeduplicateData(db epvdb.Database) func() error {
 			case <-time.After(time.Microsecond * 100):
 			}
 		}
-		                                              
+
 		if failed == nil {
 			log.Info("Database deduplication successful", "deduped", converted)
 			db.Put(deduplicateData, []byte{42})
@@ -126,7 +105,7 @@ func upgradeDeduplicateData(db epvdb.Database) func() error {
 		errc := <-stop
 		errc <- failed
 	}()
-	                                     
+
 	return func() error {
 		errc := make(chan error)
 		stop <- errc

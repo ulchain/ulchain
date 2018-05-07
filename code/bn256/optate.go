@@ -1,12 +1,7 @@
-                                                      
-                                                     
-                                                 
 
 package bn256
 
 func lineFunctionAdd(r, p *twistPoint, q *curvePoint, r2 *gfP2, pool *bnPool) (a, b, c *gfP2, rOut *twistPoint) {
-	                                                                   
-	                                                      
 
 	B := newGFp2(pool).Mul(p.x, r.t, pool)
 
@@ -83,8 +78,6 @@ func lineFunctionAdd(r, p *twistPoint, q *curvePoint, r2 *gfP2, pool *bnPool) (a
 }
 
 func lineFunctionDouble(r *twistPoint, q *curvePoint, pool *bnPool) (a, b, c *gfP2, rOut *twistPoint) {
-	                                                                     
-	                                                      
 
 	A := newGFp2(pool).Square(r.x, pool)
 	B := newGFp2(pool).Square(r.y, pool)
@@ -181,14 +174,11 @@ func mulLine(ret *gfP12, a, b, c *gfP2, pool *bnPool) {
 	t.Put(pool)
 }
 
-                                             
 var sixuPlus2NAF = []int8{0, 0, 0, 1, 0, 1, 0, -1, 0, 0, 1, -1, 0, 0, 1, 0,
 	0, 1, 1, 0, -1, 0, 0, 1, 0, -1, 0, 0, 0, 0, 1, 1,
 	1, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, -1, 0, 0, 1,
 	1, 0, 0, -1, 0, 0, 0, 1, 1, 0, -1, 0, 0, 1, 0, 1, 1}
 
-                                                                             
-                                                                        
 func miller(q *twistPoint, p *curvePoint, pool *bnPool) *gfP12 {
 	ret := newGFp12(pool)
 	ret.SetOne()
@@ -240,21 +230,6 @@ func miller(q *twistPoint, p *curvePoint, pool *bnPool) *gfP12 {
 		r = newR
 	}
 
-	                                                                      
-	                                                                     
-	        
-	  
-	                                                                           
-	                                                                        
-	                                                                        
-	                                                                      
-	                                                                               
-	                                                            
-	                                                                          
-	        
-	  
-	                                                  
-
 	q1 := newTwistPoint(pool)
 	q1.x.Conjugate(aAffine.x)
 	q1.x.Mul(q1.x, xiToPMinus1Over3, pool)
@@ -262,12 +237,6 @@ func miller(q *twistPoint, p *curvePoint, pool *bnPool) *gfP12 {
 	q1.y.Mul(q1.y, xiToPMinus1Over2, pool)
 	q1.z.SetOne()
 	q1.t.SetOne()
-
-	                                                                        
-	                                                                     
-	                                                           
-	                                                                         
-	                                  
 
 	minusQ2 := newTwistPoint(pool)
 	minusQ2.x.MulScalar(aAffine.x, xiToPSquaredMinus1Over3)
@@ -302,13 +271,9 @@ func miller(q *twistPoint, p *curvePoint, pool *bnPool) *gfP12 {
 	return ret
 }
 
-                                                                             
-                                                                        
-                                                    
 func finalExponentiation(in *gfP12, pool *bnPool) *gfP12 {
 	t1 := newGFp12(pool)
 
-	                            
 	t1.x.Negative(in.x)
 	t1.y.Set(in.y)
 
