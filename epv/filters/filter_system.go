@@ -1,21 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                                     
-                               
 package filters
 
 import (
@@ -33,38 +16,33 @@ import (
 	"github.com/epvchain/go-epvchain/remote"
 )
 
-                                                                         
-                                 
 type Type byte
 
 const (
-	                                                             
+
 	UnknownSubscription Type = iota
-	                                                                 
+
 	LogsSubscription
-	                                                             
+
 	PendingLogsSubscription
-	                                                                                
+
 	MinedAndPendingLogsSubscription
-	                                                                
-	                                          
+
 	PendingTransactionsSubscription
-	                                                                 
+
 	BlocksSubscription
-	                                                 
+
 	LastIndexSubscription
 )
 
 const (
 
-	                                                             
-	                                                     
 	txChanSize = 4096
-	                                                                       
+
 	rmLogsChanSize = 10
-	                                                              
+
 	logsChanSize = 10
-	                                                                  
+
 	chainEvChanSize = 10
 )
 
@@ -80,27 +58,19 @@ type subscription struct {
 	logs      chan []*types.Log
 	hashes    chan common.Hash
 	headers   chan *types.Header
-	installed chan struct{}                                       
-	err       chan error                                            
+	installed chan struct{} 
+	err       chan error    
 }
 
-                                                                                 
-                                                      
 type EventSystem struct {
 	mux       *event.TypeMux
 	backend   Backend
 	lightMode bool
 	lastHead  *types.Header
-	install   chan *subscription                                         
-	uninstall chan *subscription                                        
+	install   chan *subscription 
+	uninstall chan *subscription 
 }
 
-                                                                                
-                                                                               
-                                                                           
-  
-                                                                                  
-                                
 func NewEventSystem(mux *event.TypeMux, backend Backend, lightMode bool) *EventSystem {
 	m := &EventSystem{
 		mux:       mux,
@@ -115,7 +85,6 @@ func NewEventSystem(mux *event.TypeMux, backend Backend, lightMode bool) *EventS
 	return m
 }
 
-                                                                                   
 type Subscription struct {
 	ID        rpc.ID
 	f         *subscription
@@ -123,20 +92,15 @@ type Subscription struct {
 	unsubOnce sync.Once
 }
 
-                                                          
 func (sub *Subscription) Err() <-chan error {
 	return sub.f.err
 }
 
-                                                                         
 func (sub *Subscription) Unsubscribe() {
 	sub.unsubOnce.Do(func() {
 	uninstallLoop:
 		for {
-			                                                                 
-			                                                                 
-			                                                                  
-			                                                             
+
 			select {
 			case sub.es.uninstall <- sub.f:
 				break uninstallLoop
@@ -146,23 +110,16 @@ func (sub *Subscription) Unsubscribe() {
 			}
 		}
 
-		                                                                  
-		                                                                  
-		                                                                        
 		<-sub.Err()
 	})
 }
 
-                                                                   
 func (es *EventSystem) subscribe(sub *subscription) *Subscription {
 	es.install <- sub
 	<-sub.installed
 	return &Subscription{ID: sub.id, f: sub, es: es}
 }
 
-                                                                             
-                                                                              
-                                                                      
 func (es *EventSystem) SubscribeLogs(crit epvchain.FilterQuery, logs chan []*types.Log) (*Subscription, error) {
 	var from, to rpc.BlockNumber
 	if crit.FromBlock == nil {
@@ -176,31 +133,28 @@ func (es *EventSystem) SubscribeLogs(crit epvchain.FilterQuery, logs chan []*typ
 		to = rpc.BlockNumber(crit.ToBlock.Int64())
 	}
 
-	                                  
 	if from == rpc.PendingBlockNumber && to == rpc.PendingBlockNumber {
 		return es.subscribePendingLogs(crit, logs), nil
 	}
-	                                    
+
 	if from == rpc.LatestBlockNumber && to == rpc.LatestBlockNumber {
 		return es.subscribeLogs(crit, logs), nil
 	}
-	                                                              
+
 	if from >= 0 && to >= 0 && to >= from {
 		return es.subscribeLogs(crit, logs), nil
 	}
-	                                                                                   
+
 	if from >= rpc.LatestBlockNumber && to == rpc.PendingBlockNumber {
 		return es.subscribeMinedPendingLogs(crit, logs), nil
 	}
-	                                                                      
+
 	if from >= 0 && to == rpc.LatestBlockNumber {
 		return es.subscribeLogs(crit, logs), nil
 	}
 	return nil, fmt.Errorf("invalid from and to block combination: from > to")
 }
 
-                                                                           
-                                              
 func (es *EventSystem) subscribeMinedPendingLogs(crit epvchain.FilterQuery, logs chan []*types.Log) *Subscription {
 	sub := &subscription{
 		id:        rpc.NewID(),
@@ -216,8 +170,6 @@ func (es *EventSystem) subscribeMinedPendingLogs(crit epvchain.FilterQuery, logs
 	return es.subscribe(sub)
 }
 
-                                                                             
-                                            
 func (es *EventSystem) subscribeLogs(crit epvchain.FilterQuery, logs chan []*types.Log) *Subscription {
 	sub := &subscription{
 		id:        rpc.NewID(),
@@ -233,8 +185,6 @@ func (es *EventSystem) subscribeLogs(crit epvchain.FilterQuery, logs chan []*typ
 	return es.subscribe(sub)
 }
 
-                                                                                 
-                                                
 func (es *EventSystem) subscribePendingLogs(crit epvchain.FilterQuery, logs chan []*types.Log) *Subscription {
 	sub := &subscription{
 		id:        rpc.NewID(),
@@ -250,8 +200,6 @@ func (es *EventSystem) subscribePendingLogs(crit epvchain.FilterQuery, logs chan
 	return es.subscribe(sub)
 }
 
-                                                                                     
-                         
 func (es *EventSystem) SubscribeNewHeads(headers chan *types.Header) *Subscription {
 	sub := &subscription{
 		id:        rpc.NewID(),
@@ -266,8 +214,6 @@ func (es *EventSystem) SubscribeNewHeads(headers chan *types.Header) *Subscripti
 	return es.subscribe(sub)
 }
 
-                                                                                     
-                                                
 func (es *EventSystem) SubscribePendingTxEvents(hashes chan common.Hash) *Subscription {
 	sub := &subscription{
 		id:        rpc.NewID(),
@@ -284,7 +230,6 @@ func (es *EventSystem) SubscribePendingTxEvents(hashes chan common.Hash) *Subscr
 
 type filterIndex map[Type]map[rpc.ID]*subscription
 
-                                                  
 func (es *EventSystem) broadcast(filters filterIndex, ev interface{}) {
 	if ev == nil {
 		return
@@ -343,7 +288,7 @@ func (es *EventSystem) lightFilterNewHead(newHeader *types.Header, callBack func
 		return
 	}
 	newh := newHeader
-	                                                                        
+
 	var oldHeaders, newHeaders []*types.Header
 	for oldh.Hash() != newh.Hash() {
 		if oldh.Number.Uint64() >= newh.Number.Uint64() {
@@ -354,25 +299,24 @@ func (es *EventSystem) lightFilterNewHead(newHeader *types.Header, callBack func
 			newHeaders = append(newHeaders, newh)
 			newh = core.GetHeader(es.backend.ChainDb(), newh.ParentHash, newh.Number.Uint64()-1)
 			if newh == nil {
-				                                          
+
 				newh = oldh
 			}
 		}
 	}
-	                       
+
 	for _, h := range oldHeaders {
 		callBack(h, true)
 	}
-	                                               
+
 	for i := len(newHeaders) - 1; i >= 0; i-- {
 		callBack(newHeaders[i], false)
 	}
 }
 
-                                                      
 func (es *EventSystem) lightFilterLogs(header *types.Header, addresses []common.Address, topics [][]common.Hash, remove bool) []*types.Log {
 	if bloomFilter(header.Bloom, addresses, topics) {
-		                            
+
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 		defer cancel()
 		receipts, err := es.backend.GetReceipts(ctx, header.Hash())
@@ -393,26 +337,24 @@ func (es *EventSystem) lightFilterLogs(header *types.Header, addresses []common.
 	return nil
 }
 
-                                                           
 func (es *EventSystem) eventLoop() {
 	var (
 		index = make(filterIndex)
 		sub   = es.mux.Subscribe(core.PendingLogsEvent{})
-		                                   
+
 		txCh  = make(chan core.TxPreEvent, txChanSize)
 		txSub = es.backend.SubscribeTxPreEvent(txCh)
-		                             
+
 		rmLogsCh  = make(chan core.RemovedLogsEvent, rmLogsChanSize)
 		rmLogsSub = es.backend.SubscribeRemovedLogsEvent(rmLogsCh)
-		                         
+
 		logsCh  = make(chan []*types.Log, logsChanSize)
 		logsSub = es.backend.SubscribeLogsEvent(logsCh)
-		                       
+
 		chainEvCh  = make(chan core.ChainEvent, chainEvChanSize)
 		chainEvSub = es.backend.SubscribeChainEvent(chainEvCh)
 	)
 
-	                         
 	defer sub.Unsubscribe()
 	defer txSub.Unsubscribe()
 	defer rmLogsSub.Unsubscribe()
@@ -426,12 +368,11 @@ func (es *EventSystem) eventLoop() {
 	for {
 		select {
 		case ev, active := <-sub.Chan():
-			if !active {                  
+			if !active { 
 				return
 			}
 			es.broadcast(index, ev)
 
-		                           
 		case ev := <-txCh:
 			es.broadcast(index, ev)
 		case ev := <-rmLogsCh:
@@ -443,7 +384,7 @@ func (es *EventSystem) eventLoop() {
 
 		case f := <-es.install:
 			if f.typ == MinedAndPendingLogsSubscription {
-				                                                   
+
 				index[LogsSubscription][f.id] = f
 				index[PendingLogsSubscription][f.id] = f
 			} else {
@@ -452,7 +393,7 @@ func (es *EventSystem) eventLoop() {
 			close(f.installed)
 		case f := <-es.uninstall:
 			if f.typ == MinedAndPendingLogsSubscription {
-				                                                   
+
 				delete(index[LogsSubscription], f.id)
 				delete(index[PendingLogsSubscription], f.id)
 			} else {
@@ -460,7 +401,6 @@ func (es *EventSystem) eventLoop() {
 			}
 			close(f.err)
 
-		                 
 		case <-txSub.Err():
 			return
 		case <-rmLogsSub.Err():

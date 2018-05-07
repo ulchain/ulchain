@@ -1,10 +1,3 @@
-/*
- * Copyright 2007-2008, Haiku Inc. All rights reserved.
- * Distributed under the terms of the MIT License.
- *
- * Authors:
- *		Michael Lotz <mmlr@mlotz.ch>
- */
 
 #include "haiku_usb.h"
 #include <cstdio>
@@ -35,7 +28,6 @@ private:
 	bool		fInitCheck;
 };
 
-
 class RosterLooper : public BLooper {
 public:
 			RosterLooper(USBRoster *);
@@ -49,7 +41,6 @@ private:
 	BMessenger*	fMessenger;
 	bool		fInitCheck;
 };
-
 
 WatchedEntry::WatchedEntry(BMessenger *messenger, entry_ref *ref)
 	:	fMessenger(messenger),
@@ -92,7 +83,7 @@ WatchedEntry::WatchedEntry(BMessenger *messenger, entry_ref *ref)
 		entry.GetPath(&path);
 		fDevice = new(std::nothrow) USBDevice(path.Path());
 		if (fDevice != NULL && fDevice->InitCheck() == true) {
-			// Add this new device to each active context's device list
+
 			struct libusb_context *ctx;
 			unsigned long session_id = (unsigned long)&fDevice;
 
@@ -112,10 +103,9 @@ WatchedEntry::WatchedEntry(BMessenger *messenger, entry_ref *ref)
 				}
 				*((USBDevice **)dev->os_priv) = fDevice;
 
-				// Calculate pseudo-device-address
 				int addr, tmp;
 				if (strcmp(path.Leaf(), "hub") == 0)
-					tmp = 100;	//Random Number
+					tmp = 100;	
 				else
 					sscanf(path.Leaf(), "%d", &tmp);
 				addr = tmp + 1;
@@ -146,7 +136,6 @@ WatchedEntry::WatchedEntry(BMessenger *messenger, entry_ref *ref)
 	fInitCheck = true;
 }
 
-
 WatchedEntry::~WatchedEntry()
 {
 	if (fIsDirectory) {
@@ -161,7 +150,7 @@ WatchedEntry::~WatchedEntry()
 	}
 
 	if (fDevice) {
-		// Remove this device from each active context's device list
+
 		struct libusb_context *ctx;
 		struct libusb_device *dev;
 		unsigned long session_id = (unsigned long)&fDevice;
@@ -180,7 +169,6 @@ WatchedEntry::~WatchedEntry()
 		delete fDevice;
 	}
 }
-
 
 bool
 WatchedEntry::EntryCreated(entry_ref *ref)
@@ -205,7 +193,6 @@ WatchedEntry::EntryCreated(entry_ref *ref)
 	fEntries = child;
 	return true;
 }
-
 
 bool
 WatchedEntry::EntryRemoved(ino_t node)
@@ -234,13 +221,11 @@ WatchedEntry::EntryRemoved(ino_t node)
 	return false;
 }
 
-
 bool
 WatchedEntry::InitCheck()
 {
 	return fInitCheck;
 }
-
 
 RosterLooper::RosterLooper(USBRoster *roster)
 	:	BLooper("LibusbRoster Looper"),
@@ -278,7 +263,6 @@ RosterLooper::RosterLooper(USBRoster *roster)
 	fInitCheck = true;
 }
 
-
 void
 RosterLooper::Stop()
 {
@@ -287,7 +271,6 @@ RosterLooper::Stop()
 	delete fMessenger;
 	Quit();
 }
-
 
 void
 RosterLooper::MessageReceived(BMessage *message)
@@ -322,25 +305,21 @@ RosterLooper::MessageReceived(BMessage *message)
 	}
 }
 
-
 bool
 RosterLooper::InitCheck()
 {
 	return fInitCheck;
 }
 
-
 USBRoster::USBRoster()
 	:	fLooper(NULL)
 {
 }
 
-
 USBRoster::~USBRoster()
 {
 	Stop();
 }
-
 
 int
 USBRoster::Start()
@@ -355,7 +334,6 @@ USBRoster::Start()
 	}
 	return LIBUSB_SUCCESS;
 }
-
 
 void
 USBRoster::Stop()

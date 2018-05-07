@@ -1,8 +1,3 @@
-/**********************************************************************
- * Copyright (c) 2013, 2014 Pieter Wuille                             *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
 
 #ifndef _SECP256K1_BASIC_CONFIG_
 #define _SECP256K1_BASIC_CONFIG_
@@ -28,5 +23,5 @@
 #define USE_FIELD_10X26 1
 #define USE_SCALAR_8X32 1
 
-#endif // USE_BASIC_CONFIG
-#endif // _SECP256K1_BASIC_CONFIG_
+#endif 
+#endif 

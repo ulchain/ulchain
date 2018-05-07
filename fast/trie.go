@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                 
 package trie
 
 import (
@@ -28,10 +12,9 @@ import (
 )
 
 var (
-	                                                     
+
 	emptyRoot = common.HexToHash("56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421")
 
-	                                                             
 	emptyState = crypto.Keccak256Hash(nil)
 )
 
@@ -40,59 +23,32 @@ var (
 	cacheUnloadCounter = metrics.NewRegisteredCounter("trie/cacheunload", nil)
 )
 
-                                                                              
-                                                                                
-                           
 func CacheMisses() int64 {
 	return cacheMissCounter.Count()
 }
 
-                                                                                
-                                                                                
-                           
 func CacheUnloads() int64 {
 	return cacheUnloadCounter.Count()
 }
 
-                                                                               
-                                                                                 
-                                     
 type LeafCallback func(leaf []byte, parent common.Hash) error
 
-                                  
-                                                    
-                                                           
-  
-                                       
 type Trie struct {
 	db           *Database
 	root         node
 	originalRoot common.Hash
 
-	                           
-	                                                        
-	                                                                
-	                                                                
 	cachegen, cachelimit uint16
 }
 
-                                                                
-                                                     
 func (t *Trie) SetCacheLimit(l uint16) {
 	t.cachelimit = l
 }
 
-                                                                 
 func (t *Trie) newFlag() nodeFlag {
 	return nodeFlag{dirty: true, gen: t.cachegen}
 }
 
-                                                         
-  
-                                                                    
-                                                                      
-                                                                          
-                                                                               
 func New(root common.Hash, db *Database) (*Trie, error) {
 	if db == nil {
 		panic("trie.New called without a database")
@@ -111,14 +67,10 @@ func New(root common.Hash, db *Database) (*Trie, error) {
 	return trie, nil
 }
 
-                                                                                       
-                                     
 func (t *Trie) NodeIterator(start []byte) NodeIterator {
 	return newNodeIterator(t, start)
 }
 
-                                                    
-                                                      
 func (t *Trie) Get(key []byte) []byte {
 	res, err := t.TryGet(key)
 	if err != nil {
@@ -127,9 +79,6 @@ func (t *Trie) Get(key []byte) []byte {
 	return res
 }
 
-                                                       
-                                                      
-                                                                           
 func (t *Trie) TryGet(key []byte) ([]byte, error) {
 	key = keybytesToHex(key)
 	value, newroot, didResolve, err := t.tryGet(t.root, key, 0)
@@ -147,7 +96,7 @@ func (t *Trie) tryGet(origNode node, key []byte, pos int) (value []byte, newnode
 		return n, n, false, nil
 	case *shortNode:
 		if len(key)-pos < len(n.Key) || !bytes.Equal(n.Key, key[pos:pos+len(n.Key)]) {
-			                        
+
 			return nil, n, false, nil
 		}
 		value, newnode, didResolve, err = t.tryGet(n.Val, key, pos+len(n.Key))
@@ -177,26 +126,12 @@ func (t *Trie) tryGet(origNode node, key []byte, pos int) (value []byte, newnode
 	}
 }
 
-                                                                    
-                                                                      
-                                                             
-  
-                                                                    
-                      
 func (t *Trie) Update(key, value []byte) {
 	if err := t.TryUpdate(key, value); err != nil {
 		log.Error(fmt.Sprintf("Unhandled trie error: %v", err))
 	}
 }
 
-                                                                       
-                                                                      
-                                                             
-  
-                                                                    
-                      
-  
-                                                                           
 func (t *Trie) TryUpdate(key, value []byte) error {
 	k := keybytesToHex(key)
 	if len(value) != 0 {
@@ -225,8 +160,7 @@ func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error
 	switch n := n.(type) {
 	case *shortNode:
 		matchlen := prefixLen(key, n.Key)
-		                                                       
-		                             
+
 		if matchlen == len(n.Key) {
 			dirty, nn, err := t.insert(n.Val, append(prefix, key[:matchlen]...), key[matchlen:], value)
 			if !dirty || err != nil {
@@ -234,7 +168,7 @@ func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error
 			}
 			return true, &shortNode{n.Key, nn, t.newFlag()}, nil
 		}
-		                                                       
+
 		branch := &fullNode{flags: t.newFlag()}
 		var err error
 		_, branch.Children[n.Key[matchlen]], err = t.insert(nil, append(prefix, n.Key[:matchlen+1]...), n.Key[matchlen+1:], n.Val)
@@ -245,11 +179,11 @@ func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error
 		if err != nil {
 			return false, nil, err
 		}
-		                                                                  
+
 		if matchlen == 0 {
 			return true, branch, nil
 		}
-		                                                                    
+
 		return true, &shortNode{key[:matchlen], branch, t.newFlag()}, nil
 
 	case *fullNode:
@@ -266,9 +200,7 @@ func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error
 		return true, &shortNode{key, value, t.newFlag()}, nil
 
 	case hashNode:
-		                                                           
-		                                                              
-		                                     
+
 		rn, err := t.resolveHash(n, prefix)
 		if err != nil {
 			return false, nil, err
@@ -284,15 +216,12 @@ func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error
 	}
 }
 
-                                                           
 func (t *Trie) Delete(key []byte) {
 	if err := t.TryDelete(key); err != nil {
 		log.Error(fmt.Sprintf("Unhandled trie error: %v", err))
 	}
 }
 
-                                                              
-                                                                           
 func (t *Trie) TryDelete(key []byte) error {
 	k := keybytesToHex(key)
 	_, n, err := t.delete(t.root, nil, k)
@@ -303,35 +232,24 @@ func (t *Trie) TryDelete(key []byte) error {
 	return nil
 }
 
-                                                            
-                                                     
-                                                  
 func (t *Trie) delete(n node, prefix, key []byte) (bool, node, error) {
 	switch n := n.(type) {
 	case *shortNode:
 		matchlen := prefixLen(key, n.Key)
 		if matchlen < len(n.Key) {
-			return false, n, nil                               
+			return false, n, nil 
 		}
 		if matchlen == len(key) {
-			return true, nil, nil                                       
+			return true, nil, nil 
 		}
-		                                                            
-		                                                          
-		                                                           
-		                     
+
 		dirty, child, err := t.delete(n.Val, append(prefix, key[:len(n.Key)]...), key[len(n.Key):])
 		if !dirty || err != nil {
 			return false, n, err
 		}
 		switch child := child.(type) {
 		case *shortNode:
-			                                                  
-			                                                  
-			                                                    
-			                                                   
-			                                                      
-			               
+
 			return true, &shortNode{concat(n.Key, child.Key...), child.Val, t.newFlag()}, nil
 		default:
 			return true, &shortNode{n.Key, child, t.newFlag()}, nil
@@ -346,15 +264,6 @@ func (t *Trie) delete(n node, prefix, key []byte) (bool, node, error) {
 		n.flags = t.newFlag()
 		n.Children[key[0]] = nn
 
-		                                                             
-		                                                            
-		                                                        
-		                                                            
-		                               
-		  
-		                                                              
-		                                                           
-		          
 		pos := -1
 		for i, cld := range n.Children {
 			if cld != nil {
@@ -368,12 +277,7 @@ func (t *Trie) delete(n node, prefix, key []byte) (bool, node, error) {
 		}
 		if pos >= 0 {
 			if pos != 16 {
-				                                                      
-				                                                      
-				                                         
-				                                                   
-				                                                    
-				         
+
 				cnode, err := t.resolve(n.Children[pos], prefix)
 				if err != nil {
 					return false, nil, err
@@ -383,11 +287,10 @@ func (t *Trie) delete(n node, prefix, key []byte) (bool, node, error) {
 					return true, &shortNode{k, cnode.Val, t.newFlag()}, nil
 				}
 			}
-			                                                      
-			                        
+
 			return true, &shortNode{[]byte{byte(pos)}, n.Children[pos], t.newFlag()}, nil
 		}
-		                                                              
+
 		return true, n, nil
 
 	case valueNode:
@@ -397,9 +300,7 @@ func (t *Trie) delete(n node, prefix, key []byte) (bool, node, error) {
 		return false, nil, nil
 
 	case hashNode:
-		                                                           
-		                                                              
-		                                     
+
 		rn, err := t.resolveHash(n, prefix)
 		if err != nil {
 			return false, nil, err
@@ -441,20 +342,14 @@ func (t *Trie) resolveHash(n hashNode, prefix []byte) (node, error) {
 	return mustDecodeNode(n, enc, t.cachegen), nil
 }
 
-                                          
-                                
 func (t *Trie) Root() []byte { return t.Hash().Bytes() }
 
-                                                                   
-                                                              
 func (t *Trie) Hash() common.Hash {
 	hash, cached, _ := t.hashRoot(nil, nil)
 	t.root = cached
 	return common.BytesToHash(hash.(hashNode))
 }
 
-                                                                               
-                                               
 func (t *Trie) Commit(onleaf LeafCallback) (root common.Hash, err error) {
 	if t.db == nil {
 		panic("commit called on trie with nil database")

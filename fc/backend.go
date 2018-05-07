@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                         
 package les
 
 import (
@@ -51,9 +35,9 @@ type LightEPVchain struct {
 	odr         *LesOdr
 	relay       *LesTxRelay
 	chainConfig *params.ChainConfig
-	                                        
+
 	shutdownChan chan bool
-	           
+
 	peers           *peerSet
 	txPool          *light.TxPool
 	blockchain      *light.LightChain
@@ -61,10 +45,10 @@ type LightEPVchain struct {
 	serverPool      *serverPool
 	reqDist         *requestDistributor
 	retriever       *retrieveManager
-	                
-	chainDb epvdb.Database                        
 
-	bloomRequests                              chan chan *bloombits.Retrieval                                                   
+	chainDb epvdb.Database 
+
+	bloomRequests                              chan chan *bloombits.Retrieval 
 	bloomIndexer, chtIndexer, bloomTrieIndexer *core.ChainIndexer
 
 	ApiBackend *LesApiBackend
@@ -118,7 +102,7 @@ func New(ctx *node.ServiceContext, config *epv.Config) (*LightEPVchain, error) {
 		return nil, err
 	}
 	lepv.bloomIndexer.Start(lepv.blockchain)
-	                                                              
+
 	if compat, ok := genesisErr.(*params.ConfigCompatError); ok {
 		log.Warn("Rewinding chain to upgrade configuration", "err", compat)
 		lepv.blockchain.SetHead(compat.RewindTo)
@@ -153,28 +137,22 @@ func lesTopic(genesisHash common.Hash, protocolVersion uint) discv5.Topic {
 
 type LightDummyAPI struct{}
 
-                                                              
 func (s *LightDummyAPI) EPVCbase() (common.Address, error) {
 	return common.Address{}, fmt.Errorf("not supported")
 }
 
-                                                                                   
 func (s *LightDummyAPI) Coinbase() (common.Address, error) {
 	return common.Address{}, fmt.Errorf("not supported")
 }
 
-                                    
 func (s *LightDummyAPI) Hashrate() hexutil.Uint {
 	return 0
 }
 
-                                                                 
 func (s *LightDummyAPI) Mining() bool {
 	return false
 }
 
-                                                                           
-                                                                            
 func (s *LightEPVchain) APIs() []rpc.API {
 	return append(epvapi.GetAPIs(s.ApiBackend), []rpc.API{
 		{
@@ -212,27 +190,21 @@ func (s *LightEPVchain) LesVersion() int                    { return int(s.proto
 func (s *LightEPVchain) Downloader() *downloader.Downloader { return s.protocolManager.downloader }
 func (s *LightEPVchain) EventMux() *event.TypeMux           { return s.eventMux }
 
-                                                                            
-                              
 func (s *LightEPVchain) Protocols() []p2p.Protocol {
 	return s.protocolManager.SubProtocols
 }
 
-                                                                                
-                                    
 func (s *LightEPVchain) Start(srvr *p2p.Server) error {
 	s.startBloomHandlers()
 	log.Warn("Light client mode is an experimental feature")
 	s.netRPCService = epvapi.NewPublicNetAPI(srvr, s.networkId)
-	                                                                      
+
 	protocolVersion := AdvertiseProtocolVersions[0]
 	s.serverPool.start(srvr, lesTopic(s.blockchain.Genesis().Hash(), protocolVersion))
 	s.protocolManager.Start(s.config.LightPeers)
 	return nil
 }
 
-                                                                                
-                     
 func (s *LightEPVchain) Stop() error {
 	s.odr.Stop()
 	if s.bloomIndexer != nil {

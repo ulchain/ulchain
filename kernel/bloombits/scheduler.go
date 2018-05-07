@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package bloombits
 
@@ -20,32 +5,22 @@ import (
 	"sync"
 )
 
-                                                                                  
-                                         
 type request struct {
-	section uint64                                                   
-	bit     uint                                                            
+	section uint64 
+	bit     uint   
 }
 
-                                                                               
 type response struct {
-	cached []byte                                                 
-	done   chan struct{}                                           
+	cached []byte        
+	done   chan struct{} 
 }
 
-                                                                            
-                                                                                
-                                                                              
-                                                                              
-             
 type scheduler struct {
-	bit       uint                                                                                          
-	responses map[uint64]*response                                                                    
-	lock      sync.Mutex                                                                  
+	bit       uint                 
+	responses map[uint64]*response 
+	lock      sync.Mutex           
 }
 
-                                                                             
-             
 func newScheduler(idx uint) *scheduler {
 	return &scheduler{
 		bit:       idx,
@@ -53,23 +28,15 @@ func newScheduler(idx uint) *scheduler {
 	}
 }
 
-                                                                                
-                                                                               
-                                                                                   
 func (s *scheduler) run(sections chan uint64, dist chan *request, done chan []byte, quit chan struct{}, wg *sync.WaitGroup) {
-	                                                                                
-	                                                                        
+
 	pend := make(chan uint64, cap(dist))
 
-	                                                                               
 	wg.Add(2)
 	go s.scheduleRequests(sections, dist, pend, quit, wg)
 	go s.scheduleDeliveries(pend, done, quit, wg)
 }
 
-                                                                              
-                                                                               
-                  
 func (s *scheduler) reset() {
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -81,26 +48,22 @@ func (s *scheduler) reset() {
 	}
 }
 
-                                                                            
-                                                                                  
-                                                     
 func (s *scheduler) scheduleRequests(reqs chan uint64, dist chan *request, pend chan uint64, quit chan struct{}, wg *sync.WaitGroup) {
-	                                                
+
 	defer wg.Done()
 	defer close(pend)
 
-	                                               
 	for {
 		select {
 		case <-quit:
 			return
 
 		case section, ok := <-reqs:
-			                                  
+
 			if !ok {
 				return
 			}
-			                                 
+
 			unique := false
 
 			s.lock.Lock()
@@ -112,7 +75,6 @@ func (s *scheduler) scheduleRequests(reqs chan uint64, dist chan *request, pend 
 			}
 			s.lock.Unlock()
 
-			                                                                                     
 			if unique {
 				select {
 				case <-quit:
@@ -129,25 +91,22 @@ func (s *scheduler) scheduleRequests(reqs chan uint64, dist chan *request, pend 
 	}
 }
 
-                                                                               
-                                                             
 func (s *scheduler) scheduleDeliveries(pend chan uint64, done chan []byte, quit chan struct{}, wg *sync.WaitGroup) {
-	                                                
+
 	defer wg.Done()
 	defer close(done)
 
-	                                                       
 	for {
 		select {
 		case <-quit:
 			return
 
 		case idx, ok := <-pend:
-			                                
+
 			if !ok {
 				return
 			}
-			                                     
+
 			s.lock.Lock()
 			res := s.responses[idx]
 			s.lock.Unlock()
@@ -157,7 +116,7 @@ func (s *scheduler) scheduleDeliveries(pend chan uint64, done chan []byte, quit 
 				return
 			case <-res.done:
 			}
-			                     
+
 			select {
 			case <-quit:
 				return
@@ -167,13 +126,12 @@ func (s *scheduler) scheduleDeliveries(pend chan uint64, done chan []byte, quit 
 	}
 }
 
-                                                                                  
 func (s *scheduler) deliver(sections []uint64, data [][]byte) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	for i, section := range sections {
-		if res := s.responses[section]; res != nil && res.cached == nil {                                            
+		if res := s.responses[section]; res != nil && res.cached == nil { 
 			res.cached = data[i]
 			close(res.done)
 		}

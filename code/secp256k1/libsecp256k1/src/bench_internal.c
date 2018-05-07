@@ -1,8 +1,4 @@
-/**********************************************************************
- * Copyright (c) 2014-2015 Pieter Wuille                              *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
+
 #include <stdio.h>
 
 #include "include/secp256k1.h"
@@ -255,7 +251,6 @@ void bench_wnaf_const(void* arg) {
         secp256k1_scalar_add(&data->scalar_x, &data->scalar_x, &data->scalar_y);
     }
 }
-
 
 void bench_sha256(void* arg) {
     int i;

@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package core
 
@@ -30,66 +15,45 @@ import (
 	"github.com/epvchain/go-epvchain/book"
 )
 
-                                                                              
-                                                                               
-                                        
 type ChainIndexerBackend interface {
-	                                                                                 
-	                                                           
+
 	Reset(section uint64, prevHead common.Hash) error
 
-	                                                                            
-	                                             
 	Process(header *types.Header)
 
-	                                                                         
 	Commit() error
 }
 
-                                                                                 
 type ChainIndexerChain interface {
-	                                                           
+
 	CurrentHeader() *types.Header
 
-	                                                                   
 	SubscribeChainEvent(ch chan<- ChainEvent) event.Subscription
 }
 
-                                                                            
-                                                                          
-                                                                     
-                                 
-  
-                                                                              
-                                                                            
-                                                                               
-                                    
 type ChainIndexer struct {
-	chainDb  epvdb.Database                                              
-	indexDb  epvdb.Database                                                                   
-	backend  ChainIndexerBackend                                                          
-	children []*ChainIndexer                                                  
+	chainDb  epvdb.Database      
+	indexDb  epvdb.Database      
+	backend  ChainIndexerBackend 
+	children []*ChainIndexer     
 
-	active uint32                                                    
-	update chan struct{}                                                           
-	quit   chan chan error                                                
+	active uint32          
+	update chan struct{}   
+	quit   chan chan error 
 
-	sectionSize uint64                                                         
-	confirmsReq uint64                                                                 
+	sectionSize uint64 
+	confirmsReq uint64 
 
-	storedSections uint64                                                             
-	knownSections  uint64                                                        
-	cascadedHead   uint64                                                                      
+	storedSections uint64 
+	knownSections  uint64 
+	cascadedHead   uint64 
 
-	throttling time.Duration                                                                     
+	throttling time.Duration 
 
 	log  log.Logger
 	lock sync.RWMutex
 }
 
-                                                                             
-                                                                               
-                                                                        
 func NewChainIndexer(chainDb, indexDb epvdb.Database, backend ChainIndexerBackend, section, confirm uint64, throttling time.Duration, kind string) *ChainIndexer {
 	c := &ChainIndexer{
 		chainDb:     chainDb,
@@ -102,15 +66,13 @@ func NewChainIndexer(chainDb, indexDb epvdb.Database, backend ChainIndexerBacken
 		throttling:  throttling,
 		log:         log.New("type", kind),
 	}
-	                                                             
+
 	c.loadValidSections()
 	go c.updateLoop()
 
 	return c
 }
 
-                                                                                 
-                                           
 func (c *ChainIndexer) AddKnownSectionHead(section uint64, shead common.Hash) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
@@ -122,9 +84,6 @@ func (c *ChainIndexer) AddKnownSectionHead(section uint64, shead common.Hash) {
 	c.setValidSections(section + 1)
 }
 
-                                                                           
-                                                                            
-                                                  
 func (c *ChainIndexer) Start(chain ChainIndexerChain) {
 	events := make(chan ChainEvent, 10)
 	sub := chain.SubscribeChainEvent(events)
@@ -132,31 +91,28 @@ func (c *ChainIndexer) Start(chain ChainIndexerChain) {
 	go c.eventLoop(chain.CurrentHeader(), events, sub)
 }
 
-                                                                                 
-                                       
 func (c *ChainIndexer) Close() error {
 	var errs []error
 
-	                                    
 	errc := make(chan error)
 	c.quit <- errc
 	if err := <-errc; err != nil {
 		errs = append(errs, err)
 	}
-	                                                
+
 	if atomic.LoadUint32(&c.active) != 0 {
 		c.quit <- errc
 		if err := <-errc; err != nil {
 			errs = append(errs, err)
 		}
 	}
-	                     
+
 	for _, child := range c.children {
 		if err := child.Close(); err != nil {
 			errs = append(errs, err)
 		}
 	}
-	                      
+
 	switch {
 	case len(errs) == 0:
 		return nil
@@ -169,16 +125,12 @@ func (c *ChainIndexer) Close() error {
 	}
 }
 
-                                                                                
-                                                                                
-         
 func (c *ChainIndexer) eventLoop(currentHeader *types.Header, events chan ChainEvent, sub event.Subscription) {
-	                                                                     
+
 	atomic.StoreUint32(&c.active, 1)
 
 	defer sub.Unsubscribe()
 
-	                                                                      
 	c.newHead(currentHeader.Number.Uint64(), false)
 
 	var (
@@ -188,12 +140,12 @@ func (c *ChainIndexer) eventLoop(currentHeader *types.Header, events chan ChainE
 	for {
 		select {
 		case errc := <-c.quit:
-			                                                         
+
 			errc <- nil
 			return
 
 		case ev, ok := <-events:
-			                                                                 
+
 			if !ok {
 				errc := <-c.quit
 				errc <- nil
@@ -201,11 +153,7 @@ func (c *ChainIndexer) eventLoop(currentHeader *types.Header, events chan ChainE
 			}
 			header := ev.Block.Header()
 			if header.ParentHash != prevHash {
-				                                                                                     
-				                                                                                            
 
-				                                                                                           
-				                                                                              
 				if h := FindCommonAncestor(c.chainDb, prevHeader, header); h != nil {
 					c.newHead(h.Number.Uint64(), true)
 				}
@@ -217,23 +165,21 @@ func (c *ChainIndexer) eventLoop(currentHeader *types.Header, events chan ChainE
 	}
 }
 
-                                                                    
 func (c *ChainIndexer) newHead(head uint64, reorg bool) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	                                                                
 	if reorg {
-		                                                     
+
 		changed := head / c.sectionSize
 		if changed < c.knownSections {
 			c.knownSections = changed
 		}
-		                                                                  
+
 		if changed < c.storedSections {
 			c.setValidSections(changed)
 		}
-		                                                                              
+
 		head = changed * c.sectionSize
 
 		if head < c.cascadedHead {
@@ -244,7 +190,7 @@ func (c *ChainIndexer) newHead(head uint64, reorg bool) {
 		}
 		return
 	}
-	                                                                                   
+
 	var sections uint64
 	if head >= c.confirmsReq {
 		sections = (head + 1 - c.confirmsReq) / c.sectionSize
@@ -259,8 +205,6 @@ func (c *ChainIndexer) newHead(head uint64, reorg bool) {
 	}
 }
 
-                                                                               
-                                    
 func (c *ChainIndexer) updateLoop() {
 	var (
 		updating bool
@@ -270,15 +214,15 @@ func (c *ChainIndexer) updateLoop() {
 	for {
 		select {
 		case errc := <-c.quit:
-			                                                         
+
 			errc <- nil
 			return
 
 		case <-c.update:
-			                                                               
+
 			c.lock.Lock()
 			if c.knownSections > c.storedSections {
-				                                                        
+
 				if time.Since(updated) > 8*time.Second {
 					if c.knownSections > c.storedSections+1 {
 						updating = true
@@ -286,13 +230,13 @@ func (c *ChainIndexer) updateLoop() {
 					}
 					updated = time.Now()
 				}
-				                                                                        
+
 				section := c.storedSections
 				var oldHead common.Hash
 				if section > 0 {
 					oldHead = c.SectionHead(section - 1)
 				}
-				                                                      
+
 				c.lock.Unlock()
 				newHead, err := c.processSection(section, oldHead)
 				if err != nil {
@@ -300,7 +244,6 @@ func (c *ChainIndexer) updateLoop() {
 				}
 				c.lock.Lock()
 
-				                                                                              
 				if err == nil && oldHead == c.SectionHead(section-1) {
 					c.setSectionHead(section, newHead)
 					c.setValidSections(section + 1)
@@ -315,12 +258,12 @@ func (c *ChainIndexer) updateLoop() {
 						child.newHead(c.cascadedHead, false)
 					}
 				} else {
-					                                                               
+
 					c.log.Debug("Chain index processing failed", "section", section, "err", err)
 					c.knownSections = c.storedSections
 				}
 			}
-			                                                             
+
 			if c.knownSections > c.storedSections {
 				time.AfterFunc(c.throttling, func() {
 					select {
@@ -334,14 +277,8 @@ func (c *ChainIndexer) updateLoop() {
 	}
 }
 
-                                                                                
-                                                                              
-                                                                                
-                                           
 func (c *ChainIndexer) processSection(section uint64, lastHead common.Hash) (common.Hash, error) {
 	c.log.Trace("Processing new chain section", "section", section)
-
-	                               
 
 	if err := c.backend.Reset(section, lastHead); err != nil {
 		c.setValidSections(0)
@@ -369,9 +306,6 @@ func (c *ChainIndexer) processSection(section uint64, lastHead common.Hash) (com
 	return lastHead, nil
 }
 
-                                                                              
-                                                                                 
-                 
 func (c *ChainIndexer) Sections() (uint64, uint64, common.Hash) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
@@ -379,21 +313,17 @@ func (c *ChainIndexer) Sections() (uint64, uint64, common.Hash) {
 	return c.storedSections, c.storedSections*c.sectionSize - 1, c.SectionHead(c.storedSections - 1)
 }
 
-                                                                                
 func (c *ChainIndexer) AddChildIndexer(indexer *ChainIndexer) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
 	c.children = append(c.children, indexer)
 
-	                                                  
 	if c.storedSections > 0 {
 		indexer.newHead(c.storedSections*c.sectionSize-1, false)
 	}
 }
 
-                                                                               
-                                      
 func (c *ChainIndexer) loadValidSections() {
 	data, _ := c.indexDb.Get([]byte("count"))
 	if len(data) == 8 {
@@ -401,23 +331,19 @@ func (c *ChainIndexer) loadValidSections() {
 	}
 }
 
-                                                                             
 func (c *ChainIndexer) setValidSections(sections uint64) {
-	                                                           
+
 	var data [8]byte
 	binary.BigEndian.PutUint64(data[:], sections)
 	c.indexDb.Put([]byte("count"), data[:])
 
-	                                                                   
 	for c.storedSections > sections {
 		c.storedSections--
 		c.removeSectionHead(c.storedSections)
 	}
-	c.storedSections = sections                       
+	c.storedSections = sections 
 }
 
-                                                                            
-                  
 func (c *ChainIndexer) SectionHead(section uint64) common.Hash {
 	var data [8]byte
 	binary.BigEndian.PutUint64(data[:], section)
@@ -429,8 +355,6 @@ func (c *ChainIndexer) SectionHead(section uint64) common.Hash {
 	return common.Hash{}
 }
 
-                                                                                
-            
 func (c *ChainIndexer) setSectionHead(section uint64, hash common.Hash) {
 	var data [8]byte
 	binary.BigEndian.PutUint64(data[:], section)
@@ -438,8 +362,6 @@ func (c *ChainIndexer) setSectionHead(section uint64, hash common.Hash) {
 	c.indexDb.Put(append([]byte("shead"), data[:]...), hash.Bytes())
 }
 
-                                                                                
-            
 func (c *ChainIndexer) removeSectionHead(section uint64) {
 	var data [8]byte
 	binary.BigEndian.PutUint64(data[:], section)

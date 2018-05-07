@@ -1,8 +1,3 @@
-/**********************************************************************
- * Copyright (c) 2013, 2014 Pieter Wuille                             *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
 
 #ifndef _SECP256K1_UTIL_H_
 #define _SECP256K1_UTIL_H_
@@ -56,7 +51,6 @@ static SECP256K1_INLINE void secp256k1_callback_call(const secp256k1_callback * 
 } while(0)
 #endif
 
-/* Like assert(), but when VERIFY is defined, and side-effect safe. */
 #if defined(COVERAGE)
 #define VERIFY_CHECK(check)
 #define VERIFY_SETUP(stmt)
@@ -76,7 +70,6 @@ static SECP256K1_INLINE void *checked_malloc(const secp256k1_callback* cb, size_
     return ret;
 }
 
-/* Macro for restrict, when available and not in a VERIFY build. */
 #if defined(SECP256K1_BUILD) && defined(VERIFY)
 # define SECP256K1_RESTRICT
 #else

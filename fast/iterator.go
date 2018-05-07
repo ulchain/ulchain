@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package trie
 
@@ -24,23 +9,20 @@ import (
 	"github.com/epvchain/go-epvchain/public"
 )
 
-                                                               
 type Iterator struct {
 	nodeIt NodeIterator
 
-	Key   []byte                                                           
-	Value []byte                                                             
+	Key   []byte 
+	Value []byte 
 	Err   error
 }
 
-                                                                    
 func NewIterator(it NodeIterator) *Iterator {
 	return &Iterator{
 		nodeIt: it,
 	}
 }
 
-                                                       
 func (it *Iterator) Next() bool {
 	for it.nodeIt.Next(true) {
 		if it.nodeIt.Leaf() {
@@ -55,54 +37,40 @@ func (it *Iterator) Next() bool {
 	return false
 }
 
-                                                              
 type NodeIterator interface {
-	                                                                                 
-	                         
+
 	Next(bool) bool
-	                                                  
+
 	Error() error
 
-	                                             
 	Hash() common.Hash
-	                                                                                     
-	                                                                        
+
 	Parent() common.Hash
-	                                                         
-	                                                                             
-	                                                                                
+
 	Path() []byte
 
-	                                                         
-	                                                                        
-	                                                            
-	                                                                              
 	Leaf() bool
 	LeafBlob() []byte
 	LeafKey() []byte
 }
 
-                                                                                 
-                                                    
 type nodeIteratorState struct {
-	hash    common.Hash                                                           
-	node    node                                   
-	parent  common.Hash                                                                     
-	index   int                                      
-	pathlen int                                           
+	hash    common.Hash 
+	node    node        
+	parent  common.Hash 
+	index   int         
+	pathlen int         
 }
 
 type nodeIterator struct {
-	trie  *Trie                                      
-	stack []*nodeIteratorState                                                          
-	path  []byte                                          
-	err   error                                                                           
+	trie  *Trie                
+	stack []*nodeIteratorState 
+	path  []byte               
+	err   error                
 }
 
-                                                                    
 var iteratorEnd = errors.New("end of iteration")
 
-                                                                          
 type seekError struct {
 	key []byte
 	err error
@@ -171,10 +139,6 @@ func (it *nodeIterator) Error() error {
 	return it.err
 }
 
-                                                                            
-                                                                            
-                                                                          
-                                                         
 func (it *nodeIterator) Next(descend bool) bool {
 	if it.err == iteratorEnd {
 		return false
@@ -184,7 +148,7 @@ func (it *nodeIterator) Next(descend bool) bool {
 			return false
 		}
 	}
-	                                                                  
+
 	state, parentIndex, path, err := it.peek(descend)
 	it.err = err
 	if it.err != nil {
@@ -195,10 +159,10 @@ func (it *nodeIterator) Next(descend bool) bool {
 }
 
 func (it *nodeIterator) seek(prefix []byte) error {
-	                                                                        
+
 	key := keybytesToHex(prefix)
 	key = key[:len(key)-1]
-	                                                                 
+
 	for {
 		state, parentIndex, path, err := it.peek(bytes.HasPrefix(key, it.path))
 		if err == iteratorEnd {
@@ -212,10 +176,9 @@ func (it *nodeIterator) seek(prefix []byte) error {
 	}
 }
 
-                                               
 func (it *nodeIterator) peek(descend bool) (*nodeIteratorState, *int, []byte, error) {
 	if len(it.stack) == 0 {
-		                                                 
+
 		root := it.trie.Hash()
 		state := &nodeIteratorState{node: it.trie.root, index: -1}
 		if root != emptyRoot {
@@ -225,11 +188,10 @@ func (it *nodeIterator) peek(descend bool) (*nodeIteratorState, *int, []byte, er
 		return state, nil, nil, err
 	}
 	if !descend {
-		                                                         
+
 		it.pop()
 	}
 
-	                                       
 	for len(it.stack) > 0 {
 		parent := it.stack[len(it.stack)-1]
 		ancestor := parent.hash
@@ -243,7 +205,7 @@ func (it *nodeIterator) peek(descend bool) (*nodeIteratorState, *int, []byte, er
 			}
 			return state, &parent.index, path, nil
 		}
-		                                     
+
 		it.pop()
 	}
 	return nil, nil, nil, iteratorEnd
@@ -264,7 +226,7 @@ func (st *nodeIteratorState) resolve(tr *Trie, path []byte) error {
 func (it *nodeIterator) nextChild(parent *nodeIteratorState, ancestor common.Hash) (*nodeIteratorState, []byte, bool) {
 	switch node := parent.node.(type) {
 	case *fullNode:
-		                                              
+
 		for i := parent.index + 1; i < len(node.Children); i++ {
 			child := node.Children[i]
 			if child != nil {
@@ -282,7 +244,7 @@ func (it *nodeIterator) nextChild(parent *nodeIteratorState, ancestor common.Has
 			}
 		}
 	case *shortNode:
-		                                                 
+
 		if parent.index < 0 {
 			hash, _ := node.Val.cache()
 			state := &nodeIteratorState{
@@ -332,14 +294,11 @@ func compareNodes(a, b NodeIterator) int {
 }
 
 type differenceIterator struct {
-	a, b  NodeIterator                                      
-	eof   bool                                               
-	count int                                                   
+	a, b  NodeIterator 
+	eof   bool         
+	count int          
 }
 
-                                                                                        
-                                                                                       
-                 
 func NewDifferenceIterator(a, b NodeIterator) (NodeIterator, *int) {
 	a.Next(true)
 	it := &differenceIterator{
@@ -374,33 +333,31 @@ func (it *differenceIterator) Path() []byte {
 }
 
 func (it *differenceIterator) Next(bool) bool {
-	              
-	                                                 
-	                                                                           
+
 	if !it.b.Next(true) {
 		return false
 	}
 	it.count += 1
 
 	if it.eof {
-		                                                           
+
 		return true
 	}
 
 	for {
 		switch compareNodes(it.a, it.b) {
 		case -1:
-			                             
+
 			if !it.a.Next(true) {
 				it.eof = true
 				return true
 			}
 			it.count += 1
 		case 1:
-			                
+
 			return true
 		case 0:
-			                                                                          
+
 			hasHash := it.a.Hash() == common.Hash{}
 			if !it.b.Next(hasHash) {
 				return false
@@ -436,13 +393,10 @@ func (h *nodeIteratorHeap) Pop() interface{} {
 }
 
 type unionIterator struct {
-	items *nodeIteratorHeap                                                               
-	count int                                                          
+	items *nodeIteratorHeap 
+	count int               
 }
 
-                                                                                      
-                                                                                   
-                                         
 func NewUnionIterator(iters []NodeIterator) (NodeIterator, *int) {
 	h := make(nodeIteratorHeap, len(iters))
 	copy(h, iters)
@@ -476,36 +430,19 @@ func (it *unionIterator) Path() []byte {
 	return (*it.items)[0].Path()
 }
 
-                                                                        
-  
-                                                                           
-                                                                          
-                                                                             
-                                                                            
-                                                                              
-                                                                                 
-                                                                                
-                          
-  
-                                                                                 
-                                                                                 
-                    
 func (it *unionIterator) Next(descend bool) bool {
 	if len(*it.items) == 0 {
 		return false
 	}
 
-	                                  
 	least := heap.Pop(it.items).(NodeIterator)
 
-	                                                                                      
-	                                                         
 	for len(*it.items) > 0 && ((!descend && bytes.HasPrefix((*it.items)[0].Path(), least.Path())) || compareNodes(least, (*it.items)[0]) == 0) {
 		skipped := heap.Pop(it.items).(NodeIterator)
-		                                                                                 
+
 		if skipped.Next(skipped.Hash() == common.Hash{}) {
 			it.count += 1
-			                                                                 
+
 			heap.Push(it.items, skipped)
 		}
 	}

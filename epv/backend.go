@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                
 package epv
 
 import (
@@ -57,30 +41,26 @@ type LesServer interface {
 	SetBloomBitsIndexer(bbIndexer *core.ChainIndexer)
 }
 
-                                                      
 type EPVchain struct {
 	config      *Config
 	chainConfig *params.ChainConfig
 
-	                                        
-	shutdownChan  chan bool                                             
-	stopDbUpgrade func() error                                        
+	shutdownChan  chan bool    
+	stopDbUpgrade func() error 
 
-	           
 	txPool          *core.TxPool
 	blockchain      *core.BlockChain
 	protocolManager *ProtocolManager
 	lesServer       LesServer
 
-	                
-	chainDb epvdb.Database                        
+	chainDb epvdb.Database 
 
 	eventMux       *event.TypeMux
 	engine         consensus.Engine
 	accountManager *accounts.Manager
 
-	bloomRequests chan chan *bloombits.Retrieval                                                   
-	bloomIndexer  *core.ChainIndexer                                                            
+	bloomRequests chan chan *bloombits.Retrieval 
+	bloomIndexer  *core.ChainIndexer             
 
 	ApiBackend *EPVApiBackend
 
@@ -91,7 +71,7 @@ type EPVchain struct {
 	networkId     uint64
 	netRPCService *epvapi.PublicNetAPI
 
-	lock sync.RWMutex                                                              
+	lock sync.RWMutex 
 }
 
 func (s *EPVchain) AddLesServer(ls LesServer) {
@@ -99,8 +79,6 @@ func (s *EPVchain) AddLesServer(ls LesServer) {
 	ls.SetBloomBitsIndexer(s.bloomIndexer)
 }
 
-                                                   
-                                                
 func New(ctx *node.ServiceContext, config *Config) (*EPVchain, error) {
 	if config.SyncMode == downloader.LightSync {
 		return nil, errors.New("can't run epv.EPVchain in light sync mode, use les.LightEPVchain")
@@ -152,7 +130,7 @@ func New(ctx *node.ServiceContext, config *Config) (*EPVchain, error) {
 	if err != nil {
 		return nil, err
 	}
-	                                                              
+
 	if compat, ok := genesisErr.(*params.ConfigCompatError); ok {
 		log.Warn("Rewinding chain to upgrade configuration", "err", compat)
 		epv.blockchain.SetHead(compat.RewindTo)
@@ -183,7 +161,7 @@ func New(ctx *node.ServiceContext, config *Config) (*EPVchain, error) {
 
 func makeExtraData(extra []byte) []byte {
 	if len(extra) == 0 {
-		                           
+
 		extra, _ = rlp.EncodeToBytes([]interface{}{
 			uint(params.VersionMajor<<16 | params.VersionMinor<<8 | params.VersionPatch),
 			"gepv",
@@ -198,7 +176,6 @@ func makeExtraData(extra []byte) []byte {
 	return extra
 }
 
-                                       
 func CreateDB(ctx *node.ServiceContext, config *Config, name string) (epvdb.Database, error) {
 	db, err := ctx.OpenDatabase(name, config.DatabaseCache, config.DatabaseHandles)
 	if err != nil {
@@ -210,12 +187,11 @@ func CreateDB(ctx *node.ServiceContext, config *Config, name string) (epvdb.Data
 	return db, nil
 }
 
-                                                                                                       
 func CreateConsensusEngine(ctx *node.ServiceContext, config *epvhash.Config, chainConfig *params.ChainConfig, db epvdb.Database) consensus.Engine {
 	if chainConfig.DPos != nil {
 		return epvdpos.New(chainConfig.DPos, db)
 	}
-	                                 
+
 	switch {
 	case config.PowMode == epvhash.ModeFake:
 		log.Warn("EPVhash used in fake mode")
@@ -235,20 +211,16 @@ func CreateConsensusEngine(ctx *node.ServiceContext, config *epvhash.Config, cha
 			DatasetsInMem:  config.DatasetsInMem,
 			DatasetsOnDisk: config.DatasetsOnDisk,
 		})
-		engine.SetThreads(-1)                      
+		engine.SetThreads(-1) 
 		return engine
 	}
 }
 
-                                                                           
-                                                                            
 func (s *EPVchain) APIs() []rpc.API {
 	apis := epvapi.GetAPIs(s.ApiBackend)
 
-	                                                             
 	apis = append(apis, s.engine.APIs(s.BlockChain())...)
 
-	                                       
 	return append(apis, []rpc.API{
 		{
 			Namespace: "epv",
@@ -324,7 +296,6 @@ func (s *EPVchain) EPVCbase() (eb common.Address, err error) {
 	return common.Address{}, fmt.Errorf("epvcbase must be explicitly specified")
 }
 
-                                                                  
 func (self *EPVchain) SetEPVCbase(epvcbase common.Address) {
 	self.lock.Lock()
 	self.epvcbase = epvcbase
@@ -348,10 +319,7 @@ func (s *EPVchain) StartMining(local bool) error {
 		dpos.Authorize(eb, wallet.SignHash)
 	}
 	if local {
-		                                                                             
-		                                                                               
-		                                                                            
-		                                                                   
+
 		atomic.StoreUint32(&s.protocolManager.acceptTxs, 1)
 	}
 	go s.miner.Start(eb)
@@ -368,13 +336,11 @@ func (s *EPVchain) TxPool() *core.TxPool               { return s.txPool }
 func (s *EPVchain) EventMux() *event.TypeMux           { return s.eventMux }
 func (s *EPVchain) Engine() consensus.Engine           { return s.engine }
 func (s *EPVchain) ChainDb() epvdb.Database            { return s.chainDb }
-func (s *EPVchain) IsListening() bool                  { return true }                    
+func (s *EPVchain) IsListening() bool                  { return true } 
 func (s *EPVchain) EPVVersion() int                    { return int(s.protocolManager.SubProtocols[0].Version) }
 func (s *EPVchain) NetVersion() uint64                 { return s.networkId }
 func (s *EPVchain) Downloader() *downloader.Downloader { return s.protocolManager.downloader }
 
-                                                                            
-                              
 func (s *EPVchain) Protocols() []p2p.Protocol {
 	if s.lesServer == nil {
 		return s.protocolManager.SubProtocols
@@ -382,16 +348,12 @@ func (s *EPVchain) Protocols() []p2p.Protocol {
 	return append(s.protocolManager.SubProtocols, s.lesServer.Protocols()...)
 }
 
-                                                                                
-                                    
 func (s *EPVchain) Start(srvr *p2p.Server) error {
-	                                            
+
 	s.startBloomHandlers()
 
-	                        
 	s.netRPCService = epvapi.NewPublicNetAPI(srvr, s.NetVersion())
 
-	                                                          
 	maxPeers := srvr.MaxPeers
 	if s.config.LightServ > 0 {
 		if s.config.LightPeers >= srvr.MaxPeers {
@@ -399,7 +361,7 @@ func (s *EPVchain) Start(srvr *p2p.Server) error {
 		}
 		maxPeers -= s.config.LightPeers
 	}
-	                                                               
+
 	s.protocolManager.Start(maxPeers)
 	if s.lesServer != nil {
 		s.lesServer.Start(srvr)
@@ -407,8 +369,6 @@ func (s *EPVchain) Start(srvr *p2p.Server) error {
 	return nil
 }
 
-                                                                                
-                     
 func (s *EPVchain) Stop() error {
 	if s.stopDbUpgrade != nil {
 		s.stopDbUpgrade()

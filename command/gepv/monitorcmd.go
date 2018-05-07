@@ -1,18 +1,3 @@
-                                         
-                                    
-  
-                                                                      
-                                                                       
-                                                                    
-                                      
-  
-                                                                 
-                                                                 
-                                                               
-                                               
-  
-                                                                    
-                                                                      
 
 package main
 
@@ -49,7 +34,7 @@ var (
 		Usage: "Refresh interval in seconds",
 	}
 	monitorCommand = cli.Command{
-		Action:    utils.MigrateFlags(monitor),                                    
+		Action:    utils.MigrateFlags(monitor), 
 		Name:      "monitor",
 		Usage:     "Monitor and visualize node metrics",
 		ArgsUsage: " ",
@@ -67,20 +52,18 @@ to display multiple metrics simultaneously.
 	}
 )
 
-                                                                                
 func monitor(ctx *cli.Context) error {
 	var (
 		client *rpc.Client
 		err    error
 	)
-	                                             
+
 	endpoint := ctx.String(monitorCommandAttachFlag.Name)
 	if client, err = dialRPC(endpoint); err != nil {
 		utils.Fatalf("Unable to attach to gepv node: %v", err)
 	}
 	defer client.Close()
 
-	                                                                  
 	metrics, err := retrieveMetrics(client)
 	if err != nil {
 		utils.Fatalf("Failed to retrieve system metrics: %v", err)
@@ -100,7 +83,7 @@ func monitor(ctx *cli.Context) error {
 	if cols := len(monitored) / ctx.Int(monitorCommandRowsFlag.Name); cols > 6 {
 		utils.Fatalf("Requested metrics (%d) spans more that 6 columns:\n - %s", len(monitored), strings.Join(monitored, "\n - "))
 	}
-	                                             
+
 	if err := termui.Init(); err != nil {
 		utils.Fatalf("Unable to initialize terminal UI: %v", err)
 	}
@@ -114,7 +97,7 @@ func monitor(ctx *cli.Context) error {
 	for i := 0; i < rows; i++ {
 		termui.Body.AddRows(termui.NewRow())
 	}
-	                                    
+
 	footer := termui.NewPar("")
 	footer.Block.Border = true
 	footer.Height = 3
@@ -133,7 +116,6 @@ func monitor(ctx *cli.Context) error {
 	termui.Body.Align()
 	termui.Render(termui.Body)
 
-	                                                                       
 	termui.Handle("/sys/kbd/C-c", func(termui.Event) {
 		termui.StopLoop()
 	})
@@ -158,16 +140,12 @@ func monitor(ctx *cli.Context) error {
 	return nil
 }
 
-                                                                               
-                               
 func retrieveMetrics(client *rpc.Client) (map[string]interface{}, error) {
 	var metrics map[string]interface{}
 	err := client.Call(&metrics, "debug_metrics", true)
 	return metrics, err
 }
 
-                                                                                 
-                                  
 func resolveMetrics(metrics map[string]interface{}, patterns []string) []string {
 	res := []string{}
 	for _, pattern := range patterns {
@@ -176,12 +154,9 @@ func resolveMetrics(metrics map[string]interface{}, patterns []string) []string 
 	return res
 }
 
-                                                                                
-                                  
 func resolveMetric(metrics map[string]interface{}, pattern string, path string) []string {
 	results := []string{}
 
-	                                                                             
 	parts := strings.SplitN(pattern, "/", 2)
 	if len(parts) > 1 {
 		for _, variation := range strings.Split(parts[0], ",") {
@@ -194,11 +169,11 @@ func resolveMetric(metrics map[string]interface{}, pattern string, path string) 
 		}
 		return results
 	}
-	                                                    
+
 	for _, variation := range strings.Split(pattern, ",") {
 		switch metric := metrics[variation].(type) {
 		case float64:
-			                                                
+
 			results = append(results, path+variation)
 
 		case map[string]interface{}:
@@ -212,18 +187,17 @@ func resolveMetric(metrics map[string]interface{}, pattern string, path string) 
 	return results
 }
 
-                                                                              
 func expandMetrics(metrics map[string]interface{}, path string) []string {
-	                                                  
+
 	list := []string{}
 	for name, metric := range metrics {
 		switch metric := metric.(type) {
 		case float64:
-			                                           
+
 			list = append(list, path+name)
 
 		case map[string]interface{}:
-			                                            
+
 			list = append(list, expandMetrics(metric, path+name+"/")...)
 
 		default:
@@ -234,7 +208,6 @@ func expandMetrics(metrics map[string]interface{}, path string) []string {
 	return list
 }
 
-                                                                          
 func fetchMetric(metrics map[string]interface{}, metric string) float64 {
 	parts := strings.Split(metric, "/")
 	for _, part := range parts[:len(parts)-1] {
@@ -250,8 +223,6 @@ func fetchMetric(metrics map[string]interface{}, metric string) float64 {
 	return 0
 }
 
-                                                                           
-                                             
 func refreshCharts(client *rpc.Client, metrics []string, data [][]float64, units []int, charts []*termui.LineChart, ctx *cli.Context, footer *termui.Par) (realign bool) {
 	values, err := retrieveMetrics(client)
 	for i, metric := range metrics {
@@ -268,18 +239,15 @@ func refreshCharts(client *rpc.Client, metrics []string, data [][]float64, units
 	return
 }
 
-                                                                               
-                                                                       
 func updateChart(metric string, data []float64, base *int, chart *termui.LineChart, err error) (realign bool) {
 	dataUnits := []string{"", "K", "M", "G", "T", "E"}
 	timeUnits := []string{"ns", "µs", "ms", "s", "ks", "ms"}
 	colors := []termui.Attribute{termui.ColorBlue, termui.ColorCyan, termui.ColorGreen, termui.ColorYellow, termui.ColorRed, termui.ColorRed}
 
-	                                                        
 	if chart.Width*2 < len(data) {
 		data = data[:chart.Width*2]
 	}
-	                                            
+
 	high := 0.0
 	if len(data) > 0 {
 		high = data[0]
@@ -291,11 +259,11 @@ func updateChart(metric string, data []float64, base *int, chart *termui.LineCha
 	for high >= 1000 && unit+1 < len(dataUnits) {
 		high, unit, scale = high/1000, unit+1, scale*1000
 	}
-	                                                                       
+
 	if unit != *base {
 		realign, *base, *chart = true, unit, *createChart(chart.Height)
 	}
-	                                                        
+
 	if cap(chart.Data) < len(data) {
 		chart.Data = make([]float64, len(data))
 	}
@@ -303,7 +271,7 @@ func updateChart(metric string, data []float64, base *int, chart *termui.LineCha
 	for i, value := range data {
 		chart.Data[i] = value / scale
 	}
-	                                                
+
 	units := dataUnits
 	if strings.Contains(metric, "/Percentiles/") || strings.Contains(metric, "/pauses/") || strings.Contains(metric, "/time/") {
 		units = timeUnits
@@ -319,7 +287,6 @@ func updateChart(metric string, data []float64, base *int, chart *termui.LineCha
 	return
 }
 
-                                                                    
 func createChart(height int) *termui.LineChart {
 	chart := termui.NewLineChart()
 	if runtime.GOOS == "windows" {
@@ -336,14 +303,12 @@ func createChart(height int) *termui.LineChart {
 	return chart
 }
 
-                                                                            
 func updateFooter(ctx *cli.Context, err error, footer *termui.Par) {
-	                            
+
 	refresh := time.Duration(ctx.Int(monitorCommandRefreshFlag.Name)) * time.Second
 	footer.Text = fmt.Sprintf("Press Ctrl+C to quit. Refresh interval: %v.", refresh)
 	footer.TextFgColor = termui.ThemeAttr("par.fg") | termui.AttrBold
 
-	                                
 	if err != nil {
 		footer.Text = fmt.Sprintf("Error: %v.", err)
 		footer.TextFgColor = termui.ColorRed | termui.AttrBold

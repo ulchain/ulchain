@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package trie
 
@@ -35,7 +20,7 @@ type node interface {
 
 type (
 	fullNode struct {
-		Children [17]node                                                                 
+		Children [17]node 
 		flags    nodeFlag
 	}
 	shortNode struct {
@@ -47,7 +32,6 @@ type (
 	valueNode []byte
 )
 
-                                                               
 func (n *fullNode) EncodeRLP(w io.Writer) error {
 	return rlp.Encode(w, n.Children)
 }
@@ -55,14 +39,12 @@ func (n *fullNode) EncodeRLP(w io.Writer) error {
 func (n *fullNode) copy() *fullNode   { copy := *n; return &copy }
 func (n *shortNode) copy() *shortNode { copy := *n; return &copy }
 
-                                                           
 type nodeFlag struct {
-	hash  hashNode                                        
-	gen   uint16                              
-	dirty bool                                                                         
+	hash  hashNode 
+	gen   uint16   
+	dirty bool     
 }
 
-                                                  
 func (n *nodeFlag) canUnload(cachegen, cachelimit uint16) bool {
 	return !n.dirty && cachegen-n.gen >= cachelimit
 }
@@ -77,7 +59,6 @@ func (n *shortNode) cache() (hashNode, bool) { return n.flags.hash, n.flags.dirt
 func (n hashNode) cache() (hashNode, bool)   { return nil, true }
 func (n valueNode) cache() (hashNode, bool)  { return nil, true }
 
-                   
 func (n *fullNode) String() string  { return n.fstring("") }
 func (n *shortNode) String() string { return n.fstring("") }
 func (n hashNode) String() string   { return n.fstring("") }
@@ -112,7 +93,6 @@ func mustDecodeNode(hash, buf []byte, cachegen uint16) node {
 	return n
 }
 
-                                                     
 func decodeNode(hash, buf []byte, cachegen uint16) (node, error) {
 	if len(buf) == 0 {
 		return nil, io.ErrUnexpectedEOF
@@ -141,7 +121,7 @@ func decodeShort(hash, buf, elems []byte, cachegen uint16) (node, error) {
 	flag := nodeFlag{hash: hash, gen: cachegen}
 	key := compactToHex(kbuf)
 	if hasTerm(key) {
-		             
+
 		val, _, err := rlp.SplitString(rest)
 		if err != nil {
 			return nil, fmt.Errorf("invalid value node: %v", err)
@@ -183,8 +163,7 @@ func decodeRef(buf []byte, cachegen uint16) (node, []byte, error) {
 	}
 	switch {
 	case kind == rlp.List:
-		                                                          
-		                                    
+
 		if size := len(buf) - len(rest); size > hashLen {
 			err := fmt.Errorf("oversized embedded node (size is %d bytes, want size < %d)", size, hashLen)
 			return nil, buf, err
@@ -192,7 +171,7 @@ func decodeRef(buf []byte, cachegen uint16) (node, []byte, error) {
 		n, err := decodeNode(nil, buf, cachegen)
 		return n, rest, err
 	case kind == rlp.String && len(val) == 0:
-		             
+
 		return nil, rest, nil
 	case kind == rlp.String && len(val) == 32:
 		return append(hashNode{}, val...), rest, nil
@@ -201,8 +180,6 @@ func decodeRef(buf []byte, cachegen uint16) (node, []byte, error) {
 	}
 }
 
-                                                                
-                                                      
 type decodeError struct {
 	what  error
 	stack []string

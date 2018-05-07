@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package epv
 
@@ -28,26 +13,21 @@ import (
 	"github.com/epvchain/go-epvchain/process"
 )
 
-                                                       
 const (
 	epv62 = 62
 	epv63 = 63
 )
 
-                                                                          
 var ProtocolName = "epv"
 
-                                                             
 var ProtocolVersions = []uint{epv63, epv62}
 
-                                                                              
 var ProtocolLengths = []uint64{17, 8}
 
-const ProtocolMaxMsgSize = 10 * 1024 * 1024                                                 
+const ProtocolMaxMsgSize = 10 * 1024 * 1024 
 
-                             
 const (
-	                                        
+
 	StatusMsg          = 0x00
 	NewBlockHashesMsg  = 0x01
 	TxMsg              = 0x02
@@ -57,7 +37,6 @@ const (
 	BlockBodiesMsg     = 0x06
 	NewBlockMsg        = 0x07
 
-	                                        
 	GetNodeDataMsg = 0x0d
 	NodeDataMsg    = 0x0e
 	GetReceiptsMsg = 0x0f
@@ -82,7 +61,6 @@ func (e errCode) String() string {
 	return errorToString[int(e)]
 }
 
-                                     
 var errorToString = map[int]string{
 	ErrMsgTooLarge:             "Message too long",
 	ErrDecode:                  "Invalid message",
@@ -96,19 +74,14 @@ var errorToString = map[int]string{
 }
 
 type txPool interface {
-	                                                            
+
 	AddRemotes([]*types.Transaction) []error
 
-	                                              
-	                                                
 	Pending() (map[common.Address]types.Transactions, error)
 
-	                                                             
-	                                                   
 	SubscribeTxPreEvent(chan<- core.TxPreEvent) event.Subscription
 }
 
-                                                           
 type statusData struct {
 	ProtocolVersion uint32
 	NetworkId       uint64
@@ -117,28 +90,23 @@ type statusData struct {
 	GenesisBlock    common.Hash
 }
 
-                                                                        
 type newBlockHashesData []struct {
-	Hash   common.Hash                                                
-	Number uint64                                                       
+	Hash   common.Hash 
+	Number uint64      
 }
 
-                                                       
 type getBlockHeadersData struct {
-	Origin  hashOrNumber                                        
-	Amount  uint64                                               
-	Skip    uint64                                                    
-	Reverse bool                                                                                           
+	Origin  hashOrNumber 
+	Amount  uint64       
+	Skip    uint64       
+	Reverse bool         
 }
 
-                                                                   
 type hashOrNumber struct {
-	Hash   common.Hash                                                               
-	Number uint64                                                                  
+	Hash   common.Hash 
+	Number uint64      
 }
 
-                                                                                
-                              
 func (hn *hashOrNumber) EncodeRLP(w io.Writer) error {
 	if hn.Hash == (common.Hash{}) {
 		return rlp.Encode(w, hn.Number)
@@ -149,8 +117,6 @@ func (hn *hashOrNumber) EncodeRLP(w io.Writer) error {
 	return rlp.Encode(w, hn.Hash)
 }
 
-                                                                             
-                                              
 func (hn *hashOrNumber) DecodeRLP(s *rlp.Stream) error {
 	_, size, _ := s.Kind()
 	origin, err := s.Raw()
@@ -167,17 +133,14 @@ func (hn *hashOrNumber) DecodeRLP(s *rlp.Stream) error {
 	return err
 }
 
-                                                                        
 type newBlockData struct {
 	Block *types.Block
 	TD    *big.Int
 }
 
-                                                           
 type blockBody struct {
-	Transactions []*types.Transaction                                         
-	Uncles       []*types.Header                                        
+	Transactions []*types.Transaction 
+	Uncles       []*types.Header      
 }
 
-                                                                        
 type blockBodiesData []*blockBody

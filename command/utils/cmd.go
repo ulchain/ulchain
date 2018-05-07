@@ -1,20 +1,4 @@
-                                         
-                                    
-  
-                                                                      
-                                                                       
-                                                                    
-                                      
-  
-                                                                 
-                                                                 
-                                                               
-                                               
-  
-                                                                    
-                                                                      
 
-                                                                             
 package utils
 
 import (
@@ -38,14 +22,10 @@ const (
 	importBatchSize = 2500
 )
 
-                                                                    
-                                                                   
-                                     
 func Fatalf(format string, args ...interface{}) {
 	w := io.MultiWriter(os.Stdout, os.Stderr)
 	if runtime.GOOS == "windows" {
-		                                                    
-		                                                                    
+
 		w = os.Stdout
 	} else {
 		outf, _ := os.Stdout.Stat()
@@ -75,14 +55,13 @@ func StartNode(stack *node.Node) {
 				log.Warn("Already shutting down, interrupt more to panic.", "times", i-1)
 			}
 		}
-		debug.Exit()                                                 
+		debug.Exit() 
 		debug.LoudPanic("boom")
 	}()
 }
 
 func ImportChain(chain *core.BlockChain, fn string) error {
-	                                                
-	                                                                   
+
 	interrupt := make(chan os.Signal, 1)
 	stop := make(chan struct{})
 	signal.Notify(interrupt, os.Interrupt)
@@ -118,11 +97,10 @@ func ImportChain(chain *core.BlockChain, fn string) error {
 	}
 	stream := rlp.NewStream(reader, 0)
 
-	                         
 	blocks := make(types.Blocks, importBatchSize)
 	n := 0
 	for batch := 0; ; batch++ {
-		                              
+
 		if checkInterrupt() {
 			return fmt.Errorf("interrupted")
 		}
@@ -134,7 +112,7 @@ func ImportChain(chain *core.BlockChain, fn string) error {
 			} else if err != nil {
 				return fmt.Errorf("at block %d: %v", n, err)
 			}
-			                           
+
 			if b.NumberU64() == 0 {
 				i--
 				continue
@@ -145,7 +123,7 @@ func ImportChain(chain *core.BlockChain, fn string) error {
 		if i == 0 {
 			break
 		}
-		                    
+
 		if checkInterrupt() {
 			return fmt.Errorf("interrupted")
 		}
@@ -164,14 +142,14 @@ func ImportChain(chain *core.BlockChain, fn string) error {
 func missingBlocks(chain *core.BlockChain, blocks []*types.Block) []*types.Block {
 	head := chain.CurrentBlock()
 	for i, block := range blocks {
-		                                                                               
+
 		if head.NumberU64() > block.NumberU64() {
 			if !chain.HasBlock(block.Hash(), block.NumberU64()) {
 				return blocks[i:]
 			}
 			continue
 		}
-		                                                              
+
 		if !chain.HasBlockAndState(block.Hash(), block.NumberU64()) {
 			return blocks[i:]
 		}
@@ -203,7 +181,7 @@ func ExportChain(blockchain *core.BlockChain, fn string) error {
 
 func ExportAppendChain(blockchain *core.BlockChain, fn string, first uint64, last uint64) error {
 	log.Info("Exporting blockchain", "file", fn)
-	                         
+
 	fh, err := os.OpenFile(fn, os.O_CREATE|os.O_APPEND|os.O_WRONLY, os.ModePerm)
 	if err != nil {
 		return err

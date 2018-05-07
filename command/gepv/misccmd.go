@@ -1,18 +1,3 @@
-                                         
-                                    
-  
-                                                                      
-                                                                       
-                                                                    
-                                      
-  
-                                                                 
-                                                                 
-                                                               
-                                               
-  
-                                                                    
-                                                                      
 
 package main
 
@@ -76,7 +61,6 @@ The output of this command is supposed to be machine-readable.
 	}
 )
 
-                                                                              
 func makecache(ctx *cli.Context) error {
 	args := ctx.Args()
 	if len(args) != 2 {
@@ -91,7 +75,6 @@ func makecache(ctx *cli.Context) error {
 	return nil
 }
 
-                                                                    
 func makedag(ctx *cli.Context) error {
 	args := ctx.Args()
 	if len(args) != 2 {

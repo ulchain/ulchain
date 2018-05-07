@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package gasprice
 
@@ -37,8 +22,6 @@ type Config struct {
 	Default    *big.Int `toml:",omitempty"`
 }
 
-                                                              
-                                                    
 type Oracle struct {
 	backend   epvapi.Backend
 	lastHead  common.Hash
@@ -50,7 +33,6 @@ type Oracle struct {
 	percentile                       int
 }
 
-                                  
 func NewOracle(backend epvapi.Backend, params Config) *Oracle {
 	blocks := params.Blocks
 	if blocks < 1 {
@@ -73,7 +55,6 @@ func NewOracle(backend epvapi.Backend, params Config) *Oracle {
 	}
 }
 
-                                                  
 func (gpo *Oracle) SuggestPrice(ctx context.Context) (*big.Int, error) {
 	gpo.cacheLock.RLock()
 	lastHead := gpo.lastHead
@@ -89,7 +70,6 @@ func (gpo *Oracle) SuggestPrice(ctx context.Context) (*big.Int, error) {
 	gpo.fetchLock.Lock()
 	defer gpo.fetchLock.Unlock()
 
-	                                                                          
 	gpo.cacheLock.RLock()
 	lastHead = gpo.lastHead
 	lastPrice = gpo.lastPrice
@@ -158,8 +138,6 @@ func (t transactionsByGasPrice) Len() int           { return len(t) }
 func (t transactionsByGasPrice) Swap(i, j int)      { t[i], t[j] = t[j], t[i] }
 func (t transactionsByGasPrice) Less(i, j int) bool { return t[i].GasPrice().Cmp(t[j].GasPrice()) < 0 }
 
-                                                                              
-                                                                           
 func (gpo *Oracle) getBlockPrices(ctx context.Context, signer types.Signer, blockNum uint64, ch chan getBlockPricesResult) {
 	block, err := gpo.backend.BlockByNumber(ctx, rpc.BlockNumber(blockNum))
 	if block == nil {

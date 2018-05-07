@@ -1,32 +1,8 @@
-// Copyright 2015 The go-epvchain Authors
-// This file is part of the go-epvchain library.
-//
-// The go-epvchain library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-epvchain library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-epvchain library. If not, see <http://www.gnu.org/licenses/>.
 
-// secp256k1_context_create_sign_verify creates a context for signing and signature verification.
 static secp256k1_context* secp256k1_context_create_sign_verify() {
 	return secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
 }
 
-// secp256k1_ext_ecdsa_recover recovers the public key of an encoded compact signature.
-//
-// Returns: 1: recovery was successful
-//          0: recovery was not successful
-// Args:    ctx:        pointer to a context object (cannot be NULL)
-//  Out:    pubkey_out: the serialized 65-byte public key of the signer (cannot be NULL)
-//  In:     sigdata:    pointer to a 65-byte signature with the recovery id at the end (cannot be NULL)
-//          msgdata:    pointer to a 32-byte message (cannot be NULL)
 static int secp256k1_ext_ecdsa_recover(
 	const secp256k1_context* ctx,
 	unsigned char *pubkey_out,
@@ -46,15 +22,6 @@ static int secp256k1_ext_ecdsa_recover(
 	return secp256k1_ec_pubkey_serialize(ctx, pubkey_out, &outputlen, &pubkey, SECP256K1_EC_UNCOMPRESSED);
 }
 
-// secp256k1_ext_ecdsa_verify verifies an encoded compact signature.
-//
-// Returns: 1: signature is valid
-//          0: signature is invalid
-// Args:    ctx:        pointer to a context object (cannot be NULL)
-//  In:     sigdata:    pointer to a 64-byte signature (cannot be NULL)
-//          msgdata:    pointer to a 32-byte message (cannot be NULL)
-//          pubkeydata: pointer to public key data (cannot be NULL)
-//          pubkeylen:  length of pubkeydata
 static int secp256k1_ext_ecdsa_verify(
 	const secp256k1_context* ctx,
 	const unsigned char *sigdata,
@@ -74,17 +41,6 @@ static int secp256k1_ext_ecdsa_verify(
 	return secp256k1_ecdsa_verify(ctx, &sig, msgdata, &pubkey);
 }
 
-// secp256k1_ext_reencode_pubkey decodes then encodes a public key. It can be used to
-// convert between public key formats. The input/output formats are chosen depending on the
-// length of the input/output buffers.
-//
-// Returns: 1: conversion successful
-//          0: conversion unsuccessful
-// Args:    ctx:        pointer to a context object (cannot be NULL)
-//  Out:    out:        output buffer that will contain the reencoded key (cannot be NULL)
-//  In:     outlen:     length of out (33 for compressed keys, 65 for uncompressed keys)
-//          pubkeydata: the input public key (cannot be NULL)
-//          pubkeylen:  length of pubkeydata
 static int secp256k1_ext_reencode_pubkey(
 	const secp256k1_context* ctx,
 	unsigned char *out,
@@ -101,15 +57,6 @@ static int secp256k1_ext_reencode_pubkey(
 	return secp256k1_ec_pubkey_serialize(ctx, out, &outlen, &pubkey, flag);
 }
 
-// secp256k1_ext_scalar_mul multiplies a point by a scalar in constant time.
-//
-// Returns: 1: multiplication was successful
-//          0: scalar was invalid (zero or overflow)
-// Args:    ctx:      pointer to a context object (cannot be NULL)
-//  Out:    point:    the multiplied point (usually secret)
-//  In:     point:    pointer to a 64-byte public point,
-//                    encoded as two 256bit big-endian numbers.
-//          scalar:   a 32-byte scalar with which to multiply the point
 int secp256k1_ext_scalar_mul(const secp256k1_context* ctx, unsigned char *point, const unsigned char *scalar) {
 	int ret = 0;
 	int overflow = 0;
@@ -130,7 +77,7 @@ int secp256k1_ext_scalar_mul(const secp256k1_context* ctx, unsigned char *point,
 	} else {
 		secp256k1_ecmult_const(&res, &ge, &s);
 		secp256k1_ge_set_gej(&ge, &res);
-		/* Note: can't use secp256k1_pubkey_save here because it is not constant time. */
+
 		secp256k1_fe_normalize(&ge.x);
 		secp256k1_fe_normalize(&ge.y);
 		secp256k1_fe_get_b32(point, &ge.x);

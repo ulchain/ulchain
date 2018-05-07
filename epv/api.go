@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package epv
 
@@ -38,40 +23,31 @@ import (
 	"github.com/epvchain/go-epvchain/fast"
 )
 
-                                                                         
-               
 type PublicEPVchainAPI struct {
 	e *EPVchain
 }
 
-                                                                           
 func NewPublicEPVchainAPI(e *EPVchain) *PublicEPVchainAPI {
 	return &PublicEPVchainAPI{e}
 }
 
-                                                              
 func (api *PublicEPVchainAPI) EPVCbase() (common.Address, error) {
 	return api.e.EPVCbase()
 }
 
-                                                                                   
 func (api *PublicEPVchainAPI) Coinbase() (common.Address, error) {
 	return api.EPVCbase()
 }
 
-                                    
 func (api *PublicEPVchainAPI) Hashrate() hexutil.Uint64 {
 	return hexutil.Uint64(api.e.Miner().HashRate())
 }
 
-                                                       
-                                                                                                         
 type PublicMinerAPI struct {
 	e     *EPVchain
 	agent *miner.RemoteAgent
 }
 
-                                                          
 func NewPublicMinerAPI(e *EPVchain) *PublicMinerAPI {
 	agent := miner.NewRemoteAgent(e.BlockChain(), e.Engine())
 	e.Miner().Register(agent)
@@ -79,21 +55,14 @@ func NewPublicMinerAPI(e *EPVchain) *PublicMinerAPI {
 	return &PublicMinerAPI{e, agent}
 }
 
-                                                                 
 func (api *PublicMinerAPI) Mining() bool {
 	return api.e.IsMining()
 }
 
-                                                                                                                  
-                                                                            
 func (api *PublicMinerAPI) SubmitWork(nonce types.BlockNonce, solution, digest common.Hash) bool {
 	return api.agent.SubmitWork(nonce, digest, solution)
 }
 
-                                                                                            
-                                                                
-                                                         
-                                                                                  
 func (api *PublicMinerAPI) GetWork() ([3]string, error) {
 	if !api.e.IsMining() {
 		if err := api.e.StartMining(false); err != nil {
@@ -107,35 +76,25 @@ func (api *PublicMinerAPI) GetWork() ([3]string, error) {
 	return work, nil
 }
 
-                                                                                                                       
-                                                                                                                      
-                                
 func (api *PublicMinerAPI) SubmitHashrate(hashrate hexutil.Uint64, id common.Hash) bool {
 	api.agent.SubmitHashrate(id, uint64(hashrate))
 	return true
 }
 
-                                                                     
-                                                                                                            
 type PrivateMinerAPI struct {
 	e *EPVchain
 }
 
-                                                                                     
 func NewPrivateMinerAPI(e *EPVchain) *PrivateMinerAPI {
 	return &PrivateMinerAPI{e: e}
 }
 
-                                                                                 
-                                                                               
-                                                                               
-                          
 func (api *PrivateMinerAPI) Start(threads *int) error {
-	                                                           
+
 	if threads == nil {
 		threads = new(int)
 	} else if *threads == 0 {
-		*threads = -1                                 
+		*threads = -1 
 	}
 	type threaded interface {
 		SetThreads(threads int)
@@ -144,9 +103,9 @@ func (api *PrivateMinerAPI) Start(threads *int) error {
 		log.Info("Updated mining threads", "threads", *threads)
 		th.SetThreads(*threads)
 	}
-	                             
+
 	if !api.e.IsMining() {
-		                                                            
+
 		api.e.lock.RLock()
 		price := api.e.gasPrice
 		api.e.lock.RUnlock()
@@ -157,7 +116,6 @@ func (api *PrivateMinerAPI) Start(threads *int) error {
 	return nil
 }
 
-                 
 func (api *PrivateMinerAPI) Stop() bool {
 	type threaded interface {
 		SetThreads(threads int)
@@ -169,7 +127,6 @@ func (api *PrivateMinerAPI) Stop() bool {
 	return true
 }
 
-                                                                                      
 func (api *PrivateMinerAPI) SetExtra(extra string) (bool, error) {
 	if err := api.e.Miner().SetExtra([]byte(extra)); err != nil {
 		return false, err
@@ -177,7 +134,6 @@ func (api *PrivateMinerAPI) SetExtra(extra string) (bool, error) {
 	return true, nil
 }
 
-                                                                 
 func (api *PrivateMinerAPI) SetGasPrice(gasPrice hexutil.Big) bool {
 	api.e.lock.Lock()
 	api.e.gasPrice = (*big.Int)(&gasPrice)
@@ -187,32 +143,25 @@ func (api *PrivateMinerAPI) SetGasPrice(gasPrice hexutil.Big) bool {
 	return true
 }
 
-                                             
 func (api *PrivateMinerAPI) SetEPVCbase(epvcbase common.Address) bool {
 	api.e.SetEPVCbase(epvcbase)
 	return true
 }
 
-                                                         
 func (api *PrivateMinerAPI) GetHashrate() uint64 {
 	return uint64(api.e.miner.HashRate())
 }
 
-                                                                       
-                                           
 type PrivateAdminAPI struct {
 	epv *EPVchain
 }
 
-                                                                            
-                                         
 func NewPrivateAdminAPI(epv *EPVchain) *PrivateAdminAPI {
 	return &PrivateAdminAPI{epv: epv}
 }
 
-                                                                
 func (api *PrivateAdminAPI) ExportChain(file string) (bool, error) {
-	                                                  
+
 	out, err := os.OpenFile(file, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
 	if err != nil {
 		return false, err
@@ -225,7 +174,6 @@ func (api *PrivateAdminAPI) ExportChain(file string) (bool, error) {
 		defer writer.(*gzip.Writer).Close()
 	}
 
-	                        
 	if err := api.epv.BlockChain().Export(writer); err != nil {
 		return false, err
 	}
@@ -242,9 +190,8 @@ func hasAllBlocks(chain *core.BlockChain, bs []*types.Block) bool {
 	return true
 }
 
-                                                      
 func (api *PrivateAdminAPI) ImportChain(file string) (bool, error) {
-	                                              
+
 	in, err := os.Open(file)
 	if err != nil {
 		return false, err
@@ -258,12 +205,11 @@ func (api *PrivateAdminAPI) ImportChain(file string) (bool, error) {
 		}
 	}
 
-	                                                  
 	stream := rlp.NewStream(reader, 0)
 
 	blocks, index := make([]*types.Block, 0, 2500), 0
 	for batch := 0; ; batch++ {
-		                                             
+
 		for len(blocks) < cap(blocks) {
 			block := new(types.Block)
 			if err := stream.Decode(block); err == io.EOF {
@@ -282,7 +228,7 @@ func (api *PrivateAdminAPI) ImportChain(file string) (bool, error) {
 			blocks = blocks[:0]
 			continue
 		}
-		                                        
+
 		if _, err := api.epv.BlockChain().InsertChain(blocks); err != nil {
 			return false, fmt.Errorf("batch %d: failed to insert: %v", batch, err)
 		}
@@ -291,24 +237,17 @@ func (api *PrivateAdminAPI) ImportChain(file string) (bool, error) {
 	return true, nil
 }
 
-                                                                      
-                                      
 type PublicDebugAPI struct {
 	epv *EPVchain
 }
 
-                                                                    
-                                                        
 func NewPublicDebugAPI(epv *EPVchain) *PublicDebugAPI {
 	return &PublicDebugAPI{epv: epv}
 }
 
-                                                                         
 func (api *PublicDebugAPI) DumpBlock(blockNr rpc.BlockNumber) (state.Dump, error) {
 	if blockNr == rpc.PendingBlockNumber {
-		                                                         
-		                                                           
-		                                 
+
 		_, stateDb := api.epv.miner.Pending()
 		return stateDb.RawDump(), nil
 	}
@@ -328,35 +267,27 @@ func (api *PublicDebugAPI) DumpBlock(blockNr rpc.BlockNumber) (state.Dump, error
 	return stateDb.RawDump(), nil
 }
 
-                                                                            
-                                  
 type PrivateDebugAPI struct {
 	config *params.ChainConfig
 	epv    *EPVchain
 }
 
-                                                                            
-                                                 
 func NewPrivateDebugAPI(config *params.ChainConfig, epv *EPVchain) *PrivateDebugAPI {
 	return &PrivateDebugAPI{config: config, epv: epv}
 }
 
-                                                                                        
 func (api *PrivateDebugAPI) Preimage(ctx context.Context, hash common.Hash) (hexutil.Bytes, error) {
 	db := core.PreimageTable(api.epv.ChainDb())
 	return db.Get(hash.Bytes())
 }
 
-                                                                                               
-                                                  
 func (api *PrivateDebugAPI) GetBadBlocks(ctx context.Context) ([]core.BadBlockArgs, error) {
 	return api.epv.BlockChain().BadBlocks()
 }
 
-                                                                       
 type StorageRangeResult struct {
 	Storage storageMap   `json:"storage"`
-	NextKey *common.Hash `json:"nextKey"`                                                     
+	NextKey *common.Hash `json:"nextKey"` 
 }
 
 type storageMap map[common.Hash]storageEntry
@@ -366,7 +297,6 @@ type storageEntry struct {
 	Value common.Hash  `json:"value"`
 }
 
-                                                                                      
 func (api *PrivateDebugAPI) StorageRangeAt(ctx context.Context, blockHash common.Hash, txIndex int, contractAddress common.Address, keyStart hexutil.Bytes, maxResult int) (StorageRangeResult, error) {
 	_, _, statedb, err := api.computeTxEnv(blockHash, txIndex, 0)
 	if err != nil {
@@ -394,7 +324,7 @@ func storageRangeAt(st state.Trie, start []byte, maxResult int) (StorageRangeRes
 		}
 		result.Storage[common.BytesToHash(it.Key)] = e
 	}
-	                                                          
+
 	if it.Next() {
 		next := common.BytesToHash(it.Key)
 		result.NextKey = &next
@@ -402,11 +332,6 @@ func storageRangeAt(st state.Trie, start []byte, maxResult int) (StorageRangeRes
 	return result, nil
 }
 
-                                                                                
-                                                                               
-                              
-  
-                                                                                    
 func (api *PrivateDebugAPI) GetModifiedAccountsByNumber(startNum uint64, endNum *uint64) ([]common.Address, error) {
 	var startBlock, endBlock *types.Block
 
@@ -430,11 +355,6 @@ func (api *PrivateDebugAPI) GetModifiedAccountsByNumber(startNum uint64, endNum 
 	return api.getModifiedAccounts(startBlock, endBlock)
 }
 
-                                                                               
-                                                                               
-                              
-  
-                                                                                    
 func (api *PrivateDebugAPI) GetModifiedAccountsByHash(startHash common.Hash, endHash *common.Hash) ([]common.Address, error) {
 	var startBlock, endBlock *types.Block
 	startBlock = api.epv.blockchain.GetBlockByHash(startHash)

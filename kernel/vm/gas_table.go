@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package vm
 
@@ -22,20 +7,12 @@ import (
 	"github.com/epvchain/go-epvchain/content"
 )
 
-                                                                               
-                                                                     
 func memoryGasCost(mem *Memory, newMemSize uint64) (uint64, error) {
 
 	if newMemSize == 0 {
 		return 0, nil
 	}
-	                                                              
-	                                                  
-	                                                
-	                                                                          
-	               
-	                                                                           
-	                                  
+
 	if newMemSize > 0xffffffffe0 {
 		return 0, errGasUintOverflow
 	}
@@ -120,19 +97,16 @@ func gasSStore(gt params.GasTable, evm *EVM, contract *Contract, stack *Stack, m
 		y, x = stack.Back(1), stack.Back(0)
 		val  = evm.StateDB.GetState(contract.Address(), common.BigToHash(x))
 	)
-	                                                              
-	                                                                       
-	                                                                    
-	                                                                    
+
 	if common.EmptyHash(val) && !common.EmptyHash(common.BigToHash(y)) {
-		             
+
 		return params.SstoreSetGas, nil
 	} else if !common.EmptyHash(val) && common.EmptyHash(common.BigToHash(y)) {
 		evm.StateDB.AddRefund(params.SstoreRefundGas)
 
 		return params.SstoreClearGas, nil
 	} else {
-		                             
+
 		return params.SstoreResetGas, nil
 	}
 }
@@ -305,7 +279,7 @@ func gasExp(gt params.GasTable, evm *EVM, contract *Contract, stack *Stack, mem 
 	expByteLen := uint64((stack.data[stack.len()-2].BitLen() + 7) / 8)
 
 	var (
-		gas      = expByteLen * gt.ExpByte                                                        
+		gas      = expByteLen * gt.ExpByte 
 		overflow bool
 	)
 	if gas, overflow = math.SafeAdd(gas, GasSlowStep); overflow {
@@ -384,7 +358,7 @@ func gasRevert(gt params.GasTable, evm *EVM, contract *Contract, stack *Stack, m
 
 func gasSuicide(gt params.GasTable, evm *EVM, contract *Contract, stack *Stack, mem *Memory, memorySize uint64) (uint64, error) {
 	var gas uint64
-	                                     
+
 	if evm.ChainConfig().IsEIP150(evm.BlockNumber) {
 		gas = gt.Suicide
 		var (
@@ -393,7 +367,7 @@ func gasSuicide(gt params.GasTable, evm *EVM, contract *Contract, stack *Stack, 
 		)
 
 		if eip158 {
-			                               
+
 			if evm.StateDB.Empty(address) && evm.StateDB.GetBalance(contract.Address()).Sign() != 0 {
 				gas += gt.CreateBySuicide
 			}

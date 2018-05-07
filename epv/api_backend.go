@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package epv
 
@@ -36,7 +21,6 @@ import (
 	"github.com/epvchain/go-epvchain/remote"
 )
 
-                                                         
 type EPVApiBackend struct {
 	epv *EPVchain
 	gpo *gasprice.Oracle
@@ -56,12 +40,12 @@ func (b *EPVApiBackend) SetHead(number uint64) {
 }
 
 func (b *EPVApiBackend) HeaderByNumber(ctx context.Context, blockNr rpc.BlockNumber) (*types.Header, error) {
-	                                           
+
 	if blockNr == rpc.PendingBlockNumber {
 		block := b.epv.miner.PendingBlock()
 		return block.Header(), nil
 	}
-	                                         
+
 	if blockNr == rpc.LatestBlockNumber {
 		return b.epv.blockchain.CurrentBlock().Header(), nil
 	}
@@ -69,12 +53,12 @@ func (b *EPVApiBackend) HeaderByNumber(ctx context.Context, blockNr rpc.BlockNum
 }
 
 func (b *EPVApiBackend) BlockByNumber(ctx context.Context, blockNr rpc.BlockNumber) (*types.Block, error) {
-	                                           
+
 	if blockNr == rpc.PendingBlockNumber {
 		block := b.epv.miner.PendingBlock()
 		return block, nil
 	}
-	                                         
+
 	if blockNr == rpc.LatestBlockNumber {
 		return b.epv.blockchain.CurrentBlock(), nil
 	}
@@ -82,12 +66,12 @@ func (b *EPVApiBackend) BlockByNumber(ctx context.Context, blockNr rpc.BlockNumb
 }
 
 func (b *EPVApiBackend) StateAndHeaderByNumber(ctx context.Context, blockNr rpc.BlockNumber) (*state.StateDB, *types.Header, error) {
-	                                           
+
 	if blockNr == rpc.PendingBlockNumber {
 		block, state := b.epv.miner.Pending()
 		return state, block.Header(), nil
 	}
-	                                                          
+
 	header, err := b.HeaderByNumber(ctx, blockNr)
 	if header == nil || err != nil {
 		return nil, nil, err

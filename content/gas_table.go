@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package params
 
@@ -26,17 +11,11 @@ type GasTable struct {
 
 	ExpByte uint64
 
-	                                  
-	                                    
-	                                   
-	                                      
-	               
 	CreateBySuicide uint64
 }
 
 var (
-	                                               
-	                       
+
 	GasTableHomestead = GasTable{
 		ExtcodeSize: 20,
 		ExtcodeCopy: 20,
@@ -47,8 +26,6 @@ var (
 		ExpByte:     10,
 	}
 
-	                                                  
-	                       
 	GasTableEIP150 = GasTable{
 		ExtcodeSize: 700,
 		ExtcodeCopy: 700,

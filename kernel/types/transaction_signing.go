@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package types
 
@@ -31,14 +16,11 @@ var (
 	ErrInvalidChainId = errors.New("invalid chain id for signer")
 )
 
-                                                            
-                                
 type sigCache struct {
 	signer Signer
 	from   common.Address
 }
 
-                                                                                
 func MakeSigner(config *params.ChainConfig, blockNumber *big.Int) Signer {
 	var signer Signer
 	switch {
@@ -52,7 +34,6 @@ func MakeSigner(config *params.ChainConfig, blockNumber *big.Int) Signer {
 	return signer
 }
 
-                                                                      
 func SignTx(tx *Transaction, s Signer, prv *ecdsa.PrivateKey) (*Transaction, error) {
 	h := s.Hash(tx)
 	sig, err := crypto.Sign(h[:], prv)
@@ -62,19 +43,10 @@ func SignTx(tx *Transaction, s Signer, prv *ecdsa.PrivateKey) (*Transaction, err
 	return tx.WithSignature(s, sig)
 }
 
-                                                                                  
-                                                                         
-             
-  
-                                                                     
-                                                                     
-                                                 
 func Sender(signer Signer, tx *Transaction) (common.Address, error) {
 	if sc := tx.from.Load(); sc != nil {
 		sigCache := sc.(sigCache)
-		                                                  
-		                                                   
-		             
+
 		if sigCache.signer.Equal(signer) {
 			return sigCache.from, nil
 		}
@@ -88,21 +60,17 @@ func Sender(signer Signer, tx *Transaction) (common.Address, error) {
 	return addr, nil
 }
 
-                                                                                        
-                                                                           
 type Signer interface {
-	                                                        
+
 	Sender(tx *Transaction) (common.Address, error)
-	                                                                      
-	                   
+
 	SignatureValues(tx *Transaction, sig []byte) (r, s, v *big.Int, err error)
-	                                      
+
 	Hash(tx *Transaction) common.Hash
-	                                                                      
+
 	Equal(Signer) bool
 }
 
-                                                              
 type EIP155Signer struct {
 	chainId, chainIdMul *big.Int
 }
@@ -136,8 +104,6 @@ func (s EIP155Signer) Sender(tx *Transaction) (common.Address, error) {
 	return recoverPlain(s.Hash(tx), tx.data.R, tx.data.S, V, true)
 }
 
-                                                                                   
-                                                             
 func (s EIP155Signer) SignatureValues(tx *Transaction, sig []byte) (R, S, V *big.Int, err error) {
 	R, S, V, err = HomesteadSigner{}.SignatureValues(tx, sig)
 	if err != nil {
@@ -150,8 +116,6 @@ func (s EIP155Signer) SignatureValues(tx *Transaction, sig []byte) (R, S, V *big
 	return R, S, V, nil
 }
 
-                                                    
-                                                 
 func (s EIP155Signer) Hash(tx *Transaction) common.Hash {
 	return rlpHash([]interface{}{
 		tx.data.AccountNonce,
@@ -164,8 +128,6 @@ func (s EIP155Signer) Hash(tx *Transaction) common.Hash {
 	})
 }
 
-                                                                 
-                   
 type HomesteadSigner struct{ FrontierSigner }
 
 func (s HomesteadSigner) Equal(s2 Signer) bool {
@@ -173,8 +135,6 @@ func (s HomesteadSigner) Equal(s2 Signer) bool {
 	return ok
 }
 
-                                                           
-                                                             
 func (hs HomesteadSigner) SignatureValues(tx *Transaction, sig []byte) (r, s, v *big.Int, err error) {
 	return hs.FrontierSigner.SignatureValues(tx, sig)
 }
@@ -190,8 +150,6 @@ func (s FrontierSigner) Equal(s2 Signer) bool {
 	return ok
 }
 
-                                                           
-                                                             
 func (fs FrontierSigner) SignatureValues(tx *Transaction, sig []byte) (r, s, v *big.Int, err error) {
 	if len(sig) != 65 {
 		panic(fmt.Sprintf("wrong size for signature: got %d, want 65", len(sig)))
@@ -202,8 +160,6 @@ func (fs FrontierSigner) SignatureValues(tx *Transaction, sig []byte) (r, s, v *
 	return r, s, v, nil
 }
 
-                                                    
-                                                 
 func (fs FrontierSigner) Hash(tx *Transaction) common.Hash {
 	return rlpHash([]interface{}{
 		tx.data.AccountNonce,
@@ -227,13 +183,13 @@ func recoverPlain(sighash common.Hash, R, S, Vb *big.Int, homestead bool) (commo
 	if !crypto.ValidateSignatureValues(V, R, S, homestead) {
 		return common.Address{}, ErrInvalidSig
 	}
-	                                            
+
 	r, s := R.Bytes(), S.Bytes()
 	sig := make([]byte, 65)
 	copy(sig[32-len(r):32], r)
 	copy(sig[64-len(s):64], s)
 	sig[64] = V
-	                                          
+
 	pub, err := crypto.Ecrecover(sighash[:], sig)
 	if err != nil {
 		return common.Address{}, err
@@ -246,7 +202,6 @@ func recoverPlain(sighash common.Hash, R, S, Vb *big.Int, homestead bool) (commo
 	return addr, nil
 }
 
-                                                                
 func deriveChainId(v *big.Int) *big.Int {
 	if v.BitLen() <= 64 {
 		v := v.Uint64()

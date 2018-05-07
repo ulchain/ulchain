@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package core
 
@@ -30,14 +15,11 @@ import (
 	"github.com/epvchain/go-epvchain/content"
 )
 
-                                                         
 var (
 	canonicalSeed = 1
 	forkSeed      = 2
 )
 
-                                       
-                                                
 type BlockGen struct {
 	i           int
 	parent      *types.Block
@@ -55,8 +37,6 @@ type BlockGen struct {
 	engine consensus.Engine
 }
 
-                                                        
-                                 
 func (b *BlockGen) SetCoinbase(addr common.Address) {
 	if b.gasPool != nil {
 		if len(b.txs) > 0 {
@@ -68,19 +48,10 @@ func (b *BlockGen) SetCoinbase(addr common.Address) {
 	b.gasPool = new(GasPool).AddGas(b.header.GasLimit)
 }
 
-                                                             
 func (b *BlockGen) SetExtra(data []byte) {
 	b.header.Extra = data
 }
 
-                                                                      
-                                                             
-  
-                                                                     
-                                                                     
-                                                                 
-                                                                     
-                               
 func (b *BlockGen) AddTx(tx *types.Transaction) {
 	if b.gasPool == nil {
 		b.SetCoinbase(common.Address{})
@@ -94,22 +65,14 @@ func (b *BlockGen) AddTx(tx *types.Transaction) {
 	b.receipts = append(b.receipts, receipt)
 }
 
-                                                                
 func (b *BlockGen) Number() *big.Int {
 	return new(big.Int).Set(b.header.Number)
 }
 
-                                                                        
-                       
-  
-                                                                          
-                                                                               
 func (b *BlockGen) AddUncheckedReceipt(receipt *types.Receipt) {
 	b.receipts = append(b.receipts, receipt)
 }
 
-                                                           
-                                                            
 func (b *BlockGen) TxNonce(addr common.Address) uint64 {
 	if !b.statedb.Exist(addr) {
 		panic("account does not exist")
@@ -117,14 +80,10 @@ func (b *BlockGen) TxNonce(addr common.Address) uint64 {
 	return b.statedb.GetNonce(addr)
 }
 
-                                                        
 func (b *BlockGen) AddUncle(h *types.Header) {
 	b.uncles = append(b.uncles, h)
 }
 
-                                                                         
-                                                                      
-                                                                           
 func (b *BlockGen) PrevBlock(index int) *types.Block {
 	if index >= b.i {
 		panic("block index out of range")
@@ -135,9 +94,6 @@ func (b *BlockGen) PrevBlock(index int) *types.Block {
 	return b.chain[index]
 }
 
-                                                                            
-                                                                            
-                                 
 func (b *BlockGen) OffsetTime(seconds int64) {
 	b.header.Time.Add(b.header.Time, new(big.Int).SetInt64(seconds))
 	if b.header.Time.Cmp(b.parent.Header().Time) <= 0 {
@@ -146,18 +102,6 @@ func (b *BlockGen) OffsetTime(seconds int64) {
 	b.header.Difficulty = b.engine.CalcDifficulty(b.chainReader, b.header.Time.Uint64(), b.parent.Header())
 }
 
-                                                               
-                                                          
-                                                                  
-  
-                                                                  
-                                                                  
-                                                                    
-                                               
-  
-                                                                     
-                                                                    
-                                                         
 func GenerateChain(config *params.ChainConfig, parent *types.Block, engine consensus.Engine, db epvdb.Database, n int, gen func(int, *BlockGen)) ([]*types.Block, []types.Receipts) {
 	if config == nil {
 		config = params.TestChainConfig
@@ -170,7 +114,6 @@ func GenerateChain(config *params.ChainConfig, parent *types.Block, engine conse
 		b := &BlockGen{i: i, parent: parent, chain: blocks, chainReader: blockchain, statedb: statedb, config: config, engine: engine}
 		b.header = makeHeader(b.chainReader, parent, statedb, b.engine)
 
-		                                                              
 		if daoBlock := config.DAOForkBlock; daoBlock != nil {
 			limit := new(big.Int).Add(daoBlock, params.DAOForkExtraRange)
 			if b.header.Number.Cmp(daoBlock) >= 0 && b.header.Number.Cmp(limit) < 0 {
@@ -182,14 +125,14 @@ func GenerateChain(config *params.ChainConfig, parent *types.Block, engine conse
 		if config.DAOForkSupport && config.DAOForkBlock != nil && config.DAOForkBlock.Cmp(b.header.Number) == 0 {
 			misc.ApplyDAOHardFork(statedb)
 		}
-		                                                              
+
 		if gen != nil {
 			gen(i, b)
 		}
 
 		if b.engine != nil {
 			block, _ := b.engine.Finalize(b.chainReader, b.header, statedb, b.txs, b.uncles, b.receipts)
-			                            
+
 			root, err := statedb.Commit(config.IsEIP158(b.header.Number))
 			if err != nil {
 				panic(fmt.Sprintf("state write error: %v", err))
@@ -219,7 +162,7 @@ func makeHeader(chain consensus.ChainReader, parent *types.Block, state *state.S
 	if parent.Time() == nil {
 		time = big.NewInt(10)
 	} else {
-		time = new(big.Int).Add(parent.Time(), big.NewInt(10))                                     
+		time = new(big.Int).Add(parent.Time(), big.NewInt(10)) 
 	}
 
 	return &types.Header{
@@ -238,33 +181,29 @@ func makeHeader(chain consensus.ChainReader, parent *types.Block, state *state.S
 	}
 }
 
-                                                                               
-                                                                               
-                     
 func newCanonical(engine consensus.Engine, n int, full bool) (epvdb.Database, *BlockChain, error) {
-	                                                     
+
 	gspec := new(Genesis)
 	db, _ := epvdb.NewMemDatabase()
 	genesis := gspec.MustCommit(db)
 
 	blockchain, _ := NewBlockChain(db, nil, params.AllEPVhashProtocolChanges, engine, vm.Config{})
-	                                        
+
 	if n == 0 {
 		return db, blockchain, nil
 	}
 	if full {
-		                             
+
 		blocks := makeBlockChain(genesis, n, engine, db, canonicalSeed)
 		_, err := blockchain.InsertChain(blocks)
 		return db, blockchain, err
 	}
-	                              
+
 	headers := makeHeaderChain(genesis.Header(), n, engine, db, canonicalSeed)
 	_, err := blockchain.InsertHeaderChain(headers, 1)
 	return db, blockchain, err
 }
 
-                                                                             
 func makeHeaderChain(parent *types.Header, n int, engine consensus.Engine, db epvdb.Database, seed int) []*types.Header {
 	blocks := makeBlockChain(types.NewBlockWithHeader(parent), n, engine, db, seed)
 	headers := make([]*types.Header, len(blocks))
@@ -274,7 +213,6 @@ func makeHeaderChain(parent *types.Header, n int, engine consensus.Engine, db ep
 	return headers
 }
 
-                                                                           
 func makeBlockChain(parent *types.Block, n int, engine consensus.Engine, db epvdb.Database, seed int) []*types.Block {
 	blocks, _ := GenerateChain(params.TestChainConfig, parent, engine, db, n, func(i int, b *BlockGen) {
 		b.SetCoinbase(common.Address{0: byte(seed), 19: byte(i)})

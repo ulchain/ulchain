@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package types
 
@@ -29,26 +14,20 @@ type bytesBacked interface {
 }
 
 const (
-	                                                                             
+
 	BloomByteLength = 256
 
-	                                                                           
 	BloomBitLength = 8 * BloomByteLength
 )
 
-                                            
 type Bloom [BloomByteLength]byte
 
-                                                        
-                                          
 func BytesToBloom(b []byte) Bloom {
 	var bloom Bloom
 	bloom.SetBytes(b)
 	return bloom
 }
 
-                                                     
-                                          
 func (b *Bloom) SetBytes(d []byte) {
 	if len(b) < len(d) {
 		panic(fmt.Sprintf("bloom bytes too big %d %d", len(b), len(d)))
@@ -56,14 +35,12 @@ func (b *Bloom) SetBytes(d []byte) {
 	copy(b[BloomByteLength-len(d):], d)
 }
 
-                                                                      
 func (b *Bloom) Add(d *big.Int) {
 	bin := new(big.Int).SetBytes(b[:])
 	bin.Or(bin, bloom9(d.Bytes()))
 	b.SetBytes(bin.Bytes())
 }
 
-                                   
 func (b Bloom) Big() *big.Int {
 	return new(big.Int).SetBytes(b[:])
 }
@@ -81,12 +58,10 @@ func (b Bloom) TestBytes(test []byte) bool {
 
 }
 
-                                                        
 func (b Bloom) MarshalText() ([]byte, error) {
 	return hexutil.Bytes(b[:]).MarshalText()
 }
 
-                                                  
 func (b *Bloom) UnmarshalText(input []byte) error {
 	return hexutil.UnmarshalFixedText("Bloom", input, b[:])
 }

@@ -1,8 +1,3 @@
-/**********************************************************************
- * Copyright (c) 2015 Andrew Poelstra                                 *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
 
 #ifndef _SECP256K1_MODULE_ECDH_MAIN_
 #define _SECP256K1_MODULE_ECDH_MAIN_
@@ -32,9 +27,7 @@ int secp256k1_ecdh(const secp256k1_context* ctx, unsigned char *result, const se
 
         secp256k1_ecmult_const(&res, &pt, &s);
         secp256k1_ge_set_gej(&pt, &res);
-        /* Compute a hash of the point in compressed form
-         * Note we cannot use secp256k1_eckey_pubkey_serialize here since it does not
-         * expect its output to be secret and has a timing sidechannel. */
+
         secp256k1_fe_normalize(&pt.x);
         secp256k1_fe_normalize(&pt.y);
         secp256k1_fe_get_b32(x, &pt.x);

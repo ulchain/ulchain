@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package trie
 
@@ -27,15 +12,8 @@ import (
 	"github.com/epvchain/go-epvchain/process"
 )
 
-                                                                                 
-                                                                                 
-                                                    
-  
-                                                                                
-                                                                                   
-                                                    
 func (t *Trie) Prove(key []byte, fromLevel uint, proofDb epvdb.Putter) error {
-	                                        
+
 	key = keybytesToHex(key)
 	nodes := []node{}
 	tn := t.root
@@ -43,7 +21,7 @@ func (t *Trie) Prove(key []byte, fromLevel uint, proofDb epvdb.Putter) error {
 		switch n := tn.(type) {
 		case *shortNode:
 			if len(key) < len(n.Key) || !bytes.Equal(n.Key, key[:len(n.Key)]) {
-				                                    
+
 				tn = nil
 			} else {
 				tn = n.Val
@@ -67,13 +45,11 @@ func (t *Trie) Prove(key []byte, fromLevel uint, proofDb epvdb.Putter) error {
 	}
 	hasher := newHasher(0, 0, nil)
 	for i, n := range nodes {
-		                                                            
-		                                                                  
+
 		n, _, _ = hasher.hashChildren(n, nil)
 		hn, _ := hasher.store(n, nil, false)
 		if hash, ok := hn.(hashNode); ok || i == 0 {
-			                                                       
-			                                          
+
 			if fromLevel > 0 {
 				fromLevel--
 			} else {
@@ -88,20 +64,10 @@ func (t *Trie) Prove(key []byte, fromLevel uint, proofDb epvdb.Putter) error {
 	return nil
 }
 
-                                                                                 
-                                                                                 
-                                                    
-  
-                                                                                
-                                                                                   
-                                                    
 func (t *SecureTrie) Prove(key []byte, fromLevel uint, proofDb epvdb.Putter) error {
 	return t.trie.Prove(key, fromLevel, proofDb)
 }
 
-                                                                               
-                                                                              
-                                                        
 func VerifyProof(rootHash common.Hash, key []byte, proofDb DatabaseReader) (value []byte, err error, nodes int) {
 	key = keybytesToHex(key)
 	wantHash := rootHash
@@ -117,7 +83,7 @@ func VerifyProof(rootHash common.Hash, key []byte, proofDb DatabaseReader) (valu
 		keyrest, cld := get(n, key)
 		switch cld := cld.(type) {
 		case nil:
-			                                    
+
 			return nil, nil, i
 		case hashNode:
 			key = keyrest

@@ -1,18 +1,3 @@
-                                         
-                                    
-  
-                                                                      
-                                                                       
-                                                                    
-                                      
-  
-                                                                 
-                                                                 
-                                                               
-                                               
-  
-                                                                    
-                                                                      
 
 package main
 
@@ -72,15 +57,12 @@ JavaScript API. See https://github.com/epvchain/go-epvchain/wiki/Javascipt-Conso
 	}
 )
 
-                                                                                   
-             
 func localConsole(ctx *cli.Context) error {
-	                                                   
+
 	node := makeFullNode(ctx)
 	startNode(ctx, node)
 	defer node.Stop()
 
-	                                                                    
 	client, err := node.Attach()
 	if err != nil {
 		utils.Fatalf("Failed to attach to the inproc gepv: %v", err)
@@ -98,22 +80,19 @@ func localConsole(ctx *cli.Context) error {
 	}
 	defer console.Stop(false)
 
-	                                                               
 	if script := ctx.GlobalString(utils.ExecFlag.Name); script != "" {
 		console.Evaluate(script)
 		return nil
 	}
-	                                                                
+
 	console.Welcome()
 	console.Interactive()
 
 	return nil
 }
 
-                                                                               
-                 
 func remoteConsole(ctx *cli.Context) error {
-	                                                                              
+
 	endpoint := ctx.Args().First()
 	if endpoint == "" {
 		path := node.DefaultDataDir()
@@ -151,37 +130,28 @@ func remoteConsole(ctx *cli.Context) error {
 		return nil
 	}
 
-	                                                                
 	console.Welcome()
 	console.Interactive()
 
 	return nil
 }
 
-                                                                     
-                                                               
-                                                         
 func dialRPC(endpoint string) (*rpc.Client, error) {
 	if endpoint == "" {
 		endpoint = node.DefaultIPCEndpoint(clientIdentifier)
 	} else if strings.HasPrefix(endpoint, "rpc:") || strings.HasPrefix(endpoint, "ipc:") {
-		                                                         
-		                  
+
 		endpoint = endpoint[4:]
 	}
 	return rpc.Dial(endpoint)
 }
 
-                                                                            
-                                                                             
-                   
 func ephemeralConsole(ctx *cli.Context) error {
-	                                                   
+
 	node := makeFullNode(ctx)
 	startNode(ctx, node)
 	defer node.Stop()
 
-	                                                                    
 	client, err := node.Attach()
 	if err != nil {
 		utils.Fatalf("Failed to attach to the inproc gepv: %v", err)
@@ -199,13 +169,12 @@ func ephemeralConsole(ctx *cli.Context) error {
 	}
 	defer console.Stop(false)
 
-	                                                  
 	for _, file := range ctx.Args() {
 		if err = console.Execute(file); err != nil {
 			utils.Fatalf("Failed to execute %s: %v", file, err)
 		}
 	}
-	                                                   
+
 	abort := make(chan os.Signal, 1)
 	signal.Notify(abort, os.Interrupt)
 

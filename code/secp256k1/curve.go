@@ -1,33 +1,3 @@
-                                                      
-                                                 
-  
-                                                                     
-                                                                         
-       
-  
-                                                                   
-                                                                  
-                                                            
-                                                                           
-                                                                  
-                  
-                                                         
-                                                                         
-                                                             
-                                                                         
-                                                                          
-  
-                                                                      
-                                                                    
-                                                                        
-                                                                       
-                                                                        
-                                                                   
-                                                                        
-                                                                        
-                                                                      
-                                                                        
-                                                                       
 
 package secp256k1
 
@@ -45,25 +15,12 @@ extern int secp256k1_ext_scalar_mul(const secp256k1_context* ctx, const unsigned
 */
 import "C"
 
-                                                                      
-                                                     
-  
-                                                                      
-                                                                      
-                                                                    
-                                                                   
-                                                                      
-                                                                    
-                      
-
-                                                  
-                                                            
 type BitCurve struct {
-	P       *big.Int                                     
-	N       *big.Int                               
-	B       *big.Int                                         
-	Gx, Gy  *big.Int                           
-	BitSize int                                         
+	P       *big.Int 
+	N       *big.Int 
+	B       *big.Int 
+	Gx, Gy  *big.Int 
+	BitSize int      
 }
 
 func (BitCurve *BitCurve) Params() *elliptic.CurveParams {
@@ -77,24 +34,20 @@ func (BitCurve *BitCurve) Params() *elliptic.CurveParams {
 	}
 }
 
-                                                                     
 func (BitCurve *BitCurve) IsOnCurve(x, y *big.Int) bool {
-	                
-	y2 := new(big.Int).Mul(y, y)      
-	y2.Mod(y2, BitCurve.P)              
 
-	x3 := new(big.Int).Mul(x, x)      
-	x3.Mul(x3, x)                     
+	y2 := new(big.Int).Mul(y, y) 
+	y2.Mod(y2, BitCurve.P)       
 
-	x3.Add(x3, BitCurve.B)        
-	x3.Mod(x3, BitCurve.P)            
+	x3 := new(big.Int).Mul(x, x) 
+	x3.Mul(x3, x)                
+
+	x3.Add(x3, BitCurve.B) 
+	x3.Mod(x3, BitCurve.P) 
 
 	return x3.Cmp(y2) == 0
 }
 
-                                            
-                                                                             
-                   
 func (BitCurve *BitCurve) affineFromJacobian(x, y, z *big.Int) (xOut, yOut *big.Int) {
 	zinv := new(big.Int).ModInverse(z, BitCurve.P)
 	zinvsq := new(big.Int).Mul(zinv, zinv)
@@ -107,16 +60,13 @@ func (BitCurve *BitCurve) affineFromJacobian(x, y, z *big.Int) (xOut, yOut *big.
 	return
 }
 
-                                             
 func (BitCurve *BitCurve) Add(x1, y1, x2, y2 *big.Int) (*big.Int, *big.Int) {
 	z := new(big.Int).SetInt64(1)
 	return BitCurve.affineFromJacobian(BitCurve.addJacobian(x1, y1, z, x2, y2, z))
 }
 
-                                                                         
-                                                             
 func (BitCurve *BitCurve) addJacobian(x1, y1, z1, x2, y2, z2 *big.Int) (*big.Int, *big.Int, *big.Int) {
-	                                                                                        
+
 	z1z1 := new(big.Int).Mul(z1, z1)
 	z1z1.Mod(z1z1, BitCurve.P)
 	z2z2 := new(big.Int).Mul(z2, z2)
@@ -178,58 +128,52 @@ func (BitCurve *BitCurve) addJacobian(x1, y1, z1, x2, y2, z2 *big.Int) (*big.Int
 	return x3, y3, z3
 }
 
-                         
 func (BitCurve *BitCurve) Double(x1, y1 *big.Int) (*big.Int, *big.Int) {
 	z1 := new(big.Int).SetInt64(1)
 	return BitCurve.affineFromJacobian(BitCurve.doubleJacobian(x1, y1, z1))
 }
 
-                                                                       
-                                             
 func (BitCurve *BitCurve) doubleJacobian(x, y, z *big.Int) (*big.Int, *big.Int, *big.Int) {
-	                                                                                       
 
-	a := new(big.Int).Mul(x, x)       
-	b := new(big.Int).Mul(y, y)       
-	c := new(big.Int).Mul(b, b)      
+	a := new(big.Int).Mul(x, x) 
+	b := new(big.Int).Mul(y, y) 
+	c := new(big.Int).Mul(b, b) 
 
-	d := new(big.Int).Add(x, b)       
-	d.Mul(d, d)                           
-	d.Sub(d, a)                             
-	d.Sub(d, c)                               
-	d.Mul(d, big.NewInt(2))                       
+	d := new(big.Int).Add(x, b) 
+	d.Mul(d, d)                 
+	d.Sub(d, a)                 
+	d.Sub(d, c)                 
+	d.Mul(d, big.NewInt(2))     
 
-	e := new(big.Int).Mul(big.NewInt(3), a)      
-	f := new(big.Int).Mul(e, e)                  
+	e := new(big.Int).Mul(big.NewInt(3), a) 
+	f := new(big.Int).Mul(e, e)             
 
-	x3 := new(big.Int).Mul(big.NewInt(2), d)      
-	x3.Sub(f, x3)                                   
+	x3 := new(big.Int).Mul(big.NewInt(2), d) 
+	x3.Sub(f, x3)                            
 	x3.Mod(x3, BitCurve.P)
 
-	y3 := new(big.Int).Sub(d, x3)                        
-	y3.Mul(e, y3)                                            
-	y3.Sub(y3, new(big.Int).Mul(big.NewInt(8), c))               
+	y3 := new(big.Int).Sub(d, x3)                  
+	y3.Mul(e, y3)                                  
+	y3.Sub(y3, new(big.Int).Mul(big.NewInt(8), c)) 
 	y3.Mod(y3, BitCurve.P)
 
-	z3 := new(big.Int).Mul(y, z)        
-	z3.Mul(big.NewInt(2), z3)             
+	z3 := new(big.Int).Mul(y, z) 
+	z3.Mul(big.NewInt(2), z3)    
 	z3.Mod(z3, BitCurve.P)
 
 	return x3, y3, z3
 }
 
 func (BitCurve *BitCurve) ScalarMult(Bx, By *big.Int, scalar []byte) (*big.Int, *big.Int) {
-	                                                            
-	                                                           
+
 	if len(scalar) > 32 {
 		panic("can't handle scalars > 256 bits")
 	}
-	                               
+
 	padded := make([]byte, 32)
 	copy(padded[32-len(scalar):], scalar)
 	scalar = padded
 
-	                                              
 	point := make([]byte, 64)
 	math.ReadBits(Bx, point[:32])
 	math.ReadBits(By, point[32:])
@@ -237,7 +181,6 @@ func (BitCurve *BitCurve) ScalarMult(Bx, By *big.Int, scalar []byte) (*big.Int, 
 	scalarPtr := (*C.uchar)(unsafe.Pointer(&scalar[0]))
 	res := C.secp256k1_ext_scalar_mul(context, pointPtr, scalarPtr)
 
-	                                           
 	x := new(big.Int).SetBytes(point[:32])
 	y := new(big.Int).SetBytes(point[32:])
 	for i := range point {
@@ -252,31 +195,25 @@ func (BitCurve *BitCurve) ScalarMult(Bx, By *big.Int, scalar []byte) (*big.Int, 
 	return x, y
 }
 
-                                                                              
-                                 
 func (BitCurve *BitCurve) ScalarBaseMult(k []byte) (*big.Int, *big.Int) {
 	return BitCurve.ScalarMult(BitCurve.Gx, BitCurve.Gy, k)
 }
 
-                                                                            
-         
 func (BitCurve *BitCurve) Marshal(x, y *big.Int) []byte {
 	byteLen := (BitCurve.BitSize + 7) >> 3
 	ret := make([]byte, 1+2*byteLen)
-	ret[0] = 4                           
+	ret[0] = 4 
 	math.ReadBits(x, ret[1:1+byteLen])
 	math.ReadBits(y, ret[1+byteLen:])
 	return ret
 }
 
-                                                                           
-                  
 func (BitCurve *BitCurve) Unmarshal(data []byte) (x, y *big.Int) {
 	byteLen := (BitCurve.BitSize + 7) >> 3
 	if len(data) != 1+2*byteLen {
 		return
 	}
-	if data[0] != 4 {                     
+	if data[0] != 4 { 
 		return
 	}
 	x = new(big.Int).SetBytes(data[1 : 1+byteLen])
@@ -287,9 +224,7 @@ func (BitCurve *BitCurve) Unmarshal(data []byte) (x, y *big.Int) {
 var theCurve = new(BitCurve)
 
 func init() {
-	                          
-	                               
-	                                                
+
 	theCurve.P, _ = new(big.Int).SetString("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F", 16)
 	theCurve.N, _ = new(big.Int).SetString("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141", 16)
 	theCurve.B, _ = new(big.Int).SetString("0000000000000000000000000000000000000000000000000000000000000007", 16)
@@ -298,7 +233,6 @@ func init() {
 	theCurve.BitSize = 256
 }
 
-                                                      
 func S256() *BitCurve {
 	return theCurve
 }

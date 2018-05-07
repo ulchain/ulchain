@@ -1,27 +1,8 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package params
 
 const (
-	                                                    
-	                                                               
-	  
-	                                                         
-	  
+
 	Wei      = 1
 	Ada      = 1e3
 	Babbage  = 1e6

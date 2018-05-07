@@ -1,8 +1,3 @@
-/**********************************************************************
- * Copyright (c) 2014 Pieter Wuille                                   *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
 
 #ifndef _SECP256K1_HASH_
 #define _SECP256K1_HASH_
@@ -12,7 +7,7 @@
 
 typedef struct {
     uint32_t s[8];
-    uint32_t buf[16]; /* In big endian */
+    uint32_t buf[16]; 
     size_t bytes;
 } secp256k1_sha256_t;
 

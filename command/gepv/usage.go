@@ -1,20 +1,3 @@
-                                         
-                                    
-  
-                                                                      
-                                                                       
-                                                                    
-                                      
-  
-                                                                 
-                                                                 
-                                                               
-                                               
-  
-                                                                    
-                                                                      
-
-                                                          
 
 package main
 
@@ -29,11 +12,10 @@ import (
 	"gopkg.in/urfave/cli.v1"
 )
 
-                                                                               
 var AppHelpTemplate = `NAME:
    {{.App.Name}} - {{.App.Usage}}
 
-   Copyright 2013-2017 The go-epvchain Authors
+   Copyright 2018 The go-epvchain Authors
 
 USAGE:
    {{.App.HelpName}} [options]{{if .App.Commands}} command [command options]{{end}} {{if .App.ArgsUsage}}{{.App.ArgsUsage}}{{else}}[arguments...]{{end}}
@@ -56,13 +38,11 @@ COPYRIGHT:
    {{end}}
 `
 
-                                                                  
 type flagGroup struct {
 	Name  string
 	Flags []cli.Flag
 }
 
-                                                                        
 var AppHelpFlagGroups = []flagGroup{
 	{
 		Name: "EPVCHAIN",
@@ -100,16 +80,7 @@ var AppHelpFlagGroups = []flagGroup{
 			utils.EPVhashDatasetsOnDiskFlag,
 		},
 	},
-	   
-	                     
-	                     
-	                               
-	                            
-	                            
-	                               
-	                              
-	     
-	    
+
 	{
 		Name: "TRANSACTION POOL",
 		Flags: []cli.Flag{
@@ -227,15 +198,13 @@ var AppHelpFlagGroups = []flagGroup{
 	},
 }
 
-                                                              
-                                
 type byCategory []flagGroup
 
 func (a byCategory) Len() int      { return len(a) }
 func (a byCategory) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a byCategory) Less(i, j int) bool {
 	iCat, jCat := a[i].Name, a[j].Name
-	iIdx, jIdx := len(AppHelpFlagGroups), len(AppHelpFlagGroups)                                          
+	iIdx, jIdx := len(AppHelpFlagGroups), len(AppHelpFlagGroups)
 
 	for i, group := range AppHelpFlagGroups {
 		if iCat == group.Name {
@@ -261,20 +230,18 @@ func flagCategory(flag cli.Flag) string {
 }
 
 func init() {
-	                                         
+
 	cli.AppHelpTemplate = AppHelpTemplate
 
-	                                                         
 	type helpData struct {
 		App        interface{}
 		FlagGroups []flagGroup
 	}
 
-	                                                                          
 	originalHelpPrinter := cli.HelpPrinter
 	cli.HelpPrinter = func(w io.Writer, tmpl string, data interface{}) {
 		if tmpl == AppHelpTemplate {
-			                                                            
+
 			categorized := make(map[string]struct{})
 			for _, group := range AppHelpFlagGroups {
 				for _, flag := range group.Flags {
@@ -291,19 +258,18 @@ func init() {
 				}
 			}
 			if len(uncategorized) > 0 {
-				                                                     
+
 				miscs := len(AppHelpFlagGroups[len(AppHelpFlagGroups)-1].Flags)
 				AppHelpFlagGroups[len(AppHelpFlagGroups)-1].Flags = append(AppHelpFlagGroups[len(AppHelpFlagGroups)-1].Flags, uncategorized...)
 
-				                                        
 				defer func() {
 					AppHelpFlagGroups[len(AppHelpFlagGroups)-1].Flags = AppHelpFlagGroups[len(AppHelpFlagGroups)-1].Flags[:miscs]
 				}()
 			}
-			                                 
+
 			originalHelpPrinter(w, tmpl, helpData{data, AppHelpFlagGroups})
 		} else if tmpl == utils.CommandHelpTemplate {
-			                                                              
+
 			categorized := make(map[string][]cli.Flag)
 			for _, flag := range data.(cli.Command).Flags {
 				if _, ok := categorized[flag.String()]; !ok {
@@ -311,14 +277,12 @@ func init() {
 				}
 			}
 
-			                                
 			sorted := make([]flagGroup, 0, len(categorized))
 			for cat, flgs := range categorized {
 				sorted = append(sorted, flagGroup{cat, flgs})
 			}
 			sort.Sort(byCategory(sorted))
 
-			                                                           
 			originalHelpPrinter(w, tmpl, map[string]interface{}{
 				"cmd":              data,
 				"categorizedFlags": sorted,

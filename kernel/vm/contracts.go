@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package vm
 
@@ -29,16 +14,11 @@ import (
 	"golang.org/x/crypto/ripemd160"
 )
 
-                                                                                         
-                                                                                      
-            
 type PrecompiledContract interface {
-	RequiredGas(input []byte) uint64                                                  
-	Run(input []byte) ([]byte, error)                                     
+	RequiredGas(input []byte) uint64  
+	Run(input []byte) ([]byte, error) 
 }
 
-                                                                                  
-                                                         
 var PrecompiledContractsHomestead = map[common.Address]PrecompiledContract{
 	common.BytesToAddress([]byte{1}): &ecrecover{},
 	common.BytesToAddress([]byte{2}): &sha256hash{},
@@ -46,8 +26,6 @@ var PrecompiledContractsHomestead = map[common.Address]PrecompiledContract{
 	common.BytesToAddress([]byte{4}): &dataCopy{},
 }
 
-                                                                                  
-                                           
 var PrecompiledContractsByzantium = map[common.Address]PrecompiledContract{
 	common.BytesToAddress([]byte{1}): &ecrecover{},
 	common.BytesToAddress([]byte{2}): &sha256hash{},
@@ -59,7 +37,6 @@ var PrecompiledContractsByzantium = map[common.Address]PrecompiledContract{
 	common.BytesToAddress([]byte{8}): &bn256Pairing{},
 }
 
-                                                                                  
 func RunPrecompiledContract(p PrecompiledContract, input []byte, contract *Contract) (ret []byte, err error) {
 	gas := p.RequiredGas(input)
 	if contract.UseGas(gas) {
@@ -68,7 +45,6 @@ func RunPrecompiledContract(p PrecompiledContract, input []byte, contract *Contr
 	return nil, ErrOutOfGas
 }
 
-                                              
 type ecrecover struct{}
 
 func (c *ecrecover) RequiredGas(input []byte) uint64 {
@@ -79,35 +55,26 @@ func (c *ecrecover) Run(input []byte) ([]byte, error) {
 	const ecRecoverInputLength = 128
 
 	input = common.RightPadBytes(input, ecRecoverInputLength)
-	                                            
-	                                      
 
 	r := new(big.Int).SetBytes(input[64:96])
 	s := new(big.Int).SetBytes(input[96:128])
 	v := input[63] - 27
 
-	                                                             
 	if !allZero(input[32:63]) || !crypto.ValidateSignatureValues(v, r, s, false) {
 		return nil, nil
 	}
-	                                            
+
 	pubKey, err := crypto.Ecrecover(input[:32], append(input[64:128], v))
-	                                          
+
 	if err != nil {
 		return nil, nil
 	}
 
-	                                               
 	return common.LeftPadBytes(crypto.Keccak256(pubKey[1:])[12:], 32), nil
 }
 
-                                           
 type sha256hash struct{}
 
-                                                                             
-  
-                                                                                 
-                                                                           
 func (c *sha256hash) RequiredGas(input []byte) uint64 {
 	return uint64(len(input)+31)/32*params.Sha256PerWordGas + params.Sha256BaseGas
 }
@@ -116,13 +83,8 @@ func (c *sha256hash) Run(input []byte) ([]byte, error) {
 	return h[:], nil
 }
 
-                                              
 type ripemd160hash struct{}
 
-                                                                             
-  
-                                                                                 
-                                                                           
 func (c *ripemd160hash) RequiredGas(input []byte) uint64 {
 	return uint64(len(input)+31)/32*params.Ripemd160PerWordGas + params.Ripemd160BaseGas
 }
@@ -132,13 +94,8 @@ func (c *ripemd160hash) Run(input []byte) ([]byte, error) {
 	return common.LeftPadBytes(ripemd.Sum(nil), 32), nil
 }
 
-                                              
 type dataCopy struct{}
 
-                                                                             
-  
-                                                                                 
-                                                                           
 func (c *dataCopy) RequiredGas(input []byte) uint64 {
 	return uint64(len(input)+31)/32*params.IdentityPerWordGas + params.IdentityBaseGas
 }
@@ -146,7 +103,6 @@ func (c *dataCopy) Run(in []byte) ([]byte, error) {
 	return in, nil
 }
 
-                                                                           
 type bigModExp struct{}
 
 var (
@@ -163,7 +119,6 @@ var (
 	big199680 = big.NewInt(199680)
 )
 
-                                                                             
 func (c *bigModExp) RequiredGas(input []byte) uint64 {
 	var (
 		baseLen = new(big.Int).SetBytes(getData(input, 0, 32))
@@ -175,7 +130,7 @@ func (c *bigModExp) RequiredGas(input []byte) uint64 {
 	} else {
 		input = input[:0]
 	}
-	                                                                     
+
 	var expHead *big.Int
 	if big.NewInt(int64(len(input))).Cmp(baseLen) <= 0 {
 		expHead = new(big.Int)
@@ -186,7 +141,7 @@ func (c *bigModExp) RequiredGas(input []byte) uint64 {
 			expHead = new(big.Int).SetBytes(getData(input, baseLen.Uint64(), expLen.Uint64()))
 		}
 	}
-	                                         
+
 	var msb int
 	if bitlen := expHead.BitLen(); bitlen > 0 {
 		msb = bitlen - 1
@@ -198,7 +153,6 @@ func (c *bigModExp) RequiredGas(input []byte) uint64 {
 	}
 	adjExpLen.Add(adjExpLen, big.NewInt(int64(msb)))
 
-	                                          
 	gas := new(big.Int).Set(math.BigMax(modLen, baseLen))
 	switch {
 	case gas.Cmp(big64) <= 0:
@@ -234,35 +188,30 @@ func (c *bigModExp) Run(input []byte) ([]byte, error) {
 	} else {
 		input = input[:0]
 	}
-	                                                                  
+
 	if baseLen == 0 && modLen == 0 {
 		return []byte{}, nil
 	}
-	                                                       
+
 	var (
 		base = new(big.Int).SetBytes(getData(input, 0, baseLen))
 		exp  = new(big.Int).SetBytes(getData(input, baseLen, expLen))
 		mod  = new(big.Int).SetBytes(getData(input, baseLen+expLen, modLen))
 	)
 	if mod.BitLen() == 0 {
-		                                     
+
 		return common.LeftPadBytes([]byte{}, int(modLen)), nil
 	}
 	return common.LeftPadBytes(base.Exp(base, exp, mod).Bytes(), int(modLen)), nil
 }
 
 var (
-	                                                                              
-	                                   
+
 	errNotOnCurve = errors.New("point not on elliptic curve")
 
-	                                                                            
-	                                   
 	errInvalidCurvePoint = errors.New("invalid elliptic curve point")
 )
 
-                                                                            
-                                                     
 func newCurvePoint(blob []byte) (*bn256.G1, error) {
 	p, onCurve := new(bn256.G1).Unmarshal(blob)
 	if !onCurve {
@@ -275,8 +224,6 @@ func newCurvePoint(blob []byte) (*bn256.G1, error) {
 	return p, nil
 }
 
-                                                                            
-                                                     
 func newTwistPoint(blob []byte) (*bn256.G2, error) {
 	p, onCurve := new(bn256.G2).Unmarshal(blob)
 	if !onCurve {
@@ -290,10 +237,8 @@ func newTwistPoint(blob []byte) (*bn256.G2, error) {
 	return p, nil
 }
 
-                                                              
 type bn256Add struct{}
 
-                                                                             
 func (c *bn256Add) RequiredGas(input []byte) uint64 {
 	return params.Bn256AddGas
 }
@@ -312,10 +257,8 @@ func (c *bn256Add) Run(input []byte) ([]byte, error) {
 	return res.Marshal(), nil
 }
 
-                                                                           
 type bn256ScalarMul struct{}
 
-                                                                             
 func (c *bn256ScalarMul) RequiredGas(input []byte) uint64 {
 	return params.Bn256ScalarMulGas
 }
@@ -331,30 +274,26 @@ func (c *bn256ScalarMul) Run(input []byte) ([]byte, error) {
 }
 
 var (
-	                                                              
+
 	true32Byte = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}
 
-	                                                            
 	false32Byte = make([]byte, 32)
 
-	                                                                        
 	errBadPairingInput = errors.New("bad elliptic curve pairing size")
 )
 
-                                                                    
 type bn256Pairing struct{}
 
-                                                                             
 func (c *bn256Pairing) RequiredGas(input []byte) uint64 {
 	return params.Bn256PairingBaseGas + uint64(len(input)/192)*params.Bn256PairingPerPointGas
 }
 
 func (c *bn256Pairing) Run(input []byte) ([]byte, error) {
-	                                   
+
 	if len(input)%192 > 0 {
 		return nil, errBadPairingInput
 	}
-	                                              
+
 	var (
 		cs []*bn256.G1
 		ts []*bn256.G2
@@ -371,7 +310,7 @@ func (c *bn256Pairing) Run(input []byte) ([]byte, error) {
 		cs = append(cs, c)
 		ts = append(ts, t)
 	}
-	                                                    
+
 	if bn256.PairingCheck(cs, ts) {
 		return true32Byte, nil
 	}

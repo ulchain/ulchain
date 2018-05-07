@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package params
 
@@ -21,13 +6,12 @@ import (
 )
 
 const (
-	VersionMajor = 0                                                         
-	VersionMinor = 0                                                         
-	VersionPatch = 3                                                         
-	VersionMeta  = "master"                                                    
+	VersionMajor = 0        
+	VersionMinor = 0        
+	VersionPatch = 3        
+	VersionMeta  = "master" 
 )
 
-                                            
 var Version = func() string {
 	v := fmt.Sprintf("%d.%d.%d", VersionMajor, VersionMinor, VersionPatch)
 	if VersionMeta != "" {

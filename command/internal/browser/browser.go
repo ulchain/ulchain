@@ -1,8 +1,4 @@
-                                                      
-                                                     
-                                                 
 
-                                                                           
 package browser
 
 import (
@@ -11,7 +7,6 @@ import (
 	"runtime"
 )
 
-                                                                     
 func Commands() [][]string {
 	var cmds [][]string
 	if exe := os.Getenv("BROWSER"); exe != "" {
@@ -34,7 +29,6 @@ func Commands() [][]string {
 	return cmds
 }
 
-                                                                        
 func Open(url string) bool {
 	for _, args := range Commands() {
 		cmd := exec.Command(args[0], append(args[1:], url)...)

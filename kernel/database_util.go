@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package core
 
@@ -33,12 +18,10 @@ import (
 	"github.com/epvchain/go-epvchain/process"
 )
 
-                                                               
 type DatabaseReader interface {
 	Get(key []byte) (value []byte, err error)
 }
 
-                                                                   
 type DatabaseDeleter interface {
 	Delete(key []byte) error
 }
@@ -48,48 +31,41 @@ var (
 	headBlockKey  = []byte("LastBlock")
 	headFastKey   = []byte("LastFast")
 
-	                                                                              
-	headerPrefix        = []byte("h")                                                           
-	tdSuffix            = []byte("t")                                                                  
-	numSuffix           = []byte("n")                                                              
-	blockHashPrefix     = []byte("H")                                                     
-	bodyPrefix          = []byte("b")                                                             
-	blockReceiptsPrefix = []byte("r")                                                                          
-	lookupPrefix        = []byte("l")                                                              
-	bloomBitsPrefix     = []byte("B")                                                                                                
+	headerPrefix        = []byte("h") 
+	tdSuffix            = []byte("t") 
+	numSuffix           = []byte("n") 
+	blockHashPrefix     = []byte("H") 
+	bodyPrefix          = []byte("b") 
+	blockReceiptsPrefix = []byte("r") 
+	lookupPrefix        = []byte("l") 
+	bloomBitsPrefix     = []byte("B") 
 
-	preimagePrefix = "secure-key-"                                                  
-	configPrefix   = []byte("epvchain-config-")                            
+	preimagePrefix = "secure-key-"              
+	configPrefix   = []byte("epvchain-config-") 
 
-	                                                                           
-	BloomBitsIndexPrefix = []byte("iB")                                                                                   
+	BloomBitsIndexPrefix = []byte("iB") 
 
-	                                               
 	oldReceiptsPrefix = []byte("receipts-")
 	oldTxMetaSuffix   = []byte{0x01}
 
-	ErrChainConfigNotFound = errors.New("ChainConfig not found")                                  
+	ErrChainConfigNotFound = errors.New("ChainConfig not found") 
 
 	preimageCounter    = metrics.NewCounter("db/preimage/total")
 	preimageHitCounter = metrics.NewCounter("db/preimage/hits")
 )
 
-                                                                                
-                                                
 type TxLookupEntry struct {
 	BlockHash  common.Hash
 	BlockIndex uint64
 	Index      uint64
 }
 
-                                                                
 func encodeBlockNumber(number uint64) []byte {
 	enc := make([]byte, 8)
 	binary.BigEndian.PutUint64(enc, number)
 	return enc
 }
 
-                                                                          
 func GetCanonicalHash(db DatabaseReader, number uint64) common.Hash {
 	data, _ := db.Get(append(append(headerPrefix, encodeBlockNumber(number)...), numSuffix...))
 	if len(data) == 0 {
@@ -98,12 +74,8 @@ func GetCanonicalHash(db DatabaseReader, number uint64) common.Hash {
 	return common.BytesToHash(data)
 }
 
-                                                                    
-                                                   
 const missingNumber = uint64(0xffffffffffffffff)
 
-                                                                   
-                                                         
 func GetBlockNumber(db DatabaseReader, hash common.Hash) uint64 {
 	data, _ := db.Get(append(blockHashPrefix, hash.Bytes()...))
 	if len(data) != 8 {
@@ -112,11 +84,6 @@ func GetBlockNumber(db DatabaseReader, hash common.Hash) uint64 {
 	return binary.BigEndian.Uint64(data)
 }
 
-                                                                             
-                                                                               
-                                                                            
-                                                                           
-                                   
 func GetHeadHeaderHash(db DatabaseReader) common.Hash {
 	data, _ := db.Get(headHeaderKey)
 	if len(data) == 0 {
@@ -125,7 +92,6 @@ func GetHeadHeaderHash(db DatabaseReader) common.Hash {
 	return common.BytesToHash(data)
 }
 
-                                                                           
 func GetHeadBlockHash(db DatabaseReader) common.Hash {
 	data, _ := db.Get(headBlockKey)
 	if len(data) == 0 {
@@ -134,10 +100,6 @@ func GetHeadBlockHash(db DatabaseReader) common.Hash {
 	return common.BytesToHash(data)
 }
 
-                                                                                     
-                                                                                 
-                                                                                 
-                                                            
 func GetHeadFastBlockHash(db DatabaseReader) common.Hash {
 	data, _ := db.Get(headFastKey)
 	if len(data) == 0 {
@@ -146,15 +108,11 @@ func GetHeadFastBlockHash(db DatabaseReader) common.Hash {
 	return common.BytesToHash(data)
 }
 
-                                                                                 
-                             
 func GetHeaderRLP(db DatabaseReader, hash common.Hash, number uint64) rlp.RawValue {
 	data, _ := db.Get(headerKey(hash, number))
 	return data
 }
 
-                                                                              
-         
 func GetHeader(db DatabaseReader, hash common.Hash, number uint64) *types.Header {
 	data := GetHeaderRLP(db, hash, number)
 	if len(data) == 0 {
@@ -168,7 +126,6 @@ func GetHeader(db DatabaseReader, hash common.Hash, number uint64) *types.Header
 	return header
 }
 
-                                                                                 
 func GetBodyRLP(db DatabaseReader, hash common.Hash, number uint64) rlp.RawValue {
 	data, _ := db.Get(blockBodyKey(hash, number))
 	return data
@@ -182,8 +139,6 @@ func blockBodyKey(hash common.Hash, number uint64) []byte {
 	return append(append(bodyPrefix, encodeBlockNumber(number)...), hash.Bytes()...)
 }
 
-                                                                              
-                           
 func GetBody(db DatabaseReader, hash common.Hash, number uint64) *types.Body {
 	data := GetBodyRLP(db, hash, number)
 	if len(data) == 0 {
@@ -197,8 +152,6 @@ func GetBody(db DatabaseReader, hash common.Hash, number uint64) *types.Body {
 	return body
 }
 
-                                                                               
-              
 func GetTd(db DatabaseReader, hash common.Hash, number uint64) *big.Int {
 	data, _ := db.Get(append(append(append(headerPrefix, encodeBlockNumber(number)...), hash[:]...), tdSuffix...))
 	if len(data) == 0 {
@@ -212,14 +165,8 @@ func GetTd(db DatabaseReader, hash common.Hash, number uint64) *big.Int {
 	return td
 }
 
-                                                                              
-                                                                               
-                                
-  
-                                                                                
-                                                                            
 func GetBlock(db DatabaseReader, hash common.Hash, number uint64) *types.Block {
-	                                              
+
 	header := GetHeader(db, hash, number)
 	if header == nil {
 		return nil
@@ -228,12 +175,10 @@ func GetBlock(db DatabaseReader, hash common.Hash, number uint64) *types.Block {
 	if body == nil {
 		return nil
 	}
-	                                  
+
 	return types.NewBlockWithHeader(header).WithBody(body.Transactions, body.Uncles)
 }
 
-                                                                                 
-                                
 func GetBlockReceipts(db DatabaseReader, hash common.Hash, number uint64) types.Receipts {
 	data, _ := db.Get(append(append(blockReceiptsPrefix, encodeBlockNumber(number)...), hash[:]...))
 	if len(data) == 0 {
@@ -251,15 +196,13 @@ func GetBlockReceipts(db DatabaseReader, hash common.Hash, number uint64) types.
 	return receipts
 }
 
-                                                                                   
-                                                               
 func GetTxLookupEntry(db DatabaseReader, hash common.Hash) (common.Hash, uint64, uint64) {
-	                                                              
+
 	data, _ := db.Get(append(lookupPrefix, hash.Bytes()...))
 	if len(data) == 0 {
 		return common.Hash{}, 0, 0
 	}
-	                                                    
+
 	var entry TxLookupEntry
 	if err := rlp.DecodeBytes(data, &entry); err != nil {
 		log.Error("Invalid lookup entry RLP", "hash", hash, "err", err)
@@ -268,10 +211,8 @@ func GetTxLookupEntry(db DatabaseReader, hash common.Hash) (common.Hash, uint64,
 	return entry.BlockHash, entry.BlockIndex, entry.Index
 }
 
-                                                                                
-                                 
 func GetTransaction(db DatabaseReader, hash common.Hash) (*types.Transaction, common.Hash, uint64, uint64) {
-	                                                                         
+
 	blockHash, blockNumber, txIndex := GetTxLookupEntry(db, hash)
 
 	if blockHash != (common.Hash{}) {
@@ -282,7 +223,7 @@ func GetTransaction(db DatabaseReader, hash common.Hash) (*types.Transaction, co
 		}
 		return body.Transactions[txIndex], blockHash, blockNumber, txIndex
 	}
-	                                                                                    
+
 	data, _ := db.Get(hash.Bytes())
 	if len(data) == 0 {
 		return nil, common.Hash{}, 0, 0
@@ -291,7 +232,7 @@ func GetTransaction(db DatabaseReader, hash common.Hash) (*types.Transaction, co
 	if err := rlp.DecodeBytes(data, &tx); err != nil {
 		return nil, common.Hash{}, 0, 0
 	}
-	                                              
+
 	data, _ = db.Get(append(hash.Bytes(), oldTxMetaSuffix...))
 	if len(data) == 0 {
 		return nil, common.Hash{}, 0, 0
@@ -303,10 +244,8 @@ func GetTransaction(db DatabaseReader, hash common.Hash) (*types.Transaction, co
 	return &tx, entry.BlockHash, entry.BlockIndex, entry.Index
 }
 
-                                                                                    
-                                 
 func GetReceipt(db DatabaseReader, hash common.Hash) (*types.Receipt, common.Hash, uint64, uint64) {
-	                                                                         
+
 	blockHash, blockNumber, receiptIndex := GetTxLookupEntry(db, hash)
 
 	if blockHash != (common.Hash{}) {
@@ -317,7 +256,7 @@ func GetReceipt(db DatabaseReader, hash common.Hash) (*types.Receipt, common.Has
 		}
 		return receipts[receiptIndex], blockHash, blockNumber, receiptIndex
 	}
-	                                                                           
+
 	data, _ := db.Get(append(oldReceiptsPrefix, hash[:]...))
 	if len(data) == 0 {
 		return nil, common.Hash{}, 0, 0
@@ -330,8 +269,6 @@ func GetReceipt(db DatabaseReader, hash common.Hash) (*types.Receipt, common.Has
 	return (*types.Receipt)(&receipt), common.Hash{}, 0, 0
 }
 
-                                                                                
-                                  
 func GetBloomBits(db DatabaseReader, bit uint, section uint64, head common.Hash) ([]byte, error) {
 	key := append(append(bloomBitsPrefix, make([]byte, 10)...), head.Bytes()...)
 
@@ -341,7 +278,6 @@ func GetBloomBits(db DatabaseReader, bit uint, section uint64, head common.Hash)
 	return db.Get(key)
 }
 
-                                                                           
 func WriteCanonicalHash(db epvdb.Putter, hash common.Hash, number uint64) error {
 	key := append(append(headerPrefix, encodeBlockNumber(number)...), numSuffix...)
 	if err := db.Put(key, hash.Bytes()); err != nil {
@@ -350,7 +286,6 @@ func WriteCanonicalHash(db epvdb.Putter, hash common.Hash, number uint64) error 
 	return nil
 }
 
-                                                     
 func WriteHeadHeaderHash(db epvdb.Putter, hash common.Hash) error {
 	if err := db.Put(headHeaderKey, hash.Bytes()); err != nil {
 		log.Crit("Failed to store last header's hash", "err", err)
@@ -358,7 +293,6 @@ func WriteHeadHeaderHash(db epvdb.Putter, hash common.Hash) error {
 	return nil
 }
 
-                                                   
 func WriteHeadBlockHash(db epvdb.Putter, hash common.Hash) error {
 	if err := db.Put(headBlockKey, hash.Bytes()); err != nil {
 		log.Crit("Failed to store last block's hash", "err", err)
@@ -366,7 +300,6 @@ func WriteHeadBlockHash(db epvdb.Putter, hash common.Hash) error {
 	return nil
 }
 
-                                                            
 func WriteHeadFastBlockHash(db epvdb.Putter, hash common.Hash) error {
 	if err := db.Put(headFastKey, hash.Bytes()); err != nil {
 		log.Crit("Failed to store last fast block's hash", "err", err)
@@ -374,7 +307,6 @@ func WriteHeadFastBlockHash(db epvdb.Putter, hash common.Hash) error {
 	return nil
 }
 
-                                                           
 func WriteHeader(db epvdb.Putter, header *types.Header) error {
 	data, err := rlp.EncodeToBytes(header)
 	if err != nil {
@@ -394,7 +326,6 @@ func WriteHeader(db epvdb.Putter, header *types.Header) error {
 	return nil
 }
 
-                                                              
 func WriteBody(db epvdb.Putter, hash common.Hash, number uint64, body *types.Body) error {
 	data, err := rlp.EncodeToBytes(body)
 	if err != nil {
@@ -403,7 +334,6 @@ func WriteBody(db epvdb.Putter, hash common.Hash, number uint64, body *types.Bod
 	return WriteBodyRLP(db, hash, number, data)
 }
 
-                                                                      
 func WriteBodyRLP(db epvdb.Putter, hash common.Hash, number uint64, rlp rlp.RawValue) error {
 	key := append(append(bodyPrefix, encodeBlockNumber(number)...), hash.Bytes()...)
 	if err := db.Put(key, rlp); err != nil {
@@ -412,7 +342,6 @@ func WriteBodyRLP(db epvdb.Putter, hash common.Hash, number uint64, rlp rlp.RawV
 	return nil
 }
 
-                                                                        
 func WriteTd(db epvdb.Putter, hash common.Hash, number uint64, td *big.Int) error {
 	data, err := rlp.EncodeToBytes(td)
 	if err != nil {
@@ -425,24 +354,20 @@ func WriteTd(db epvdb.Putter, hash common.Hash, number uint64, td *big.Int) erro
 	return nil
 }
 
-                                                                               
 func WriteBlock(db epvdb.Putter, block *types.Block) error {
-	                                                      
+
 	if err := WriteBody(db, block.Hash(), block.NumberU64(), block.Body()); err != nil {
 		return err
 	}
-	                                                       
+
 	if err := WriteHeader(db, block.Header()); err != nil {
 		return err
 	}
 	return nil
 }
 
-                                                                              
-                                                                           
-                                     
 func WriteBlockReceipts(db epvdb.Putter, hash common.Hash, number uint64, receipts types.Receipts) error {
-	                                                                  
+
 	storageReceipts := make([]*types.ReceiptForStorage, len(receipts))
 	for i, receipt := range receipts {
 		storageReceipts[i] = (*types.ReceiptForStorage)(receipt)
@@ -451,7 +376,7 @@ func WriteBlockReceipts(db epvdb.Putter, hash common.Hash, number uint64, receip
 	if err != nil {
 		return err
 	}
-	                                    
+
 	key := append(append(blockReceiptsPrefix, encodeBlockNumber(number)...), hash.Bytes()...)
 	if err := db.Put(key, bytes); err != nil {
 		log.Crit("Failed to store block receipts", "err", err)
@@ -459,10 +384,8 @@ func WriteBlockReceipts(db epvdb.Putter, hash common.Hash, number uint64, receip
 	return nil
 }
 
-                                                                               
-                                                                
 func WriteTxLookupEntries(db epvdb.Putter, block *types.Block) error {
-	                                                        
+
 	for i, tx := range block.Transactions() {
 		entry := TxLookupEntry{
 			BlockHash:  block.Hash(),
@@ -480,8 +403,6 @@ func WriteTxLookupEntries(db epvdb.Putter, block *types.Block) error {
 	return nil
 }
 
-                                                                                
-                         
 func WriteBloomBits(db epvdb.Putter, bit uint, section uint64, head common.Hash, bits []byte) {
 	key := append(append(bloomBitsPrefix, make([]byte, 10)...), head.Bytes()...)
 
@@ -493,28 +414,23 @@ func WriteBloomBits(db epvdb.Putter, bit uint, section uint64, head common.Hash,
 	}
 }
 
-                                                                    
 func DeleteCanonicalHash(db DatabaseDeleter, number uint64) {
 	db.Delete(append(append(headerPrefix, encodeBlockNumber(number)...), numSuffix...))
 }
 
-                                                                     
 func DeleteHeader(db DatabaseDeleter, hash common.Hash, number uint64) {
 	db.Delete(append(blockHashPrefix, hash.Bytes()...))
 	db.Delete(append(append(headerPrefix, encodeBlockNumber(number)...), hash.Bytes()...))
 }
 
-                                                                 
 func DeleteBody(db DatabaseDeleter, hash common.Hash, number uint64) {
 	db.Delete(append(append(bodyPrefix, encodeBlockNumber(number)...), hash.Bytes()...))
 }
 
-                                                                           
 func DeleteTd(db DatabaseDeleter, hash common.Hash, number uint64) {
 	db.Delete(append(append(append(headerPrefix, encodeBlockNumber(number)...), hash.Bytes()...), tdSuffix...))
 }
 
-                                                             
 func DeleteBlock(db DatabaseDeleter, hash common.Hash, number uint64) {
 	DeleteBlockReceipts(db, hash, number)
 	DeleteHeader(db, hash, number)
@@ -522,23 +438,18 @@ func DeleteBlock(db DatabaseDeleter, hash common.Hash, number uint64) {
 	DeleteTd(db, hash, number)
 }
 
-                                                                             
 func DeleteBlockReceipts(db DatabaseDeleter, hash common.Hash, number uint64) {
 	db.Delete(append(append(blockReceiptsPrefix, encodeBlockNumber(number)...), hash.Bytes()...))
 }
 
-                                                                           
 func DeleteTxLookupEntry(db DatabaseDeleter, hash common.Hash) {
 	db.Delete(append(lookupPrefix, hash.Bytes()...))
 }
 
-                                                                                      
 func PreimageTable(db epvdb.Database) epvdb.Database {
 	return epvdb.NewTable(db, preimagePrefix)
 }
 
-                                                                                       
-                                                             
 func WritePreimages(db epvdb.Database, number uint64, preimages map[common.Hash][]byte) error {
 	table := PreimageTable(db)
 	batch := table.NewBatch()
@@ -559,7 +470,6 @@ func WritePreimages(db epvdb.Database, number uint64, preimages map[common.Hash]
 	return nil
 }
 
-                                                         
 func GetBlockChainVersion(db DatabaseReader) int {
 	var vsn uint
 	enc, _ := db.Get([]byte("BlockchainVersion"))
@@ -567,16 +477,13 @@ func GetBlockChainVersion(db DatabaseReader) int {
 	return int(vsn)
 }
 
-                                                                 
 func WriteBlockChainVersion(db epvdb.Putter, vsn int) {
 	enc, _ := rlp.EncodeToBytes(uint(vsn))
 	db.Put([]byte("BlockchainVersion"), enc)
 }
 
-                                                                     
 func WriteChainConfig(db epvdb.Putter, hash common.Hash, cfg *params.ChainConfig) error {
-	                                                         
-	                         
+
 	if cfg == nil {
 		return nil
 	}
@@ -589,7 +496,6 @@ func WriteChainConfig(db epvdb.Putter, hash common.Hash, cfg *params.ChainConfig
 	return db.Put(append(configPrefix, hash[:]...), jsonChainConfig)
 }
 
-                                                                          
 func GetChainConfig(db DatabaseReader, hash common.Hash) (*params.ChainConfig, error) {
 	jsonChainConfig, _ := db.Get(append(configPrefix, hash[:]...))
 	if len(jsonChainConfig) == 0 {
@@ -604,7 +510,6 @@ func GetChainConfig(db DatabaseReader, hash common.Hash) (*params.ChainConfig, e
 	return &config, nil
 }
 
-                                                                           
 func FindCommonAncestor(db DatabaseReader, a, b *types.Header) *types.Header {
 	for bn := b.Number.Uint64(); a.Number.Uint64() > bn; {
 		a = GetHeader(db, a.ParentHash, a.Number.Uint64()-1)

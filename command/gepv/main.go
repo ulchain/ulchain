@@ -1,20 +1,4 @@
-                                         
-                                    
-  
-                                                                      
-                                                                       
-                                                                    
-                                      
-  
-                                                                 
-                                                                 
-                                                               
-                                               
-  
-                                                                    
-                                                                      
 
-                                                         
 package main
 
 import (
@@ -40,17 +24,17 @@ import (
 )
 
 const (
-	clientIdentifier = "gepv"                                                   
+	clientIdentifier = "gepv"
 )
 
 var (
-	                                                             
+
 	gitCommit = ""
-	                                               
+
 	relOracle = common.HexToAddress("0xfa7b9770ca4cb04296cac84f37736d4041251cdf")
-	                                             
+
 	app = utils.NewApp(gitCommit, "the go-epvchain command line interface")
-	                                
+
 	nodeFlags = []cli.Flag{
 		utils.IdentityFlag,
 		utils.UnlockedAccountFlag,
@@ -147,34 +131,34 @@ var (
 )
 
 func init() {
-	                                        
+
 	app.Action = gepv
-	app.HideVersion = true                                          
-	app.Copyright = "Copyright 2013-2017 The go-epvchain Authors"
+	app.HideVersion = true
+	app.Copyright = "Copyright 2018 The go-epvchain Authors"
 	app.Commands = []cli.Command{
-		                   
+
 		initCommand,
 		importCommand,
 		exportCommand,
 		copydbCommand,
 		removedbCommand,
 		dumpCommand,
-		                     
+
 		monitorCommand,
-		                     
+
 		accountCommand,
 		walletCommand,
-		                     
+
 		consoleCommand,
 		attachCommand,
 		javascriptCommand,
-		                  
+
 		makecacheCommand,
 		makedagCommand,
 		versionCommand,
 		bugCommand,
 		licenseCommand,
-		                
+
 		dumpConfigCommand,
 	}
 	sort.Sort(cli.CommandsByName(app.Commands))
@@ -190,7 +174,7 @@ func init() {
 		if err := debug.Setup(ctx); err != nil {
 			return err
 		}
-		                                          
+
 		go metrics.CollectProcessMetrics(3 * time.Second)
 
 		utils.SetupNetwork(ctx)
@@ -199,7 +183,7 @@ func init() {
 
 	app.After = func(ctx *cli.Context) error {
 		debug.Exit()
-		console.Stdin.Close()                         
+		console.Stdin.Close()
 		return nil
 	}
 }
@@ -211,9 +195,6 @@ func main() {
 	}
 }
 
-                                                                                
-                                                                               
-                                                 
 func gepv(ctx *cli.Context) error {
 	node := makeFullNode(ctx)
 	startNode(ctx, node)
@@ -221,14 +202,10 @@ func gepv(ctx *cli.Context) error {
 	return nil
 }
 
-                                                                               
-                                                                               
-         
 func startNode(ctx *cli.Context, stack *node.Node) {
-	                           
+
 	utils.StartNode(stack)
 
-	                                            
 	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 
 	passwords := utils.MakePasswordList(ctx)
@@ -238,25 +215,24 @@ func startNode(ctx *cli.Context, stack *node.Node) {
 			unlockAccount(ctx, ks, trimmed, i, passwords)
 		}
 	}
-	                                                                 
+
 	events := make(chan accounts.WalletEvent, 16)
 	stack.AccountManager().Subscribe(events)
 
 	go func() {
-		                                                   
+
 		rpcClient, err := stack.Attach()
 		if err != nil {
 			utils.Fatalf("Failed to attach to self: %v", err)
 		}
 		stateReader := epvclient.NewClient(rpcClient)
 
-		                                    
 		for _, wallet := range stack.AccountManager().Wallets() {
 			if err := wallet.Open(""); err != nil {
 				log.Warn("Failed to open wallet", "url", wallet.URL(), "err", err)
 			}
 		}
-		                                           
+
 		for event := range events {
 			switch event.Kind {
 			case accounts.WalletArrived:
@@ -279,9 +255,9 @@ func startNode(ctx *cli.Context, stack *node.Node) {
 			}
 		}
 	}()
-	                                      
+
 	if ctx.GlobalBool(utils.MiningEnabledFlag.Name) || ctx.GlobalBool(utils.DeveloperFlag.Name) {
-		                                                             
+
 		if ctx.GlobalBool(utils.LightModeFlag.Name) || ctx.GlobalString(utils.SyncModeFlag.Name) == "light" {
 			utils.Fatalf("Light clients do not support mining")
 		}
@@ -289,7 +265,7 @@ func startNode(ctx *cli.Context, stack *node.Node) {
 		if err := stack.Service(&epvchain); err != nil {
 			utils.Fatalf("EPVchain service not running: %v", err)
 		}
-		                                               
+
 		if threads := ctx.GlobalInt(utils.MinerThreadsFlag.Name); threads > 0 {
 			type threaded interface {
 				SetThreads(threads int)
@@ -298,7 +274,7 @@ func startNode(ctx *cli.Context, stack *node.Node) {
 				th.SetThreads(threads)
 			}
 		}
-		                                                                
+
 		epvchain.TxPool().SetGasPrice(utils.GlobalBig(ctx, utils.GasPriceFlag.Name))
 		if err := epvchain.StartMining(true); err != nil {
 			utils.Fatalf("Failed to start mining: %v", err)

@@ -1,7 +1,3 @@
-/*
- * Copyright 2006-2008, Haiku Inc. All rights reserved.
- * Distributed under the terms of the MIT License.
- */
 
 #ifndef _USB_RAW_H_
 #define _USB_RAW_H_
@@ -39,7 +35,6 @@ typedef enum {
 	B_USB_RAW_COMMAND_ISOCHRONOUS_TRANSFER
 } usb_raw_command_id;
 
-
 typedef enum {
 	B_USB_RAW_STATUS_SUCCESS = 0,
 
@@ -56,7 +51,6 @@ typedef enum {
 
 	B_USB_RAW_STATUS_NO_MEMORY
 } usb_raw_command_status;
-
 
 typedef union {
 	struct {
@@ -177,4 +171,4 @@ typedef union {
 	} isochronous;
 } usb_raw_command;
 
-#endif // _USB_RAW_H_
+#endif 

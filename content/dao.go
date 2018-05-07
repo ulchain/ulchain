@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package params
 
@@ -22,20 +7,12 @@ import (
 	"github.com/epvchain/go-epvchain/public"
 )
 
-                                                                                 
-                                                                                    
-                                              
 var DAOForkBlockExtra = common.FromHex("0x64616f2d686172642d666f726b")
 
-                                                                                
-                                                            
 var DAOForkExtraRange = big.NewInt(10)
 
-                                                                                   
 var DAORefundContract = common.HexToAddress("0xbf4ed7b27f1d666546e30d74d50d173d20bca754")
 
-                                                                                
-                                                          
 func DAODrainList() []common.Address {
 	return []common.Address{
 		common.HexToAddress("0xd4fe7bc31cedb7bfb8a345f31e668033056b2728"),

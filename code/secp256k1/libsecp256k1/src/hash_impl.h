@@ -1,8 +1,3 @@
-/**********************************************************************
- * Copyright (c) 2014 Pieter Wuille                                   *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
 
 #ifndef _SECP256K1_HASH_IMPL_H_
 #define _SECP256K1_HASH_IMPL_H_
@@ -45,7 +40,6 @@ static void secp256k1_sha256_initialize(secp256k1_sha256_t *hash) {
     hash->bytes = 0;
 }
 
-/** Perform one SHA-256 transformation, processing 16 big endian 32-bit words. */
 static void secp256k1_sha256_transform(uint32_t* s, const uint32_t* chunk) {
     uint32_t a = s[0], b = s[1], c = s[2], d = s[3], e = s[4], f = s[5], g = s[6], h = s[7];
     uint32_t w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10, w11, w12, w13, w14, w15;
@@ -132,7 +126,7 @@ static void secp256k1_sha256_write(secp256k1_sha256_t *hash, const unsigned char
     size_t bufsize = hash->bytes & 0x3F;
     hash->bytes += len;
     while (bufsize + len >= 64) {
-        /* Fill the buffer, and process it. */
+
         memcpy(((unsigned char*)hash->buf) + bufsize, data, 64 - bufsize);
         data += 64 - bufsize;
         len -= 64 - bufsize;
@@ -140,7 +134,7 @@ static void secp256k1_sha256_write(secp256k1_sha256_t *hash, const unsigned char
         bufsize = 0;
     }
     if (len) {
-        /* Fill the buffer with what remains. */
+
         memcpy(((unsigned char*)hash->buf) + bufsize, data, len);
     }
 }
@@ -201,16 +195,14 @@ static void secp256k1_hmac_sha256_finalize(secp256k1_hmac_sha256_t *hash, unsign
     secp256k1_sha256_finalize(&hash->outer, out32);
 }
 
-
 static void secp256k1_rfc6979_hmac_sha256_initialize(secp256k1_rfc6979_hmac_sha256_t *rng, const unsigned char *key, size_t keylen) {
     secp256k1_hmac_sha256_t hmac;
     static const unsigned char zero[1] = {0x00};
     static const unsigned char one[1] = {0x01};
 
-    memset(rng->v, 0x01, 32); /* RFC6979 3.2.b. */
-    memset(rng->k, 0x00, 32); /* RFC6979 3.2.c. */
+    memset(rng->v, 0x01, 32); 
+    memset(rng->k, 0x00, 32); 
 
-    /* RFC6979 3.2.d. */
     secp256k1_hmac_sha256_initialize(&hmac, rng->k, 32);
     secp256k1_hmac_sha256_write(&hmac, rng->v, 32);
     secp256k1_hmac_sha256_write(&hmac, zero, 1);
@@ -220,7 +212,6 @@ static void secp256k1_rfc6979_hmac_sha256_initialize(secp256k1_rfc6979_hmac_sha2
     secp256k1_hmac_sha256_write(&hmac, rng->v, 32);
     secp256k1_hmac_sha256_finalize(&hmac, rng->v);
 
-    /* RFC6979 3.2.f. */
     secp256k1_hmac_sha256_initialize(&hmac, rng->k, 32);
     secp256k1_hmac_sha256_write(&hmac, rng->v, 32);
     secp256k1_hmac_sha256_write(&hmac, one, 1);
@@ -233,7 +224,7 @@ static void secp256k1_rfc6979_hmac_sha256_initialize(secp256k1_rfc6979_hmac_sha2
 }
 
 static void secp256k1_rfc6979_hmac_sha256_generate(secp256k1_rfc6979_hmac_sha256_t *rng, unsigned char *out, size_t outlen) {
-    /* RFC6979 3.2.h. */
+
     static const unsigned char zero[1] = {0x00};
     if (rng->retry) {
         secp256k1_hmac_sha256_t hmac;

@@ -1,18 +1,3 @@
-                                         
-                                    
-  
-                                                                      
-                                                                       
-                                                                    
-                                      
-  
-                                                                 
-                                                                 
-                                                               
-                                               
-  
-                                                                    
-                                                                      
 
 package main
 
@@ -53,7 +38,6 @@ var (
 	}
 )
 
-                                                                               
 var tomlSettings = toml.Config{
 	NormFieldName: func(rt reflect.Type, key string) string {
 		return key
@@ -90,7 +74,7 @@ func loadConfig(file string, cfg *gepvConfig) error {
 	defer f.Close()
 
 	err = tomlSettings.NewDecoder(bufio.NewReader(f)).Decode(cfg)
-	                                                   
+
 	if _, ok := err.(*toml.LineError); ok {
 		err = errors.New(file + ", " + err.Error())
 	}
@@ -108,7 +92,7 @@ func defaultNodeConfig() node.Config {
 }
 
 func makeConfigNode(ctx *cli.Context) (*node.Node, gepvConfig) {
-	                 
+
 	cfg := gepvConfig{
 		EPV:       epv.DefaultConfig,
 		Shh:       whisper.DefaultConfig,
@@ -116,14 +100,12 @@ func makeConfigNode(ctx *cli.Context) (*node.Node, gepvConfig) {
 		Dashboard: dashboard.DefaultConfig,
 	}
 
-	                    
 	if file := ctx.GlobalString(configFileFlag.Name); file != "" {
 		if err := loadConfig(file, &cfg); err != nil {
 			utils.Fatalf("%v", err)
 		}
 	}
 
-	               
 	utils.SetNodeConfig(ctx, &cfg.Node)
 	stack, err := node.New(&cfg.Node)
 	if err != nil {
@@ -140,7 +122,6 @@ func makeConfigNode(ctx *cli.Context) (*node.Node, gepvConfig) {
 	return stack, cfg
 }
 
-                                                                      
 func enableWhisper(ctx *cli.Context) bool {
 	for _, flag := range whisperFlags {
 		if ctx.GlobalIsSet(flag.GetName()) {
@@ -158,7 +139,7 @@ func makeFullNode(ctx *cli.Context) *node.Node {
 	if ctx.GlobalBool(utils.DashboardEnabledFlag.Name) {
 		utils.RegisterDashboardService(stack, &cfg.Dashboard, gitCommit)
 	}
-	                                                                                          
+
 	shhEnabled := enableWhisper(ctx)
 	shhAutoEnabled := !ctx.GlobalIsSet(utils.WhisperEnabledFlag.Name) && ctx.GlobalIsSet(utils.DeveloperFlag.Name)
 	if shhEnabled || shhAutoEnabled {
@@ -171,14 +152,12 @@ func makeFullNode(ctx *cli.Context) *node.Node {
 		utils.RegisterShhService(stack, &cfg.Shh)
 	}
 
-	                                              
 	if cfg.EPVstats.URL != "" {
 		utils.RegisterEPVStatsService(stack, cfg.EPVstats.URL)
 	}
 	return stack
 }
 
-                                        
 func dumpConfig(ctx *cli.Context) error {
 	_, cfg := makeConfigNode(ctx)
 	comment := ""

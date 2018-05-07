@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package epvdb
 
@@ -36,30 +21,28 @@ import (
 var OpenFileLimit = 64
 
 type LDBDatabase struct {
-	fn string                               
-	db *leveldb.DB                    
+	fn string      
+	db *leveldb.DB 
 
-	getTimer       gometrics.Timer                                                                     
-	putTimer       gometrics.Timer                                                                     
-	delTimer       gometrics.Timer                                                                        
-	missMeter      gometrics.Meter                                                        
-	readMeter      gometrics.Meter                                                           
-	writeMeter     gometrics.Meter                                                           
-	compTimeMeter  gometrics.Meter                                                                   
-	compReadMeter  gometrics.Meter                                                       
-	compWriteMeter gometrics.Meter                                                          
+	getTimer       gometrics.Timer 
+	putTimer       gometrics.Timer 
+	delTimer       gometrics.Timer 
+	missMeter      gometrics.Meter 
+	readMeter      gometrics.Meter 
+	writeMeter     gometrics.Meter 
+	compTimeMeter  gometrics.Meter 
+	compReadMeter  gometrics.Meter 
+	compWriteMeter gometrics.Meter 
 
-	quitLock sync.Mutex                                                 
-	quitChan chan chan error                                                                           
+	quitLock sync.Mutex      
+	quitChan chan chan error 
 
-	log log.Logger                                                
+	log log.Logger 
 }
 
-                                                   
 func NewLDBDatabase(file string, cache int, handles int) (*LDBDatabase, error) {
 	logger := log.New("database", file)
 
-	                                                          
 	if cache < 16 {
 		cache = 16
 	}
@@ -68,17 +51,16 @@ func NewLDBDatabase(file string, cache int, handles int) (*LDBDatabase, error) {
 	}
 	logger.Info("Allocated cache and file handles", "cache", cache, "handles", handles)
 
-	                                                    
 	db, err := leveldb.OpenFile(file, &opt.Options{
 		OpenFilesCacheCapacity: handles,
 		BlockCacheCapacity:     cache / 2 * opt.MiB,
-		WriteBuffer:            cache / 4 * opt.MiB,                                    
+		WriteBuffer:            cache / 4 * opt.MiB, 
 		Filter:                 filter.NewBloomFilter(10),
 	})
 	if _, corrupted := err.(*errors.ErrCorrupted); corrupted {
 		db, err = leveldb.RecoverFile(file, nil)
 	}
-	                                                             
+
 	if err != nil {
 		return nil, err
 	}
@@ -89,19 +71,15 @@ func NewLDBDatabase(file string, cache int, handles int) (*LDBDatabase, error) {
 	}, nil
 }
 
-                                                   
 func (db *LDBDatabase) Path() string {
 	return db.fn
 }
 
-                                              
 func (db *LDBDatabase) Put(key []byte, value []byte) error {
-	                                                 
+
 	if db.putTimer != nil {
 		defer db.putTimer.UpdateSince(time.Now())
 	}
-	                                                                 
-	                             
 
 	if db.writeMeter != nil {
 		db.writeMeter.Mark(int64(len(value)))
@@ -113,13 +91,12 @@ func (db *LDBDatabase) Has(key []byte) (bool, error) {
 	return db.db.Has(key, nil)
 }
 
-                                             
 func (db *LDBDatabase) Get(key []byte) ([]byte, error) {
-	                                                 
+
 	if db.getTimer != nil {
 		defer db.getTimer.UpdateSince(time.Now())
 	}
-	                                                               
+
 	dat, err := db.db.Get(key, nil)
 	if err != nil {
 		if db.missMeter != nil {
@@ -127,21 +104,20 @@ func (db *LDBDatabase) Get(key []byte) ([]byte, error) {
 		}
 		return nil, err
 	}
-	                                                         
+
 	if db.readMeter != nil {
 		db.readMeter.Mark(int64(len(dat)))
 	}
 	return dat, nil
-	                            
+
 }
 
-                                                     
 func (db *LDBDatabase) Delete(key []byte) error {
-	                                                    
+
 	if db.delTimer != nil {
 		defer db.delTimer.UpdateSince(time.Now())
 	}
-	                               
+
 	return db.db.Delete(key, nil)
 }
 
@@ -150,7 +126,7 @@ func (db *LDBDatabase) NewIterator() iterator.Iterator {
 }
 
 func (db *LDBDatabase) Close() {
-	                                                               
+
 	db.quitLock.Lock()
 	defer db.quitLock.Unlock()
 
@@ -173,13 +149,12 @@ func (db *LDBDatabase) LDB() *leveldb.DB {
 	return db.db
 }
 
-                                                       
 func (db *LDBDatabase) Meter(prefix string) {
-	                                                           
+
 	if !metrics.Enabled {
 		return
 	}
-	                                                               
+
 	db.getTimer = metrics.NewTimer(prefix + "user/gets")
 	db.putTimer = metrics.NewTimer(prefix + "user/puts")
 	db.delTimer = metrics.NewTimer(prefix + "user/dels")
@@ -190,7 +165,6 @@ func (db *LDBDatabase) Meter(prefix string) {
 	db.compReadMeter = metrics.NewMeter(prefix + "compact/input")
 	db.compWriteMeter = metrics.NewMeter(prefix + "compact/output")
 
-	                                                              
 	db.quitLock.Lock()
 	db.quitChan = make(chan chan error)
 	db.quitLock.Unlock()
@@ -198,32 +172,21 @@ func (db *LDBDatabase) Meter(prefix string) {
 	go db.meter(3 * time.Second)
 }
 
-                                                                             
-                         
-  
-                                                   
-                
-                                                                                      
-                                                                                         
-                                                                                        
-                                                                                        
-                                                                                        
-                                                                                        
 func (db *LDBDatabase) meter(refresh time.Duration) {
-	                                                           
+
 	counters := make([][]float64, 2)
 	for i := 0; i < 2; i++ {
 		counters[i] = make([]float64, 3)
 	}
-	                                             
+
 	for i := 1; ; i++ {
-		                              
+
 		stats, err := db.db.GetProperty("leveldb.stats")
 		if err != nil {
 			db.log.Error("Failed to read database stats", "err", err)
 			return
 		}
-		                                             
+
 		lines := strings.Split(stats, "\n")
 		for len(lines) > 0 && strings.TrimSpace(lines[0]) != "Compactions" {
 			lines = lines[1:]
@@ -234,7 +197,6 @@ func (db *LDBDatabase) meter(refresh time.Duration) {
 		}
 		lines = lines[3:]
 
-		                                                              
 		for j := 0; j < len(counters[i%2]); j++ {
 			counters[i%2][j] = 0
 		}
@@ -252,7 +214,7 @@ func (db *LDBDatabase) meter(refresh time.Duration) {
 				counters[i%2][idx] += value
 			}
 		}
-		                                  
+
 		if db.compTimeMeter != nil {
 			db.compTimeMeter.Mark(int64((counters[i%2][0] - counters[(i-1)%2][0]) * 1000 * 1000 * 1000))
 		}
@@ -262,15 +224,15 @@ func (db *LDBDatabase) meter(refresh time.Duration) {
 		if db.compWriteMeter != nil {
 			db.compWriteMeter.Mark(int64((counters[i%2][2] - counters[(i-1)%2][2]) * 1024 * 1024))
 		}
-		                                                
+
 		select {
 		case errc := <-db.quitChan:
-			                                               
+
 			errc <- nil
 			return
 
 		case <-time.After(refresh):
-			                                     
+
 		}
 	}
 }
@@ -309,8 +271,6 @@ type table struct {
 	prefix string
 }
 
-                                                                         
-          
 func NewTable(db Database, prefix string) Database {
 	return &table{
 		db:     db,
@@ -335,7 +295,7 @@ func (dt *table) Delete(key []byte) error {
 }
 
 func (dt *table) Close() {
-	                                             
+
 }
 
 type tableBatch struct {
@@ -343,7 +303,6 @@ type tableBatch struct {
 	prefix string
 }
 
-                                                                                    
 func NewTableBatch(db Database, prefix string) Batch {
 	return &tableBatch{db.NewBatch(), prefix}
 }

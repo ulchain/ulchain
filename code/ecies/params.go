@@ -1,36 +1,5 @@
-                                                  
-                                                          
-  
-                                                                     
-                                                                         
-       
-  
-                                                                      
-                                                                
-                                                               
-                                                                         
-                                                                
-                
-                                                            
-                                                                       
-                                                           
-  
-                                                                      
-                                                                    
-                                                                        
-                                                                       
-                                                                        
-                                                                   
-                                                                        
-                                                                        
-                                                                      
-                                                                        
-                                                                       
 
 package ecies
-
-                                                                     
-                                            
 
 import (
 	"crypto"
@@ -52,18 +21,12 @@ var (
 )
 
 type ECIESParams struct {
-	Hash      func() hash.Hash                 
+	Hash      func() hash.Hash 
 	hashAlgo  crypto.Hash
-	Cipher    func([]byte) (cipher.Block, error)                    
-	BlockSize int                                                                 
-	KeyLen    int                                                          
+	Cipher    func([]byte) (cipher.Block, error) 
+	BlockSize int                                
+	KeyLen    int                                
 }
-
-                             
-                                           
-                                           
-                                           
-                                           
 
 var (
 	ECIES_AES128_SHA256 = &ECIESParams{
@@ -110,8 +73,6 @@ func AddParamsForCurve(curve elliptic.Curve, params *ECIESParams) {
 	paramsFromCurve[curve] = params
 }
 
-                                                                              
-                                                      
 func ParamsFromCurve(curve elliptic.Curve) (params *ECIESParams) {
 	return paramsFromCurve[curve]
 }

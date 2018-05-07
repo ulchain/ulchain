@@ -1,6 +1,3 @@
-// Copyright 2017 Zack Guo <zack.y.guo@gmail.com>. All rights reserved.
-// Use of this source code is governed by a MIT license that can
-// be found in the LICENSE file.
 
 package termui
 
@@ -222,7 +219,6 @@ func findMatch(mux map[string]func(Event), path string) string {
 
 }
 
-// Remove all existing defined Handlers from the map
 func (es *EvtStream) ResetHandlers() {
 	for Path, _ := range es.Handlers {
 		delete(es.Handlers, Path)

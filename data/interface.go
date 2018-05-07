@@ -1,31 +1,12 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package epvdb
 
-                                                                    
-                                        
 const IdealBatchSize = 100 * 1024
 
-                                                                                             
 type Putter interface {
 	Put(key []byte, value []byte) error
 }
 
-                                                                                   
 type Database interface {
 	Putter
 	Get(key []byte) ([]byte, error)
@@ -35,12 +16,10 @@ type Database interface {
 	NewBatch() Batch
 }
 
-                                                                           
-                                                           
 type Batch interface {
 	Putter
-	ValueSize() int                               
+	ValueSize() int 
 	Write() error
-	                                   
+
 	Reset()
 }

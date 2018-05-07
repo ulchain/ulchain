@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package core
 
@@ -27,8 +12,6 @@ import (
 	"github.com/epvchain/go-epvchain/book"
 )
 
-                                                                                
-                                                                        
 type nonceHeap []uint64
 
 func (h nonceHeap) Len() int           { return len(h) }
@@ -47,15 +30,12 @@ func (h *nonceHeap) Pop() interface{} {
 	return x
 }
 
-                                                                                
-                                                           
 type txSortedMap struct {
-	items map[uint64]*types.Transaction                                         
-	index *nonceHeap                                                                                      
-	cache types.Transactions                                                       
+	items map[uint64]*types.Transaction 
+	index *nonceHeap                    
+	cache types.Transactions            
 }
 
-                                                             
 func newTxSortedMap() *txSortedMap {
 	return &txSortedMap{
 		items: make(map[uint64]*types.Transaction),
@@ -63,13 +43,10 @@ func newTxSortedMap() *txSortedMap {
 	}
 }
 
-                                                                          
 func (m *txSortedMap) Get(nonce uint64) *types.Transaction {
 	return m.items[nonce]
 }
 
-                                                                            
-                                                                                
 func (m *txSortedMap) Put(tx *types.Transaction) {
 	nonce := tx.Nonce()
 	if m.items[nonce] == nil {
@@ -78,38 +55,31 @@ func (m *txSortedMap) Put(tx *types.Transaction) {
 	m.items[nonce], m.cache = tx, nil
 }
 
-                                                                            
-                                                                                 
-               
 func (m *txSortedMap) Forward(threshold uint64) types.Transactions {
 	var removed types.Transactions
 
-	                                                    
 	for m.index.Len() > 0 && (*m.index)[0] < threshold {
 		nonce := heap.Pop(m.index).(uint64)
 		removed = append(removed, m.items[nonce])
 		delete(m.items, nonce)
 	}
-	                                            
+
 	if m.cache != nil {
 		m.cache = m.cache[len(removed):]
 	}
 	return removed
 }
 
-                                                                                  
-                                            
 func (m *txSortedMap) Filter(filter func(*types.Transaction) bool) types.Transactions {
 	var removed types.Transactions
 
-	                                             
 	for nonce, tx := range m.items {
 		if filter(tx) {
 			removed = append(removed, tx)
 			delete(m.items, nonce)
 		}
 	}
-	                                                              
+
 	if len(removed) > 0 {
 		*m.index = make([]uint64, 0, len(m.items))
 		for nonce := range m.items {
@@ -122,14 +92,12 @@ func (m *txSortedMap) Filter(filter func(*types.Transaction) bool) types.Transac
 	return removed
 }
 
-                                                                             
-                        
 func (m *txSortedMap) Cap(threshold int) types.Transactions {
-	                                                          
+
 	if len(m.items) <= threshold {
 		return nil
 	}
-	                                                             
+
 	var drops types.Transactions
 
 	sort.Sort(*m.index)
@@ -140,22 +108,19 @@ func (m *txSortedMap) Cap(threshold int) types.Transactions {
 	*m.index = (*m.index)[:threshold]
 	heap.Init(m.index)
 
-	                                    
 	if m.cache != nil {
 		m.cache = m.cache[:len(m.cache)-len(drops)]
 	}
 	return drops
 }
 
-                                                                              
-                         
 func (m *txSortedMap) Remove(nonce uint64) bool {
-	                                             
+
 	_, ok := m.items[nonce]
 	if !ok {
 		return false
 	}
-	                                                          
+
 	for i := 0; i < m.index.Len(); i++ {
 		if (*m.index)[i] == nonce {
 			heap.Remove(m.index, i)
@@ -168,19 +133,12 @@ func (m *txSortedMap) Remove(nonce uint64) bool {
 	return true
 }
 
-                                                                                 
-                                                                                 
-                         
-  
-                                                                               
-                                                                                 
-                                                        
 func (m *txSortedMap) Ready(start uint64) types.Transactions {
-	                                                 
+
 	if m.index.Len() == 0 || (*m.index)[0] > start {
 		return nil
 	}
-	                                                        
+
 	var ready types.Transactions
 	for next := (*m.index)[0]; m.index.Len() > 0 && (*m.index)[0] == next; next++ {
 		ready = append(ready, m.items[next])
@@ -192,16 +150,12 @@ func (m *txSortedMap) Ready(start uint64) types.Transactions {
 	return ready
 }
 
-                                                 
 func (m *txSortedMap) Len() int {
 	return len(m.items)
 }
 
-                                                                            
-                                                                              
-                                                                          
 func (m *txSortedMap) Flatten() types.Transactions {
-	                                                         
+
 	if m.cache == nil {
 		m.cache = make(types.Transactions, 0, len(m.items))
 		for _, tx := range m.items {
@@ -209,26 +163,20 @@ func (m *txSortedMap) Flatten() types.Transactions {
 		}
 		sort.Sort(types.TxByNonce(m.cache))
 	}
-	                                                     
+
 	txs := make(types.Transactions, len(m.cache))
 	copy(txs, m.cache)
 	return txs
 }
 
-                                                                                
-                                                                                
-                                                                                 
-                                                          
 type txList struct {
-	strict bool                                                         
-	txs    *txSortedMap                                                    
+	strict bool         
+	txs    *txSortedMap 
 
-	costcap *big.Int                                                                            
-	gascap  uint64                                                                                       
+	costcap *big.Int 
+	gascap  uint64   
 }
 
-                                                                                
-                                      
 func newTxList(strict bool) *txList {
 	return &txList{
 		strict:  strict,
@@ -237,30 +185,21 @@ func newTxList(strict bool) *txList {
 	}
 }
 
-                                                                               
-                                     
 func (l *txList) Overlaps(tx *types.Transaction) bool {
 	return l.txs.Get(tx.Nonce()) != nil
 }
 
-                                                                             
-                                                                              
-  
-                                                                            
-                                           
 func (l *txList) Add(tx *types.Transaction, priceBump uint64) (bool, *types.Transaction) {
-	                                                
+
 	old := l.txs.Get(tx.Nonce())
 	if old != nil {
 		threshold := new(big.Int).Div(new(big.Int).Mul(old.GasPrice(), big.NewInt(100+int64(priceBump))), big.NewInt(100))
-		                                                                   
-		                                                                    
-		                                                              
+
 		if old.GasPrice().Cmp(tx.GasPrice()) >= 0 || threshold.Cmp(tx.GasPrice()) > 0 {
 			return false, nil
 		}
 	}
-	                                                               
+
 	l.txs.Put(tx)
 	if cost := tx.Cost(); l.costcap.Cmp(cost) < 0 {
 		l.costcap = cost
@@ -271,34 +210,20 @@ func (l *txList) Add(tx *types.Transaction, priceBump uint64) (bool, *types.Tran
 	return true, old
 }
 
-                                                                             
-                                                                                 
-               
 func (l *txList) Forward(threshold uint64) types.Transactions {
 	return l.txs.Forward(threshold)
 }
 
-                                                                                
-                                                                              
-                                                                          
-            
-  
-                                                                                   
-                                                                                      
-                                                                                     
-                                      
 func (l *txList) Filter(costLimit *big.Int, gasLimit uint64) (types.Transactions, types.Transactions) {
-	                                                             
+
 	if l.costcap.Cmp(costLimit) <= 0 && l.gascap <= gasLimit {
 		return nil, nil
 	}
-	l.costcap = new(big.Int).Set(costLimit)                                    
+	l.costcap = new(big.Int).Set(costLimit) 
 	l.gascap = gasLimit
 
-	                                                            
 	removed := l.txs.Filter(func(tx *types.Transaction) bool { return tx.Cost().Cmp(costLimit) > 0 || tx.Gas() > gasLimit })
 
-	                                                                 
 	var invalids types.Transactions
 
 	if l.strict && len(removed) > 0 {
@@ -313,58 +238,39 @@ func (l *txList) Filter(costLimit *big.Int, gasLimit uint64) (types.Transactions
 	return removed, invalids
 }
 
-                                                                             
-                        
 func (l *txList) Cap(threshold int) types.Transactions {
 	return l.txs.Cap(threshold)
 }
 
-                                                                               
-                                                                               
-                                   
 func (l *txList) Remove(tx *types.Transaction) (bool, types.Transactions) {
-	                                      
+
 	nonce := tx.Nonce()
 	if removed := l.txs.Remove(nonce); !removed {
 		return false, nil
 	}
-	                                                         
+
 	if l.strict {
 		return true, l.txs.Filter(func(tx *types.Transaction) bool { return tx.Nonce() > nonce })
 	}
 	return true, nil
 }
 
-                                                                                 
-                                                                                 
-                         
-  
-                                                                               
-                                                                                 
-                                                        
 func (l *txList) Ready(start uint64) types.Transactions {
 	return l.txs.Ready(start)
 }
 
-                                                  
 func (l *txList) Len() int {
 	return l.txs.Len()
 }
 
-                                                                  
 func (l *txList) Empty() bool {
 	return l.Len() == 0
 }
 
-                                                                            
-                                                                              
-                                                                          
 func (l *txList) Flatten() types.Transactions {
 	return l.txs.Flatten()
 }
 
-                                                                                
-                                                               
 type priceHeap []*types.Transaction
 
 func (h priceHeap) Len() int           { return len(h) }
@@ -383,15 +289,12 @@ func (h *priceHeap) Pop() interface{} {
 	return x
 }
 
-                                                                              
-                                        
 type txPricedList struct {
-	all    *map[common.Hash]*types.Transaction                                          
-	items  *priceHeap                                                                          
-	stales int                                                                                     
+	all    *map[common.Hash]*types.Transaction 
+	items  *priceHeap                          
+	stales int                                 
 }
 
-                                                               
 func newTxPricedList(all *map[common.Hash]*types.Transaction) *txPricedList {
 	return &txPricedList{
 		all:   all,
@@ -399,21 +302,17 @@ func newTxPricedList(all *map[common.Hash]*types.Transaction) *txPricedList {
 	}
 }
 
-                                               
 func (l *txPricedList) Put(tx *types.Transaction) {
 	heap.Push(l.items, tx)
 }
 
-                                                                               
-                                                                               
-                                                             
 func (l *txPricedList) Removed() {
-	                                                            
+
 	l.stales++
 	if l.stales <= len(*l.items)/4 {
 		return
 	}
-	                                                                      
+
 	reheap := make(priceHeap, 0, len(*l.all))
 
 	l.stales, l.items = 0, &reheap
@@ -423,25 +322,23 @@ func (l *txPricedList) Removed() {
 	heap.Init(l.items)
 }
 
-                                                                             
-                                                                                 
 func (l *txPricedList) Cap(threshold *big.Int, local *accountSet) types.Transactions {
-	drop := make(types.Transactions, 0, 128)                                           
-	save := make(types.Transactions, 0, 64)                                           
+	drop := make(types.Transactions, 0, 128) 
+	save := make(types.Transactions, 0, 64)  
 
 	for len(*l.items) > 0 {
-		                                                     
+
 		tx := heap.Pop(l.items).(*types.Transaction)
 		if _, ok := (*l.all)[tx.Hash()]; !ok {
 			l.stales--
 			continue
 		}
-		                                                   
+
 		if tx.GasPrice().Cmp(threshold) >= 0 {
 			save = append(save, tx)
 			break
 		}
-		                                                    
+
 		if local.containsTx(tx) {
 			save = append(save, tx)
 		} else {
@@ -454,14 +351,12 @@ func (l *txPricedList) Cap(threshold *big.Int, local *accountSet) types.Transact
 	return drop
 }
 
-                                                                                
-                                                     
 func (l *txPricedList) Underpriced(tx *types.Transaction, local *accountSet) bool {
-	                                           
+
 	if local.containsTx(tx) {
 		return false
 	}
-	                                                        
+
 	for len(*l.items) > 0 {
 		head := []*types.Transaction(*l.items)[0]
 		if _, ok := (*l.all)[head.Hash()]; !ok {
@@ -471,29 +366,27 @@ func (l *txPricedList) Underpriced(tx *types.Transaction, local *accountSet) boo
 		}
 		break
 	}
-	                                                 
+
 	if len(*l.items) == 0 {
-		log.Error("Pricing query for empty pool")                                                         
+		log.Error("Pricing query for empty pool") 
 		return false
 	}
 	cheapest := []*types.Transaction(*l.items)[0]
 	return cheapest.GasPrice().Cmp(tx.GasPrice()) >= 0
 }
 
-                                                                                 
-                                                                         
 func (l *txPricedList) Discard(count int, local *accountSet) types.Transactions {
-	drop := make(types.Transactions, 0, count)                                           
-	save := make(types.Transactions, 0, 64)                                             
+	drop := make(types.Transactions, 0, count) 
+	save := make(types.Transactions, 0, 64)    
 
 	for len(*l.items) > 0 && count > 0 {
-		                                                     
+
 		tx := heap.Pop(l.items).(*types.Transaction)
 		if _, ok := (*l.all)[tx.Hash()]; !ok {
 			l.stales--
 			continue
 		}
-		                                                    
+
 		if local.containsTx(tx) {
 			save = append(save, tx)
 		} else {

@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                                     
 package tracers
 
 import (
@@ -24,10 +8,8 @@ import (
 	"github.com/epvchain/go-epvchain/epv/tracers/internal/tracers"
 )
 
-                                                            
 var all = make(map[string]string)
 
-                                                                       
 func camel(str string) string {
 	pieces := strings.Split(str, "_")
 	for i := 1; i < len(pieces); i++ {
@@ -36,7 +18,6 @@ func camel(str string) string {
 	return strings.Join(pieces, "")
 }
 
-                                                                             
 func init() {
 	for _, file := range tracers.AssetNames() {
 		name := camel(strings.TrimSuffix(file, ".js"))
@@ -44,7 +25,6 @@ func init() {
 	}
 }
 
-                                                         
 func tracer(name string) (string, bool) {
 	if tracer, ok := all[name]; ok {
 		return tracer, true

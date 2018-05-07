@@ -1,20 +1,4 @@
-                                         
-                                    
-  
-                                                                      
-                                                                       
-                                                                    
-                                      
-  
-                                                                 
-                                                                 
-                                                               
-                                               
-  
-                                                                    
-                                                                      
 
-                                                                             
 package utils
 
 import (
@@ -89,12 +73,11 @@ GLOBAL OPTIONS:
 	cli.CommandHelpTemplate = CommandHelpTemplate
 }
 
-                                            
 func NewApp(gitCommit, usage string) *cli.App {
 	app := cli.NewApp()
 	app.Name = filepath.Base(os.Args[0])
 	app.Author = ""
-	                   
+
 	app.Email = ""
 	app.Version = params.Version
 	if len(gitCommit) >= 8 {
@@ -104,15 +87,8 @@ func NewApp(gitCommit, usage string) *cli.App {
 	return app
 }
 
-                                                   
-                                                          
-                                              
-  
-                                                           
-                                 
-
 var (
-	                   
+
 	DataDirFlag = DirectoryFlag{
 		Name:  "datadir",
 		Usage: "Data directory for the databases and keystore",
@@ -189,7 +165,7 @@ var (
 		Name:  "lightkdf",
 		Usage: "Reduce key-derivation RAM & CPU usage at some expense of KDF strength",
 	}
-	                     
+
 	DashboardEnabledFlag = cli.BoolFlag{
 		Name:  "dashboard",
 		Usage: "Enable the dashboard",
@@ -214,7 +190,7 @@ var (
 		Usage: "Developer flag to serve the dashboard from the local file system",
 		Value: dashboard.DefaultConfig.Assets,
 	}
-	                   
+
 	EPVhashCacheDirFlag = DirectoryFlag{
 		Name:  "epvhash.cachedir",
 		Usage: "Directory to store the epvhash verification caches (default = inside the datadir)",
@@ -244,7 +220,7 @@ var (
 		Usage: "Number of recent epvhash mining DAGs to keep on disk (1+GB each)",
 		Value: epv.DefaultConfig.EPVhash.DatasetsOnDisk,
 	}
-	                            
+
 	TxPoolNoLocalsFlag = cli.BoolFlag{
 		Name:  "txpool.nolocals",
 		Usage: "Disables price exemptions for locally submitted transactions",
@@ -294,7 +270,7 @@ var (
 		Usage: "Maximum amount of time non-executable transaction are queued",
 		Value: epv.DefaultConfig.TxPool.Lifetime,
 	}
-	                              
+
 	CacheFlag = cli.IntFlag{
 		Name:  "cache",
 		Usage: "Megabytes of memory allocated to internal caching",
@@ -315,7 +291,7 @@ var (
 		Usage: "Number of trie node generations to keep in memory",
 		Value: int(state.MaxTrieCacheGen),
 	}
-	                 
+
 	MiningEnabledFlag = cli.BoolFlag{
 		Name:  "mine",
 		Usage: "Enable mining",
@@ -344,7 +320,7 @@ var (
 		Name:  "extradata",
 		Usage: "Block extra data set by the miner (default = client version)",
 	}
-	                   
+
 	UnlockedAccountFlag = cli.StringFlag{
 		Name:  "unlock",
 		Usage: "Comma separated list of accounts to unlock",
@@ -360,7 +336,7 @@ var (
 		Name:  "vmdebug",
 		Usage: "Record information useful for VM and contract debugging",
 	}
-	                             
+
 	EPVStatsURLFlag = cli.StringFlag{
 		Name:  "epvstats",
 		Usage: "Reporting URL of a epvstats service (nodename:secret@host:port)",
@@ -377,7 +353,7 @@ var (
 		Name:  "nocompaction",
 		Usage: "Disables db compaction after import",
 	}
-	               
+
 	RPCEnabledFlag = cli.BoolFlag{
 		Name:  "rpc",
 		Usage: "Enable the HTTP-RPC server",
@@ -448,7 +424,6 @@ var (
 		Usage: "Comma separated list of JavaScript files to preload into the console",
 	}
 
-	                   
 	MaxPeersFlag = cli.IntFlag{
 		Name:  "maxpeers",
 		Usage: "Maximum number of network peers (network disabled if set to 0)",
@@ -505,14 +480,12 @@ var (
 		Usage: "Restricts network communication to the given IP networks (CIDR masks)",
 	}
 
-	                                                    
 	JSpathFlag = cli.StringFlag{
 		Name:  "jspath",
 		Usage: "JavaScript root path for `loadScript`",
 		Value: ".",
 	}
 
-	                            
 	GpoBlocksFlag = cli.IntFlag{
 		Name:  "gpoblocks",
 		Usage: "Number of recent blocks to check for gas prices",
@@ -539,9 +512,6 @@ var (
 	}
 )
 
-                                                                            
-                                                                                 
-                                                            
 func MakeDataDir(ctx *cli.Context) string {
 	if path := ctx.GlobalString(DataDirFlag.Name); path != "" {
 		if ctx.GlobalBool(TestnetFlag.Name) {
@@ -556,9 +526,6 @@ func MakeDataDir(ctx *cli.Context) string {
 	return ""
 }
 
-                                                                               
-                                                                                
-                                                               
 func setNodeKey(ctx *cli.Context, cfg *p2p.Config) {
 	var (
 		hex  = ctx.GlobalString(NodeKeyHexFlag.Name)
@@ -582,15 +549,12 @@ func setNodeKey(ctx *cli.Context, cfg *p2p.Config) {
 	}
 }
 
-                                                               
 func setNodeUserIdent(ctx *cli.Context, cfg *node.Config) {
 	if identity := ctx.GlobalString(IdentityFlag.Name); len(identity) > 0 {
 		cfg.UserIdent = identity
 	}
 }
 
-                                                                            
-                                                                       
 func setBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
 	urls := params.MainnetBootnodes
 	switch {
@@ -605,7 +569,7 @@ func setBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
 	case ctx.GlobalBool(RinkebyFlag.Name):
 		urls = params.RinkebyBootnodes
 	case cfg.BootstrapNodes != nil:
-		return                                      
+		return 
 	}
 
 	cfg.BootstrapNodes = make([]*discover.Node, 0, len(urls))
@@ -619,8 +583,6 @@ func setBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
 	}
 }
 
-                                                                              
-                                                                       
 func setBootstrapNodesV5(ctx *cli.Context, cfg *p2p.Config) {
 	urls := params.DiscoveryV5Bootnodes
 	switch {
@@ -633,7 +595,7 @@ func setBootstrapNodesV5(ctx *cli.Context, cfg *p2p.Config) {
 	case ctx.GlobalBool(RinkebyFlag.Name):
 		urls = params.RinkebyBootnodes
 	case cfg.BootstrapNodesV5 != nil:
-		return                                      
+		return 
 	}
 
 	cfg.BootstrapNodesV5 = make([]*discv5.Node, 0, len(urls))
@@ -647,15 +609,12 @@ func setBootstrapNodesV5(ctx *cli.Context, cfg *p2p.Config) {
 	}
 }
 
-                                                                           
-              
 func setListenAddress(ctx *cli.Context, cfg *p2p.Config) {
 	if ctx.GlobalIsSet(ListenPortFlag.Name) {
 		cfg.ListenAddr = fmt.Sprintf(":%d", ctx.GlobalInt(ListenPortFlag.Name))
 	}
 }
 
-                                                        
 func setNAT(ctx *cli.Context, cfg *p2p.Config) {
 	if ctx.GlobalIsSet(NATFlag.Name) {
 		natif, err := nat.Parse(ctx.GlobalString(NATFlag.Name))
@@ -666,8 +625,6 @@ func setNAT(ctx *cli.Context, cfg *p2p.Config) {
 	}
 }
 
-                                                 
-                                                       
 func splitAndTrim(input string) []string {
 	result := strings.Split(input, ",")
 	for i, r := range result {
@@ -676,8 +633,6 @@ func splitAndTrim(input string) []string {
 	return result
 }
 
-                                                                      
-                                                                        
 func setHTTP(ctx *cli.Context, cfg *node.Config) {
 	if ctx.GlobalBool(RPCEnabledFlag.Name) && cfg.HTTPHost == "" {
 		cfg.HTTPHost = "127.0.0.1"
@@ -699,8 +654,6 @@ func setHTTP(ctx *cli.Context, cfg *node.Config) {
 	cfg.HTTPVirtualHosts = splitAndTrim(ctx.GlobalString(RPCVirtualHostsFlag.Name))
 }
 
-                                                                         
-                                                                        
 func setWS(ctx *cli.Context, cfg *node.Config) {
 	if ctx.GlobalBool(WSEnabledFlag.Name) && cfg.WSHost == "" {
 		cfg.WSHost = "127.0.0.1"
@@ -720,8 +673,6 @@ func setWS(ctx *cli.Context, cfg *node.Config) {
 	}
 }
 
-                                                                            
-                                                                             
 func setIPC(ctx *cli.Context, cfg *node.Config) {
 	checkExclusive(ctx, IPCDisabledFlag, IPCPathFlag)
 	switch {
@@ -732,8 +683,6 @@ func setIPC(ctx *cli.Context, cfg *node.Config) {
 	}
 }
 
-                                                                                
-                                                                        
 func makeDatabaseHandles() int {
 	limit, err := fdlimit.Current()
 	if err != nil {
@@ -744,20 +693,18 @@ func makeDatabaseHandles() int {
 			Fatalf("Failed to raise file descriptor allowance: %v", err)
 		}
 	}
-	if limit > 2048 {                                                           
+	if limit > 2048 { 
 		limit = 2048
 	}
-	return limit / 2                                             
+	return limit / 2 
 }
 
-                                                                                
-                                                                      
 func MakeAddress(ks *keystore.KeyStore, account string) (accounts.Account, error) {
-	                                                         
+
 	if common.IsHexAddress(account) {
 		return accounts.Account{Address: common.HexToAddress(account)}, nil
 	}
-	                                                             
+
 	index, err := strconv.Atoi(account)
 	if err != nil || index < 0 {
 		return accounts.Account{}, fmt.Errorf("invalid account address or index %q", account)
@@ -775,8 +722,6 @@ func MakeAddress(ks *keystore.KeyStore, account string) (accounts.Account, error
 	return accs[index], nil
 }
 
-                                                                        
-                                                          
 func setEPVCbase(ctx *cli.Context, ks *keystore.KeyStore, cfg *epv.Config) {
 	if ctx.GlobalIsSet(EPVCbaseFlag.Name) {
 		account, err := MakeAddress(ks, ctx.GlobalString(EPVCbaseFlag.Name))
@@ -787,7 +732,6 @@ func setEPVCbase(ctx *cli.Context, ks *keystore.KeyStore, cfg *epv.Config) {
 	}
 }
 
-                                                                                               
 func MakePasswordList(ctx *cli.Context) []string {
 	path := ctx.GlobalString(PasswordFileFlag.Name)
 	if path == "" {
@@ -798,7 +742,7 @@ func MakePasswordList(ctx *cli.Context) []string {
 		Fatalf("Failed to read password file: %v", err)
 	}
 	lines := strings.Split(string(text), "\n")
-	                             
+
 	for i := range lines {
 		lines[i] = strings.TrimRight(lines[i], "\r")
 	}
@@ -842,9 +786,6 @@ func SetP2PConfig(ctx *cli.Context, cfg *p2p.Config) {
 		cfg.NoDiscovery = true
 	}
 
-	                                                                                
-	                                                                                     
-	                                                                                      
 	forceV5Discovery := (lightClient || lightServer) && !ctx.GlobalBool(NoDiscoverFlag.Name)
 	if ctx.GlobalIsSet(DiscoveryV5Flag.Name) {
 		cfg.DiscoveryV5 = ctx.GlobalBool(DiscoveryV5Flag.Name)
@@ -861,7 +802,7 @@ func SetP2PConfig(ctx *cli.Context, cfg *p2p.Config) {
 	}
 
 	if ctx.GlobalBool(DeveloperFlag.Name) {
-		                                       
+
 		cfg.MaxPeers = 0
 		cfg.ListenAddr = ":0"
 		cfg.NoDiscovery = true
@@ -869,7 +810,6 @@ func SetP2PConfig(ctx *cli.Context, cfg *p2p.Config) {
 	}
 }
 
-                                                                       
 func SetNodeConfig(ctx *cli.Context, cfg *node.Config) {
 	SetP2PConfig(ctx, &cfg.P2P)
 	setIPC(ctx, cfg)
@@ -881,7 +821,7 @@ func SetNodeConfig(ctx *cli.Context, cfg *node.Config) {
 	case ctx.GlobalIsSet(DataDirFlag.Name):
 		cfg.DataDir = ctx.GlobalString(DataDirFlag.Name)
 	case ctx.GlobalBool(DeveloperFlag.Name):
-		cfg.DataDir = ""                                                     
+		cfg.DataDir = "" 
 	case ctx.GlobalBool(TestnetFlag.Name):
 		cfg.DataDir = filepath.Join(node.DefaultDataDir(), "testnet")
 	case ctx.GlobalBool(RinkebyFlag.Name):
@@ -962,24 +902,21 @@ func setEPVhash(ctx *cli.Context, cfg *epv.Config) {
 	}
 }
 
-                                                                                
-                                                                              
-                         
 func checkExclusive(ctx *cli.Context, args ...interface{}) {
 	set := make([]string, 0, 1)
 	for i := 0; i < len(args); i++ {
-		                                                            
+
 		flag, ok := args[i].(cli.Flag)
 		if !ok {
 			panic(fmt.Sprintf("invalid argument, not cli.Flag type: %T", args[i]))
 		}
-		                                                              
+
 		name := flag.GetName()
 
 		if i+1 < len(args) {
 			switch option := args[i+1].(type) {
 			case string:
-				                                                         
+
 				if ctx.GlobalString(flag.GetName()) == option {
 					name += "=" + option
 				}
@@ -990,7 +927,7 @@ func checkExclusive(ctx *cli.Context, args ...interface{}) {
 				panic(fmt.Sprintf("invalid argument, not cli.Flag or string extension: %T", args[i+1]))
 			}
 		}
-		                            
+
 		if ctx.GlobalIsSet(flag.GetName()) {
 			set = append(set, "--"+name)
 		}
@@ -1000,7 +937,6 @@ func checkExclusive(ctx *cli.Context, args ...interface{}) {
 	}
 }
 
-                                                                     
 func SetShhConfig(ctx *cli.Context, stack *node.Node, cfg *whisper.Config) {
 	if ctx.GlobalIsSet(WhisperMaxMessageSizeFlag.Name) {
 		cfg.MaxMessageSize = uint32(ctx.GlobalUint(WhisperMaxMessageSizeFlag.Name))
@@ -1010,9 +946,8 @@ func SetShhConfig(ctx *cli.Context, stack *node.Node, cfg *whisper.Config) {
 	}
 }
 
-                                                                     
 func SetEPVConfig(ctx *cli.Context, stack *node.Node, cfg *epv.Config) {
-	                                  
+
 	checkExclusive(ctx, DeveloperFlag, TestnetFlag, RinkebyFlag)
 	checkExclusive(ctx, FastSyncFlag, LightModeFlag, SyncModeFlag)
 	checkExclusive(ctx, LightServFlag, LightModeFlag)
@@ -1068,11 +1003,10 @@ func SetEPVConfig(ctx *cli.Context, stack *node.Node, cfg *epv.Config) {
 		cfg.GasPrice = GlobalBig(ctx, GasPriceFlag.Name)
 	}
 	if ctx.GlobalIsSet(VMEnableDebugFlag.Name) {
-		                                             
+
 		cfg.EnablePreimageRecording = ctx.GlobalBool(VMEnableDebugFlag.Name)
 	}
 
-	                                                        
 	switch {
 	case ctx.GlobalBool(TestnetFlag.Name):
 		if !ctx.GlobalIsSet(NetworkIdFlag.Name) {
@@ -1085,7 +1019,7 @@ func SetEPVConfig(ctx *cli.Context, stack *node.Node, cfg *epv.Config) {
 		}
 		cfg.Genesis = core.DefaultRinkebyGenesisBlock()
 	case ctx.GlobalBool(DeveloperFlag.Name):
-		                                                     
+
 		var (
 			developer accounts.Account
 			err       error
@@ -1108,13 +1042,12 @@ func SetEPVConfig(ctx *cli.Context, stack *node.Node, cfg *epv.Config) {
 			cfg.GasPrice = big.NewInt(1)
 		}
 	}
-	                                                     
+
 	if gen := ctx.GlobalInt(TrieCacheGenFlag.Name); gen > 0 {
 		state.MaxTrieCacheGen = uint16(gen)
 	}
 }
 
-                                                                                 
 func SetDashboardConfig(ctx *cli.Context, cfg *dashboard.Config) {
 	cfg.Host = ctx.GlobalString(DashboardAddrFlag.Name)
 	cfg.Port = ctx.GlobalInt(DashboardPortFlag.Name)
@@ -1122,7 +1055,6 @@ func SetDashboardConfig(ctx *cli.Context, cfg *dashboard.Config) {
 	cfg.Assets = ctx.GlobalString(DashboardAssetsFlag.Name)
 }
 
-                                                           
 func RegisterEPVService(stack *node.Node, cfg *epv.Config) {
 	var err error
 	if cfg.SyncMode == downloader.LightSync {
@@ -1144,14 +1076,12 @@ func RegisterEPVService(stack *node.Node, cfg *epv.Config) {
 	}
 }
 
-                                                          
 func RegisterDashboardService(stack *node.Node, cfg *dashboard.Config, commit string) {
 	stack.Register(func(ctx *node.ServiceContext) (node.Service, error) {
 		return dashboard.New(cfg, commit)
 	})
 }
 
-                                                                       
 func RegisterShhService(stack *node.Node, cfg *whisper.Config) {
 	if err := stack.Register(func(n *node.ServiceContext) (node.Service, error) {
 		return whisper.New(cfg), nil
@@ -1160,11 +1090,9 @@ func RegisterShhService(stack *node.Node, cfg *whisper.Config) {
 	}
 }
 
-                                                                              
-                  
 func RegisterEPVStatsService(stack *node.Node, url string) {
 	if err := stack.Register(func(ctx *node.ServiceContext) (node.Service, error) {
-		                                     
+
 		var epvServ *epv.EPVchain
 		ctx.Service(&epvServ)
 
@@ -1177,13 +1105,11 @@ func RegisterEPVStatsService(stack *node.Node, url string) {
 	}
 }
 
-                                                                                   
 func SetupNetwork(ctx *cli.Context) {
-	                                               
+
 	params.TargetGasLimit = ctx.GlobalUint64(TargetGasLimitFlag.Name)
 }
 
-                                                                                                          
 func MakeChainDatabase(ctx *cli.Context, stack *node.Node) epvdb.Database {
 	var (
 		cache   = ctx.GlobalInt(CacheFlag.Name) * ctx.GlobalInt(CacheDatabaseFlag.Name) / 100
@@ -1213,7 +1139,6 @@ func MakeGenesis(ctx *cli.Context) *core.Genesis {
 	return genesis
 }
 
-                                                                 
 func MakeChain(ctx *cli.Context, stack *node.Node) (chain *core.BlockChain, chainDb epvdb.Database) {
 	var err error
 	chainDb = MakeChainDatabase(ctx, stack)
@@ -1257,14 +1182,12 @@ func MakeChain(ctx *cli.Context, stack *node.Node) (chain *core.BlockChain, chai
 	return chain, chainDb
 }
 
-                                                                              
-                                      
 func MakeConsolePreloads(ctx *cli.Context) []string {
-	                                                
+
 	if ctx.GlobalString(PreloadJSFlag.Name) == "" {
 		return nil
 	}
-	                                                   
+
 	preloads := []string{}
 
 	assets := ctx.GlobalString(JSpathFlag.Name)
@@ -1274,19 +1197,6 @@ func MakeConsolePreloads(ctx *cli.Context) []string {
 	return preloads
 }
 
-                                                                     
-                                                                           
-              
-  
-                                                              
-  
-                                                
-  
-                                                         
-  
-                                                                   
-                                                                            
-                                                                       
 func MigrateFlags(action func(ctx *cli.Context) error) func(*cli.Context) error {
 	return func(ctx *cli.Context) error {
 		for _, name := range ctx.FlagNames() {

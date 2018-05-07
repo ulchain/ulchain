@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package les
 
@@ -64,12 +49,10 @@ func (self *LesTxRelay) unregisterPeer(p *peer) {
 	self.peerList = self.ps.AllPeers()
 }
 
-                                                                          
-                                                                          
 func (self *LesTxRelay) send(txs types.Transactions, count int) {
 	sendTo := make(map[*peer]types.Transactions)
 
-	self.peerStartPos++                                                 
+	self.peerStartPos++ 
 	if self.peerStartPos >= len(self.peerList) {
 		self.peerStartPos = 0
 	}
@@ -97,14 +80,14 @@ func (self *LesTxRelay) send(txs types.Transactions, count int) {
 					cnt--
 				}
 				if cnt == 0 {
-					break                                          
+					break 
 				}
 				pos++
 				if pos == len(self.peerList) {
 					pos = 0
 				}
 				if pos == self.peerStartPos {
-					break                             
+					break 
 				}
 			}
 		}

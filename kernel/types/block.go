@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                                   
 package types
 
 import (
@@ -38,36 +22,28 @@ var (
 	EmptyUncleHash = CalcUncleHash(nil)
 )
 
-                                                                
-                                                                     
-                  
 type BlockNonce [8]byte
 
-                                                           
 func EncodeNonce(i uint64) BlockNonce {
 	var n BlockNonce
 	binary.BigEndian.PutUint64(n[:], i)
 	return n
 }
 
-                                                     
 func (n BlockNonce) Uint64() uint64 {
 	return binary.BigEndian.Uint64(n[:])
 }
 
-                                                        
 func (n BlockNonce) MarshalText() ([]byte, error) {
 	return hexutil.Bytes(n[:]).MarshalText()
 }
 
-                                                     
 func (n *BlockNonce) UnmarshalText(input []byte) error {
 	return hexutil.UnmarshalFixedText("BlockNonce", input, n[:])
 }
 
-                                                                                            
+//go:generate gencodec -type Header -field-override headerMarshaling -out gen_header_json.go
 
-                                                               
 type Header struct {
 	ParentHash  common.Hash    `json:"parentHash"       gencodec:"required"`
 	UncleHash   common.Hash    `json:"sha3Uncles"       gencodec:"required"`
@@ -86,7 +62,6 @@ type Header struct {
 	Nonce       BlockNonce     `json:"nonce"            gencodec:"required"`
 }
 
-                                    
 type headerMarshaling struct {
 	Difficulty *hexutil.Big
 	Number     *hexutil.Big
@@ -94,16 +69,13 @@ type headerMarshaling struct {
 	GasUsed    hexutil.Uint64
 	Time       *hexutil.Big
 	Extra      hexutil.Bytes
-	Hash       common.Hash `json:"hash"`                                      
+	Hash       common.Hash `json:"hash"` 
 }
 
-                                                                                       
-                
 func (h *Header) Hash() common.Hash {
 	return rlpHash(h)
 }
 
-                                                                                    
 func (h *Header) HashNoNonce() common.Hash {
 	return rlpHash([]interface{}{
 		h.ParentHash,
@@ -122,8 +94,6 @@ func (h *Header) HashNoNonce() common.Hash {
 	})
 }
 
-                                                                                
-                                                                     
 func (h *Header) Size() common.StorageSize {
 	return common.StorageSize(unsafe.Sizeof(*h)) + common.StorageSize(len(h.Extra)+(h.Difficulty.BitLen()+h.Number.BitLen()+h.Time.BitLen())/8)
 }
@@ -135,55 +105,37 @@ func rlpHash(x interface{}) (h common.Hash) {
 	return h
 }
 
-                                                                             
-                                                              
 type Body struct {
 	Transactions []*Transaction
 	Uncles       []*Header
 }
 
-                                                               
 type Block struct {
 	header       *Header
 	uncles       []*Header
 	transactions Transactions
 
-	         
 	hash atomic.Value
 	size atomic.Value
 
-	                                                           
-	                                              
 	td *big.Int
 
-	                                                
-	                          
 	ReceivedAt   time.Time
 	ReceivedFrom interface{}
 }
 
-                                                                              
-                                                                              
-                                                     
 func (b *Block) DeprecatedTd() *big.Int {
 	return b.td
 }
 
-                         
-                                                                 
-                                                                 
-                                         
 type StorageBlock Block
 
-                                                         
 type extblock struct {
 	Header *Header
 	Txs    []*Transaction
 	Uncles []*Header
 }
 
-                         
-                                               
 type storageblock struct {
 	Header *Header
 	Txs    []*Transaction
@@ -191,17 +143,9 @@ type storageblock struct {
 	TD     *big.Int
 }
 
-                                                          
-                                                                
-         
-  
-                                                                   
-                                                                   
-                
 func NewBlock(header *Header, txs []*Transaction, uncles []*Header, receipts []*Receipt) *Block {
 	b := &Block{header: CopyHeader(header), td: new(big.Int)}
 
-	                                           
 	if len(txs) == 0 {
 		b.header.TxHash = EmptyRootHash
 	} else {
@@ -230,15 +174,10 @@ func NewBlock(header *Header, txs []*Transaction, uncles []*Header, receipts []*
 	return b
 }
 
-                                                                     
-                                                                   
-                             
 func NewBlockWithHeader(header *Header) *Block {
 	return &Block{header: CopyHeader(header)}
 }
 
-                                                                                
-                               
 func CopyHeader(h *Header) *Header {
 	cpy := *h
 	if cpy.Time = new(big.Int); h.Time != nil {
@@ -257,7 +196,6 @@ func CopyHeader(h *Header) *Header {
 	return &cpy
 }
 
-                                 
 func (b *Block) DecodeRLP(s *rlp.Stream) error {
 	var eb extblock
 	_, size, _ := s.Kind()
@@ -269,7 +207,6 @@ func (b *Block) DecodeRLP(s *rlp.Stream) error {
 	return nil
 }
 
-                                                             
 func (b *Block) EncodeRLP(w io.Writer) error {
 	return rlp.Encode(w, extblock{
 		Header: b.header,
@@ -278,7 +215,6 @@ func (b *Block) EncodeRLP(w io.Writer) error {
 	})
 }
 
-                         
 func (b *StorageBlock) DecodeRLP(s *rlp.Stream) error {
 	var sb storageblock
 	if err := s.Decode(&sb); err != nil {
@@ -287,8 +223,6 @@ func (b *StorageBlock) DecodeRLP(s *rlp.Stream) error {
 	b.header, b.uncles, b.transactions, b.td = sb.Header, sb.Uncles, sb.Txs, sb.TD
 	return nil
 }
-
-               
 
 func (b *Block) Uncles() []*Header          { return b.uncles }
 func (b *Block) Transactions() Transactions { return b.transactions }
@@ -322,15 +256,12 @@ func (b *Block) Extra() []byte            { return common.CopyBytes(b.header.Ext
 
 func (b *Block) Header() *Header { return CopyHeader(b.header) }
 
-                                                    
 func (b *Block) Body() *Body { return &Body{b.transactions, b.uncles} }
 
 func (b *Block) HashNoNonce() common.Hash {
 	return b.header.HashNoNonce()
 }
 
-                                                                                  
-                                                            
 func (b *Block) Size() common.StorageSize {
 	if size := b.size.Load(); size != nil {
 		return size.(common.StorageSize)
@@ -352,8 +283,6 @@ func CalcUncleHash(uncles []*Header) common.Hash {
 	return rlpHash(uncles)
 }
 
-                                                                                 
-                  
 func (b *Block) WithSeal(header *Header) *Block {
 	cpy := *header
 
@@ -364,7 +293,6 @@ func (b *Block) WithSeal(header *Header) *Block {
 	}
 }
 
-                                                                              
 func (b *Block) WithBody(transactions []*Transaction, uncles []*Header) *Block {
 	block := &Block{
 		header:       CopyHeader(b.header),
@@ -378,8 +306,6 @@ func (b *Block) WithBody(transactions []*Transaction, uncles []*Header) *Block {
 	return block
 }
 
-                                                 
-                                                                
 func (b *Block) Hash() common.Hash {
 	if hash := b.hash.Load(); hash != nil {
 		return hash.(common.Hash)

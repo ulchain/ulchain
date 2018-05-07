@@ -1,11 +1,3 @@
-                                             
-           
-                  
-                 
-                   
-                 
-                    
-                     
 
 package tracers
 
@@ -192,9 +184,6 @@ func prestate_tracerJs() (*asset, error) {
 	return a, nil
 }
 
-                                                        
-                                                         
-                       
 func Asset(name string) ([]byte, error) {
 	canonicalName := strings.Replace(name, "\\", "/", -1)
 	if f, ok := _bindata[canonicalName]; ok {
@@ -207,8 +196,6 @@ func Asset(name string) ([]byte, error) {
 	return nil, fmt.Errorf("Asset %s not found", name)
 }
 
-                                                                       
-                                                         
 func MustAsset(name string) []byte {
 	a, err := Asset(name)
 	if err != nil {
@@ -218,9 +205,6 @@ func MustAsset(name string) []byte {
 	return a
 }
 
-                                                                 
-                                                         
-                       
 func AssetInfo(name string) (os.FileInfo, error) {
 	canonicalName := strings.Replace(name, "\\", "/", -1)
 	if f, ok := _bindata[canonicalName]; ok {
@@ -233,7 +217,6 @@ func AssetInfo(name string) (os.FileInfo, error) {
 	return nil, fmt.Errorf("AssetInfo %s not found", name)
 }
 
-                                              
 func AssetNames() []string {
 	names := make([]string, 0, len(_bindata))
 	for name := range _bindata {
@@ -242,7 +225,6 @@ func AssetNames() []string {
 	return names
 }
 
-                                                                         
 var _bindata = map[string]func() (*asset, error){
 	"4byte_tracer.js": _4byte_tracerJs,
 
@@ -257,19 +239,6 @@ var _bindata = map[string]func() (*asset, error){
 	"prestate_tracer.js": prestate_tracerJs,
 }
 
-                                                  
-                                                
-                                                                      
-                       
-            
-                
-             
-                
-                
-                                                                
-                                                               
-                                                                     
-                                             
 func AssetDir(name string) ([]string, error) {
 	node := _bintree
 	if len(name) != 0 {
@@ -306,7 +275,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	"prestate_tracer.js": {prestate_tracerJs, map[string]*bintree{}},
 }}
 
-                                                           
 func RestoreAsset(dir, name string) error {
 	data, err := Asset(name)
 	if err != nil {
@@ -327,14 +295,13 @@ func RestoreAsset(dir, name string) error {
 	return os.Chtimes(_filePath(dir, name), info.ModTime(), info.ModTime())
 }
 
-                                                                        
 func RestoreAssets(dir, name string) error {
 	children, err := AssetDir(name)
-	       
+
 	if err != nil {
 		return RestoreAsset(dir, name)
 	}
-	      
+
 	for _, child := range children {
 		err = RestoreAssets(dir, filepath.Join(name, child))
 		if err != nil {

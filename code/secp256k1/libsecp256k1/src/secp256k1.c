@@ -1,8 +1,3 @@
-/**********************************************************************
- * Copyright (c) 2013-2015 Pieter Wuille                              *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
 
 #include "include/secp256k1.h"
 
@@ -46,7 +41,6 @@ static const secp256k1_callback default_error_callback = {
     default_error_callback_fn,
     NULL
 };
-
 
 struct secp256k1_context_struct {
     secp256k1_ecmult_context ecmult_ctx;
@@ -116,14 +110,12 @@ void secp256k1_context_set_error_callback(secp256k1_context* ctx, void (*fun)(co
 
 static int secp256k1_pubkey_load(const secp256k1_context* ctx, secp256k1_ge* ge, const secp256k1_pubkey* pubkey) {
     if (sizeof(secp256k1_ge_storage) == 64) {
-        /* When the secp256k1_ge_storage type is exactly 64 byte, use its
-         * representation inside secp256k1_pubkey, as conversion is very fast.
-         * Note that secp256k1_pubkey_save must use the same representation. */
+
         secp256k1_ge_storage s;
         memcpy(&s, &pubkey->data[0], 64);
         secp256k1_ge_from_storage(ge, &s);
     } else {
-        /* Otherwise, fall back to 32-byte big endian for X and Y. */
+
         secp256k1_fe x, y;
         secp256k1_fe_set_b32(&x, pubkey->data);
         secp256k1_fe_set_b32(&y, pubkey->data + 32);
@@ -188,9 +180,7 @@ int secp256k1_ec_pubkey_serialize(const secp256k1_context* ctx, unsigned char *o
 static void secp256k1_ecdsa_signature_load(const secp256k1_context* ctx, secp256k1_scalar* r, secp256k1_scalar* s, const secp256k1_ecdsa_signature* sig) {
     (void)ctx;
     if (sizeof(secp256k1_scalar) == 32) {
-        /* When the secp256k1_scalar type is exactly 32 byte, use its
-         * representation inside secp256k1_ecdsa_signature, as conversion is very fast.
-         * Note that secp256k1_ecdsa_signature_save must use the same representation. */
+
         memcpy(r, &sig->data[0], 32);
         memcpy(s, &sig->data[32], 32);
     } else {
@@ -312,14 +302,7 @@ static int nonce_function_rfc6979(unsigned char *nonce32, const unsigned char *m
    int keylen = 64;
    secp256k1_rfc6979_hmac_sha256_t rng;
    unsigned int i;
-   /* We feed a byte array to the PRNG as input, consisting of:
-    * - the private key (32 bytes) and message (32 bytes), see RFC 6979 3.2d.
-    * - optionally 32 extra bytes of data, see RFC 6979 3.6 Additional Data.
-    * - optionally 16 extra bytes with the algorithm name.
-    * Because the arguments have distinct fixed lengths it is not possible for
-    *  different argument mixtures to emulate each other and result in the same
-    *  nonces.
-    */
+
    memcpy(keydata, key32, 32);
    memcpy(keydata + 32, msg32, 32);
    if (data != NULL) {
@@ -357,7 +340,7 @@ int secp256k1_ecdsa_sign(const secp256k1_context* ctx, secp256k1_ecdsa_signature
     }
 
     secp256k1_scalar_set_b32(&sec, seckey, &overflow);
-    /* Fail if the secret key is invalid. */
+
     if (!overflow && !secp256k1_scalar_is_zero(&sec)) {
         unsigned char nonce32[32];
         unsigned int count = 0;

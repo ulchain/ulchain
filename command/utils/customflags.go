@@ -1,18 +1,3 @@
-                                         
-                                    
-  
-                                                                      
-                                                                       
-                                                                    
-                                      
-  
-                                                                 
-                                                                 
-                                                               
-                                               
-  
-                                                                    
-                                                                      
 
 package utils
 
@@ -31,9 +16,6 @@ import (
 	"gopkg.in/urfave/cli.v1"
 )
 
-                                                                          
-                                                                            
-                         
 type DirectoryString struct {
 	Value string
 }
@@ -47,8 +29,6 @@ func (self *DirectoryString) Set(value string) error {
 	return nil
 }
 
-                                                                             
-                                               
 type DirectoryFlag struct {
 	Name  string
 	Value DirectoryString
@@ -71,8 +51,6 @@ func eachName(longName string, fn func(string)) {
 	}
 }
 
-                                                                     
-                                             
 func (self DirectoryFlag) Apply(set *flag.FlagSet) {
 	eachName(self.Name, func(name string) {
 		set.Var(&self.Value, self.Name, self.Usage)
@@ -84,7 +62,6 @@ type TextMarshaler interface {
 	encoding.TextUnmarshaler
 }
 
-                                                           
 type textMarshalerVal struct {
 	v TextMarshaler
 }
@@ -101,7 +78,6 @@ func (v textMarshalerVal) Set(s string) error {
 	return v.v.UnmarshalText([]byte(s))
 }
 
-                                                 
 type TextMarshalerFlag struct {
 	Name  string
 	Value TextMarshaler
@@ -122,7 +98,6 @@ func (f TextMarshalerFlag) Apply(set *flag.FlagSet) {
 	})
 }
 
-                                                                                         
 func GlobalTextMarshaler(ctx *cli.Context, name string) TextMarshaler {
 	val := ctx.GlobalGeneric(name)
 	if val == nil {
@@ -131,15 +106,12 @@ func GlobalTextMarshaler(ctx *cli.Context, name string) TextMarshaler {
 	return val.(textMarshalerVal).v
 }
 
-                                                                                 
-                      
 type BigFlag struct {
 	Name  string
 	Value *big.Int
 	Usage string
 }
 
-                                            
 type bigValue big.Int
 
 func (b *bigValue) String() string {
@@ -176,7 +148,6 @@ func (f BigFlag) Apply(set *flag.FlagSet) {
 	})
 }
 
-                                                                     
 func GlobalBig(ctx *cli.Context, name string) *big.Int {
 	val := ctx.GlobalGeneric(name)
 	if val == nil {
@@ -215,11 +186,6 @@ func (self *DirectoryFlag) Set(value string) {
 	self.Value.Value = value
 }
 
-                      
-                                       
-                                            
-                                             
-                                                                    
 func expandPath(p string) string {
 	if strings.HasPrefix(p, "~/") || strings.HasPrefix(p, "~\\") {
 		if home := homeDir(); home != "" {

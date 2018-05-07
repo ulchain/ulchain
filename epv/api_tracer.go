@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package epv
 
@@ -41,17 +26,12 @@ import (
 )
 
 const (
-	                                                                             
-	                                              
+
 	defaultTraceTimeout = 5 * time.Second
 
-	                                                                              
-	                                                                                
-	         
 	defaultTraceReexec = uint64(128)
 )
 
-                                                         
 type TraceConfig struct {
 	*vm.LogConfig
 	Tracer  *string
@@ -59,40 +39,31 @@ type TraceConfig struct {
 	Reexec  *uint64
 }
 
-                                                             
 type txTraceResult struct {
-	Result interface{} `json:"result,omitempty"`                                        
-	Error  string      `json:"error,omitempty"`                                         
+	Result interface{} `json:"result,omitempty"` 
+	Error  string      `json:"error,omitempty"`  
 }
 
-                                                                              
-                
 type blockTraceTask struct {
-	statedb *state.StateDB                                            
-	block   *types.Block                                            
-	rootref common.Hash                                               
-	results []*txTraceResult                                      
+	statedb *state.StateDB   
+	block   *types.Block     
+	rootref common.Hash      
+	results []*txTraceResult 
 }
 
-                                                                                  
-                         
 type blockTraceResult struct {
-	Block  hexutil.Uint64   `json:"block"`                                             
-	Hash   common.Hash      `json:"hash"`                                            
-	Traces []*txTraceResult `json:"traces"`                                      
+	Block  hexutil.Uint64   `json:"block"`  
+	Hash   common.Hash      `json:"hash"`   
+	Traces []*txTraceResult `json:"traces"` 
 }
 
-                                                                              
-                   
 type txTraceTask struct {
-	statedb *state.StateDB                                          
-	index   int                                              
+	statedb *state.StateDB 
+	index   int            
 }
 
-                                                                             
-                                                                          
 func (api *PrivateDebugAPI) TraceChain(ctx context.Context, start, end rpc.BlockNumber, config *TraceConfig) (*rpc.Subscription, error) {
-	                                                 
+
 	var from, to *types.Block
 
 	switch start {
@@ -111,7 +82,7 @@ func (api *PrivateDebugAPI) TraceChain(ctx context.Context, start, end rpc.Block
 	default:
 		to = api.epv.blockchain.GetBlockByNumber(uint64(end))
 	}
-	                                                
+
 	if from == nil {
 		return nil, fmt.Errorf("starting block #%d not found", start)
 	}
@@ -121,18 +92,14 @@ func (api *PrivateDebugAPI) TraceChain(ctx context.Context, start, end rpc.Block
 	return api.traceChain(ctx, from, to, config)
 }
 
-                                                                                  
-                                                                                    
-                                                     
 func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Block, config *TraceConfig) (*rpc.Subscription, error) {
-	                                                                      
+
 	notifier, supported := rpc.NotifierFromContext(ctx)
 	if !supported {
 		return &rpc.Subscription{}, rpc.ErrNotificationsUnsupported
 	}
 	sub := notifier.CreateSubscription()
 
-	                                                              
 	origin := start.NumberU64()
 	database := state.NewDatabase(api.epv.ChainDb())
 
@@ -144,12 +111,12 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 	}
 	statedb, err := state.New(start.Root(), database)
 	if err != nil {
-		                                                                                 
+
 		reexec := defaultTraceReexec
 		if config != nil && config.Reexec != nil {
 			reexec = *config.Reexec
 		}
-		                                                          
+
 		for i := uint64(0); i < reexec; i++ {
 			start = api.epv.blockchain.GetBlock(start.ParentHash(), start.NumberU64()-1)
 			if start == nil {
@@ -159,7 +126,7 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 				break
 			}
 		}
-		                                                       
+
 		if err != nil {
 			switch err.(type) {
 			case *trie.MissingNodeError:
@@ -169,7 +136,7 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 			}
 		}
 	}
-	                                                                                     
+
 	blocks := int(end.NumberU64() - origin)
 
 	threads := runtime.NumCPU()
@@ -186,11 +153,9 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 		go func() {
 			defer pend.Done()
 
-			                                               
 			for task := range tasks {
 				signer := types.MakeSigner(api.config, task.block.Number())
 
-				                                              
 				for i, tx := range task.block.Transactions() {
 					msg, _ := tx.AsMessage(signer)
 					vmctx := core.NewEVMContext(msg, task.block.Header(), api.epv.blockchain, nil)
@@ -204,7 +169,7 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 					task.statedb.DeleteSuicides()
 					task.results[i] = &txTraceResult{Result: res}
 				}
-				                                                          
+
 				select {
 				case results <- task:
 				case <-notifier.Closed():
@@ -213,7 +178,7 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 			}
 		}()
 	}
-	                                                            
+
 	begin := time.Now()
 
 	go func() {
@@ -224,7 +189,7 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 			failed error
 			proot  common.Hash
 		)
-		                                                            
+
 		defer func() {
 			close(tasks)
 			pend.Wait()
@@ -239,15 +204,15 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 			}
 			close(results)
 		}()
-		                                                                                 
+
 		for number = start.NumberU64() + 1; number <= end.NumberU64(); number++ {
-			                                             
+
 			select {
 			case <-notifier.Closed():
 				return
 			default:
 			}
-			                                                  
+
 			if time.Since(logged) > 8*time.Second {
 				if number > origin {
 					log.Info("Tracing chain segment", "start", origin, "end", end.NumberU64(), "current", number, "transactions", traced, "elapsed", time.Since(begin), "memory", database.TrieDB().Size())
@@ -256,13 +221,13 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 				}
 				logged = time.Now()
 			}
-			                                   
+
 			block := api.epv.blockchain.GetBlockByNumber(number)
 			if block == nil {
 				failed = fmt.Errorf("block #%d not found", number)
 				break
 			}
-			                                                                                   
+
 			if number > origin {
 				txs := block.Transactions()
 
@@ -273,13 +238,13 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 				}
 				traced += uint64(len(txs))
 			}
-			                                                        
+
 			_, _, _, err := api.epv.blockchain.Processor().Process(block, statedb, vm.Config{})
 			if err != nil {
 				failed = err
 				break
 			}
-			                                                                  
+
 			root, err := statedb.Commit(true)
 			if err != nil {
 				failed = err
@@ -289,25 +254,24 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 				failed = err
 				break
 			}
-			                                                              
+
 			database.TrieDB().Reference(root, common.Hash{})
 			if number >= origin {
 				database.TrieDB().Reference(root, common.Hash{})
 			}
-			                                                                
+
 			database.TrieDB().Dereference(proot, common.Hash{})
 			proot = root
 		}
 	}()
 
-	                                                            
 	go func() {
 		var (
 			done = make(map[uint64]*blockTraceResult)
 			next = origin + 1
 		)
 		for res := range results {
-			                                
+
 			result := &blockTraceResult{
 				Block:  hexutil.Uint64(res.block.NumberU64()),
 				Hash:   res.block.Hash(),
@@ -315,10 +279,8 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 			}
 			done[uint64(result.Block)] = result
 
-			                                                          
 			database.TrieDB().Dereference(res.rootref, common.Hash{})
 
-			                                                                   
 			for result, ok := done[next]; ok; result, ok = done[next] {
 				if len(result.Traces) > 0 || next == end.NumberU64() {
 					notifier.Notify(sub.ID, result)
@@ -331,10 +293,8 @@ func (api *PrivateDebugAPI) traceChain(ctx context.Context, start, end *types.Bl
 	return sub, nil
 }
 
-                                                                                 
-                                         
 func (api *PrivateDebugAPI) TraceBlockByNumber(ctx context.Context, number rpc.BlockNumber, config *TraceConfig) ([]*txTraceResult, error) {
-	                                        
+
 	var block *types.Block
 
 	switch number {
@@ -345,15 +305,13 @@ func (api *PrivateDebugAPI) TraceBlockByNumber(ctx context.Context, number rpc.B
 	default:
 		block = api.epv.blockchain.GetBlockByNumber(uint64(number))
 	}
-	                                  
+
 	if block == nil {
 		return nil, fmt.Errorf("block #%d not found", number)
 	}
 	return api.traceBlock(ctx, block, config)
 }
 
-                                                                               
-                                         
 func (api *PrivateDebugAPI) TraceBlockByHash(ctx context.Context, hash common.Hash, config *TraceConfig) ([]*txTraceResult, error) {
 	block := api.epv.blockchain.GetBlockByHash(hash)
 	if block == nil {
@@ -362,8 +320,6 @@ func (api *PrivateDebugAPI) TraceBlockByHash(ctx context.Context, hash common.Ha
 	return api.traceBlock(ctx, block, config)
 }
 
-                                                                             
-                                     
 func (api *PrivateDebugAPI) TraceBlock(ctx context.Context, blob []byte, config *TraceConfig) ([]*txTraceResult, error) {
 	block := new(types.Block)
 	if err := rlp.Decode(bytes.NewReader(blob), block); err != nil {
@@ -372,8 +328,6 @@ func (api *PrivateDebugAPI) TraceBlock(ctx context.Context, blob []byte, config 
 	return api.traceBlock(ctx, block, config)
 }
 
-                                                                                 
-                                         
 func (api *PrivateDebugAPI) TraceBlockFromFile(ctx context.Context, file string, config *TraceConfig) ([]*txTraceResult, error) {
 	blob, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -382,11 +336,8 @@ func (api *PrivateDebugAPI) TraceBlockFromFile(ctx context.Context, file string,
 	return api.TraceBlock(ctx, blob, config)
 }
 
-                                                                                  
-                                                                                    
-                                                     
 func (api *PrivateDebugAPI) traceBlock(ctx context.Context, block *types.Block, config *TraceConfig) ([]*txTraceResult, error) {
-	                                   
+
 	if err := api.epv.engine.VerifyHeader(api.epv.blockchain, block.Header(), true); err != nil {
 		return nil, err
 	}
@@ -402,7 +353,7 @@ func (api *PrivateDebugAPI) traceBlock(ctx context.Context, block *types.Block, 
 	if err != nil {
 		return nil, err
 	}
-	                                                                      
+
 	var (
 		signer = types.MakeSigner(api.config, block.Number())
 
@@ -421,7 +372,6 @@ func (api *PrivateDebugAPI) traceBlock(ctx context.Context, block *types.Block, 
 		go func() {
 			defer pend.Done()
 
-			                                                     
 			for task := range jobs {
 				msg, _ := txs[task.index].AsMessage(signer)
 				vmctx := core.NewEVMContext(msg, block.Header(), api.epv.blockchain, nil)
@@ -435,13 +385,12 @@ func (api *PrivateDebugAPI) traceBlock(ctx context.Context, block *types.Block, 
 			}
 		}()
 	}
-	                                                    
+
 	var failed error
 	for i, tx := range txs {
-		                                         
+
 		jobs <- &txTraceTask{statedb: statedb.Copy(), index: i}
 
-		                                                        
 		msg, _ := tx.AsMessage(signer)
 		vmctx := core.NewEVMContext(msg, block.Header(), api.epv.blockchain, nil)
 
@@ -450,29 +399,25 @@ func (api *PrivateDebugAPI) traceBlock(ctx context.Context, block *types.Block, 
 			failed = err
 			break
 		}
-		                                                                  
+
 		statedb.Finalise(true)
 	}
 	close(jobs)
 	pend.Wait()
 
-	                                        
 	if failed != nil {
 		return nil, failed
 	}
 	return results, nil
 }
 
-                                                                               
-                                                                               
-                                                            
 func (api *PrivateDebugAPI) computeStateDB(block *types.Block, reexec uint64) (*state.StateDB, error) {
-	                                                 
+
 	statedb, err := api.epv.blockchain.StateAt(block.Root())
 	if err == nil {
 		return statedb, nil
 	}
-	                                                                          
+
 	origin := block.NumberU64()
 	database := state.NewDatabase(api.epv.ChainDb())
 
@@ -493,19 +438,19 @@ func (api *PrivateDebugAPI) computeStateDB(block *types.Block, reexec uint64) (*
 			return nil, err
 		}
 	}
-	                                                      
+
 	var (
 		start  = time.Now()
 		logged time.Time
 		proot  common.Hash
 	)
 	for block.NumberU64() < origin {
-		                                                  
+
 		if time.Since(logged) > 8*time.Second {
 			log.Info("Regenerating historical state", "block", block.NumberU64()+1, "target", origin, "elapsed", time.Since(start))
 			logged = time.Now()
 		}
-		                                                       
+
 		if block = api.epv.blockchain.GetBlockByNumber(block.NumberU64() + 1); block == nil {
 			return nil, fmt.Errorf("block #%d not found", block.NumberU64()+1)
 		}
@@ -513,7 +458,7 @@ func (api *PrivateDebugAPI) computeStateDB(block *types.Block, reexec uint64) (*
 		if err != nil {
 			return nil, err
 		}
-		                                                                  
+
 		root, err := statedb.Commit(true)
 		if err != nil {
 			return nil, err
@@ -529,10 +474,8 @@ func (api *PrivateDebugAPI) computeStateDB(block *types.Block, reexec uint64) (*
 	return statedb, nil
 }
 
-                                                                                   
-                                     
 func (api *PrivateDebugAPI) TraceTransaction(ctx context.Context, hash common.Hash, config *TraceConfig) (interface{}, error) {
-	                                                        
+
 	tx, blockHash, _, index := core.GetTransaction(api.epv.ChainDb(), hash)
 	if tx == nil {
 		return nil, fmt.Errorf("transaction %x not found", hash)
@@ -545,33 +488,30 @@ func (api *PrivateDebugAPI) TraceTransaction(ctx context.Context, hash common.Ha
 	if err != nil {
 		return nil, err
 	}
-	                                   
+
 	return api.traceTx(ctx, msg, vmctx, statedb, config)
 }
 
-                                                                               
-                                                                                
-                       
 func (api *PrivateDebugAPI) traceTx(ctx context.Context, message core.Message, vmctx vm.Context, statedb *state.StateDB, config *TraceConfig) (interface{}, error) {
-	                                                          
+
 	var (
 		tracer vm.Tracer
 		err    error
 	)
 	switch {
 	case config != nil && config.Tracer != nil:
-		                                                            
+
 		timeout := defaultTraceTimeout
 		if config.Timeout != nil {
 			if timeout, err = time.ParseDuration(*config.Timeout); err != nil {
 				return nil, err
 			}
 		}
-		                                                 
+
 		if tracer, err = tracers.New(*config.Tracer); err != nil {
 			return nil, err
 		}
-		                                        
+
 		deadlineCtx, cancel := context.WithTimeout(ctx, timeout)
 		go func() {
 			<-deadlineCtx.Done()
@@ -585,14 +525,14 @@ func (api *PrivateDebugAPI) traceTx(ctx context.Context, message core.Message, v
 	default:
 		tracer = vm.NewStructLogger(config.LogConfig)
 	}
-	                                            
+
 	vmenv := vm.NewEVM(vmctx, statedb, api.config, vm.Config{Debug: true, Tracer: tracer})
 
 	ret, gas, failed, err := core.ApplyMessage(vmenv, message, new(core.GasPool).AddGas(message.Gas()))
 	if err != nil {
 		return nil, fmt.Errorf("tracing failed: %v", err)
 	}
-	                                                             
+
 	switch tracer := tracer.(type) {
 	case *vm.StructLogger:
 		return &epvapi.ExecutionResult{
@@ -610,9 +550,8 @@ func (api *PrivateDebugAPI) traceTx(ctx context.Context, message core.Message, v
 	}
 }
 
-                                                                           
 func (api *PrivateDebugAPI) computeTxEnv(blockHash common.Hash, txIndex int, reexec uint64) (core.Message, vm.Context, *state.StateDB, error) {
-	                                   
+
 	block := api.epv.blockchain.GetBlockByHash(blockHash)
 	if block == nil {
 		return nil, vm.Context{}, nil, fmt.Errorf("block %x not found", blockHash)
@@ -625,17 +564,17 @@ func (api *PrivateDebugAPI) computeTxEnv(blockHash common.Hash, txIndex int, ree
 	if err != nil {
 		return nil, vm.Context{}, nil, err
 	}
-	                                                 
+
 	signer := types.MakeSigner(api.config, block.Number())
 
 	for idx, tx := range block.Transactions() {
-		                                                                           
+
 		msg, _ := tx.AsMessage(signer)
 		context := core.NewEVMContext(msg, block.Header(), api.epv.blockchain, nil)
 		if idx == txIndex {
 			return msg, context, statedb, nil
 		}
-		                                                                            
+
 		vmenv := vm.NewEVM(context, statedb, api.config, vm.Config{})
 		if _, _, _, err := core.ApplyMessage(vmenv, msg, new(core.GasPool).AddGas(tx.Gas())); err != nil {
 			return nil, vm.Context{}, nil, fmt.Errorf("tx %x failed: %v", tx.Hash(), err)

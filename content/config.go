@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package params
 
@@ -24,12 +9,12 @@ import (
 )
 
 var (
-	MainnetGenesisHash = common.HexToHash("0x47b581352996c90bf12c73d0796d9e89bc847692407517224b7f70ea8db5de35")                                                    
-	TestnetGenesisHash = common.HexToHash("0x41941023680923e0fe4d74a34bdac8141f2540e3ae90623718e47d66d1ca4a2d")                                                    
+	MainnetGenesisHash = common.HexToHash("0x47b581352996c90bf12c73d0796d9e89bc847692407517224b7f70ea8db5de35") 
+	TestnetGenesisHash = common.HexToHash("0x41941023680923e0fe4d74a34bdac8141f2540e3ae90623718e47d66d1ca4a2d") 
 )
 
 var (
-	                                                                                
+
 	MainnetChainConfig = &ChainConfig{
 		ChainId:        big.NewInt(1),
 		HomesteadBlock: big.NewInt(1),
@@ -47,7 +32,6 @@ var (
 		},
 	}
 
-	                                                                                              
 	TestnetChainConfig = &ChainConfig{
 		ChainId:        big.NewInt(3),
 		HomesteadBlock: big.NewInt(0),
@@ -62,7 +46,6 @@ var (
 		EPVhash: new(EPVhashConfig),
 	}
 
-	                                                                                              
 	RinkebyChainConfig = &ChainConfig{
 		ChainId:        big.NewInt(4),
 		HomesteadBlock: big.NewInt(1),
@@ -87,37 +70,28 @@ var (
 	TestRules       = TestChainConfig.Rules(new(big.Int))
 )
 
-                                                                           
-  
-                                                                         
-                                                                      
-                                
 type ChainConfig struct {
-	ChainId *big.Int `json:"chainId"`                                                                           
+	ChainId *big.Int `json:"chainId"` 
 
-	HomesteadBlock *big.Int `json:"homesteadBlock,omitempty"`                                                                 
+	HomesteadBlock *big.Int `json:"homesteadBlock,omitempty"` 
 
-	DAOForkBlock   *big.Int `json:"daoForkBlock,omitempty"`                                                   
-	DAOForkSupport bool     `json:"daoForkSupport,omitempty"`                                                           
+	DAOForkBlock   *big.Int `json:"daoForkBlock,omitempty"`   
+	DAOForkSupport bool     `json:"daoForkSupport,omitempty"` 
 
-	                                                                                        
-	EIP150Block *big.Int    `json:"eip150Block,omitempty"`                                   
-	EIP150Hash  common.Hash `json:"eip150Hash,omitempty"`                                                                                
+	EIP150Block *big.Int    `json:"eip150Block,omitempty"` 
+	EIP150Hash  common.Hash `json:"eip150Hash,omitempty"`  
 
-	EIP155Block *big.Int `json:"eip155Block,omitempty"`                   
-	EIP158Block *big.Int `json:"eip158Block,omitempty"`                   
+	EIP155Block *big.Int `json:"eip155Block,omitempty"` 
+	EIP158Block *big.Int `json:"eip158Block,omitempty"` 
 
-	ByzantiumBlock *big.Int `json:"byzantiumBlock,omitempty"`                                                                    
+	ByzantiumBlock *big.Int `json:"byzantiumBlock,omitempty"` 
 
-	                            
 	EPVhash *EPVhashConfig `json:"epvhash,omitempty"`
 	DPos *DPosConfig `json:"dpos,omitempty"`
 }
 
-                                                                                 
 type EPVhashConfig struct{}
 
-                                                                                    
 func (c *EPVhashConfig) String() string {
 	return "epvhash"
 }
@@ -127,12 +101,10 @@ type DPosConfig struct {
 	Epoch  uint64 `json:"epoch"`
 }
 
-                                                                                    
 func (c *DPosConfig) String() string {
 	return "dpos"
 }
 
-                                                
 func (c *ChainConfig) String() string {
 	var engine interface{}
 	switch {
@@ -156,12 +128,10 @@ func (c *ChainConfig) String() string {
 	)
 }
 
-                                                                                     
 func (c *ChainConfig) IsHomestead(num *big.Int) bool {
 	return isForked(c.HomesteadBlock, num)
 }
 
-                                                                              
 func (c *ChainConfig) IsDAOFork(num *big.Int) bool {
 	return isForked(c.DAOForkBlock, num)
 }
@@ -182,9 +152,6 @@ func (c *ChainConfig) IsByzantium(num *big.Int) bool {
 	return isForked(c.ByzantiumBlock, num)
 }
 
-                                                                                                      
-  
-                                                                                 
 func (c *ChainConfig) GasTable(num *big.Int) GasTable {
 	if num == nil {
 		return GasTableHomestead
@@ -199,12 +166,9 @@ func (c *ChainConfig) GasTable(num *big.Int) GasTable {
 	}
 }
 
-                                                                               
-                                          
 func (c *ChainConfig) CheckCompatible(newcfg *ChainConfig, height uint64) *ConfigCompatError {
 	bhead := new(big.Int).SetUint64(height)
 
-	                                                       
 	var lasterr *ConfigCompatError
 	for {
 		err := c.checkCompatible(newcfg, bhead)
@@ -245,13 +209,10 @@ func (c *ChainConfig) checkCompatible(newcfg *ChainConfig, head *big.Int) *Confi
 	return nil
 }
 
-                                                                                     
-                                                  
 func isForkIncompatible(s1, s2, head *big.Int) bool {
 	return (isForked(s1, head) || isForked(s2, head)) && !configNumEqual(s1, s2)
 }
 
-                                                                                          
 func isForked(s, head *big.Int) bool {
 	if s == nil || head == nil {
 		return false
@@ -269,13 +230,11 @@ func configNumEqual(x, y *big.Int) bool {
 	return x.Cmp(y) == 0
 }
 
-                                                                                     
-                                         
 type ConfigCompatError struct {
 	What string
-	                                                     
+
 	StoredConfig, NewConfig *big.Int
-	                                                                                 
+
 	RewindTo uint64
 }
 
@@ -300,11 +259,6 @@ func (err *ConfigCompatError) Error() string {
 	return fmt.Sprintf("mismatching %s in database (have %d, want %d, rewindto %d)", err.What, err.StoredConfig, err.NewConfig, err.RewindTo)
 }
 
-                                                                                    
-                                                           
-  
-                                                                                        
-          
 type Rules struct {
 	ChainId                                   *big.Int
 	IsHomestead, IsEIP150, IsEIP155, IsEIP158 bool

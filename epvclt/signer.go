@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package epvclient
 
@@ -24,9 +9,6 @@ import (
 	"github.com/epvchain/go-epvchain/kernel/types"
 )
 
-                                                                                           
-                                                                                        
-                                
 type senderFromServer struct {
 	addr      common.Address
 	blockhash common.Hash
@@ -35,7 +17,7 @@ type senderFromServer struct {
 var errNotCached = errors.New("sender not cached")
 
 func setSenderFromServer(tx *types.Transaction, addr common.Address, block common.Hash) {
-	                                                                       
+
 	types.Sender(&senderFromServer{addr, block}, tx)
 }
 

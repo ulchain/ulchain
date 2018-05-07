@@ -1,8 +1,3 @@
-/**********************************************************************
- * Copyright (c) 2013-2015 Pieter Wuille                              *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
 
 #ifndef _SECP256K1_MODULE_RECOVERY_MAIN_
 #define _SECP256K1_MODULE_RECOVERY_MAIN_
@@ -12,9 +7,7 @@
 static void secp256k1_ecdsa_recoverable_signature_load(const secp256k1_context* ctx, secp256k1_scalar* r, secp256k1_scalar* s, int* recid, const secp256k1_ecdsa_recoverable_signature* sig) {
     (void)ctx;
     if (sizeof(secp256k1_scalar) == 32) {
-        /* When the secp256k1_scalar type is exactly 32 byte, use its
-         * representation inside secp256k1_ecdsa_signature, as conversion is very fast.
-         * Note that secp256k1_ecdsa_signature_save must use the same representation. */
+
         memcpy(r, &sig->data[0], 32);
         memcpy(s, &sig->data[32], 32);
     } else {
@@ -100,7 +93,7 @@ static int secp256k1_ecdsa_sig_recover(const secp256k1_ecmult_context *ctx, cons
     secp256k1_scalar_get_b32(brx, sigr);
     r = secp256k1_fe_set_b32(&fx, brx);
     (void)r;
-    VERIFY_CHECK(r); /* brx comes from a scalar, so is less than the order; certainly less than p */
+    VERIFY_CHECK(r); 
     if (recid & 2) {
         if (secp256k1_fe_cmp_var(&fx, &secp256k1_ecdsa_const_p_minus_order) >= 0) {
             return 0;
@@ -136,7 +129,7 @@ int secp256k1_ecdsa_sign_recoverable(const secp256k1_context* ctx, secp256k1_ecd
     }
 
     secp256k1_scalar_set_b32(&sec, seckey, &overflow);
-    /* Fail if the secret key is invalid. */
+
     if (!overflow && !secp256k1_scalar_is_zero(&sec)) {
         unsigned char nonce32[32];
         unsigned int count = 0;
@@ -179,7 +172,7 @@ int secp256k1_ecdsa_recover(const secp256k1_context* ctx, secp256k1_pubkey *pubk
     ARG_CHECK(pubkey != NULL);
 
     secp256k1_ecdsa_recoverable_signature_load(ctx, &r, &s, &recid, signature);
-    VERIFY_CHECK(recid >= 0 && recid < 4);  /* should have been caught in parse_compact */
+    VERIFY_CHECK(recid >= 0 && recid < 4);  
     secp256k1_scalar_set_b32(&m, msg32, NULL);
     if (secp256k1_ecdsa_sig_recover(&ctx->ecmult_ctx, &r, &s, &q, &m, recid)) {
         secp256k1_pubkey_save(pubkey, &q);

@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                           
 package core
 
 import (
@@ -59,39 +43,22 @@ const (
 	badBlockLimit       = 10
 	triesInMemory       = 128
 
-	                                                                                        
 	BlockChainVersion = 3
 )
 
-                                                                             
-                                   
 type CacheConfig struct {
-	Disabled      bool                                                                 
-	TrieNodeLimit int                                                                                    
-	TrieTimeLimit time.Duration                                                                      
+	Disabled      bool          
+	TrieNodeLimit int           
+	TrieTimeLimit time.Duration 
 }
 
-                                                                            
-                                                                               
-  
-                                                                               
-                                                                             
-                                                                                  
-                                                                              
-              
-  
-                                                                            
-                                                                              
-                                                                               
-                                                                                
-                   
 type BlockChain struct {
-	chainConfig *params.ChainConfig                                 
-	cacheConfig *CacheConfig                                          
+	chainConfig *params.ChainConfig 
+	cacheConfig *CacheConfig        
 
-	db     epvdb.Database                                                           
-	triegc *prque.Prque                                                         
-	gcproc time.Duration                                                            
+	db     epvdb.Database 
+	triegc *prque.Prque   
+	gcproc time.Duration  
 
 	hc            *HeaderChain
 	rmLogsFeed    event.Feed
@@ -102,37 +69,34 @@ type BlockChain struct {
 	scope         event.SubscriptionScope
 	genesisBlock  *types.Block
 
-	mu      sync.RWMutex                                             
-	chainmu sync.RWMutex                             
-	procmu  sync.RWMutex                        
+	mu      sync.RWMutex 
+	chainmu sync.RWMutex 
+	procmu  sync.RWMutex 
 
-	checkpoint       int                                                         
-	currentBlock     *types.Block                                   
-	currentFastBlock *types.Block                                                                       
+	checkpoint       int          
+	currentBlock     *types.Block 
+	currentFastBlock *types.Block 
 
-	stateCache   state.Database                                                                  
-	bodyCache    *lru.Cache                                              
-	bodyRLPCache *lru.Cache                                                                    
-	blockCache   *lru.Cache                                               
-	futureBlocks *lru.Cache                                                           
+	stateCache   state.Database 
+	bodyCache    *lru.Cache     
+	bodyRLPCache *lru.Cache     
+	blockCache   *lru.Cache     
+	futureBlocks *lru.Cache     
 
-	quit    chan struct{}                           
-	running int32                                             
-	                                          
-	procInterrupt int32                                                    
-	wg            sync.WaitGroup                                                 
+	quit    chan struct{} 
+	running int32         
+
+	procInterrupt int32          
+	wg            sync.WaitGroup 
 
 	engine    consensus.Engine
-	processor Processor                             
-	validator Validator                                       
+	processor Processor 
+	validator Validator 
 	vmConfig  vm.Config
 
-	badBlocks *lru.Cache                   
+	badBlocks *lru.Cache 
 }
 
-                                                                          
-                                                                               
-             
 func NewBlockChain(db epvdb.Database, cacheConfig *CacheConfig, chainConfig *params.ChainConfig, engine consensus.Engine, vmConfig vm.Config) (*BlockChain, error) {
 	if cacheConfig == nil {
 		cacheConfig = &CacheConfig{
@@ -176,12 +140,12 @@ func NewBlockChain(db epvdb.Database, cacheConfig *CacheConfig, chainConfig *par
 	if err := bc.loadLastState(); err != nil {
 		return nil, err
 	}
-	                                                                                                                   
+
 	for hash := range BadHashes {
 		if header := bc.GetHeaderByHash(hash); header != nil {
-			                                                                         
+
 			headerByNumber := bc.GetHeaderByNumber(header.Number.Uint64())
-			                                                                              
+
 			if headerByNumber != nil && headerByNumber.Hash() == header.Hash() {
 				log.Error("Found bad hash, rewinding chain", "number", header.Number, "hash", header.ParentHash)
 				bc.SetHead(header.Number.Uint64() - 1)
@@ -189,7 +153,7 @@ func NewBlockChain(db epvdb.Database, cacheConfig *CacheConfig, chainConfig *par
 			}
 		}
 	}
-	                                          
+
 	go bc.update()
 	return bc, nil
 }
@@ -198,35 +162,32 @@ func (bc *BlockChain) getProcInterrupt() bool {
 	return atomic.LoadInt32(&bc.procInterrupt) == 1
 }
 
-                                                                                
-                                                
 func (bc *BlockChain) loadLastState() error {
-	                                    
+
 	head := GetHeadBlockHash(bc.db)
 	if head == (common.Hash{}) {
-		                                               
+
 		log.Warn("Empty database, resetting chain")
 		return bc.Reset()
 	}
-	                                               
+
 	currentBlock := bc.GetBlockByHash(head)
 	if currentBlock == nil {
-		                                               
+
 		log.Warn("Head block missing, resetting chain", "hash", head)
 		return bc.Reset()
 	}
-	                                                             
+
 	if _, err := state.New(currentBlock.Root(), bc.stateCache); err != nil {
-		                                                               
+
 		log.Warn("Head state missing, repairing chain", "number", currentBlock.Number(), "hash", currentBlock.Hash())
 		if err := bc.repair(&currentBlock); err != nil {
 			return err
 		}
 	}
-	                                                     
+
 	bc.currentBlock = currentBlock
 
-	                                     
 	currentHeader := bc.currentBlock.Header()
 	if head := GetHeadHeaderHash(bc.db); head != (common.Hash{}) {
 		if header := bc.GetHeaderByHash(head); header != nil {
@@ -235,7 +196,6 @@ func (bc *BlockChain) loadLastState() error {
 	}
 	bc.hc.SetCurrentHeader(currentHeader)
 
-	                                         
 	bc.currentFastBlock = bc.currentBlock
 	if head := GetHeadFastBlockHash(bc.db); head != (common.Hash{}) {
 		if block := bc.GetBlockByHash(head); block != nil {
@@ -243,7 +203,6 @@ func (bc *BlockChain) loadLastState() error {
 		}
 	}
 
-	                                  
 	headerTd := bc.GetTd(currentHeader.Hash(), currentHeader.Number.Uint64())
 	blockTd := bc.GetTd(bc.currentBlock.Hash(), bc.currentBlock.NumberU64())
 	fastTd := bc.GetTd(bc.currentFastBlock.Hash(), bc.currentFastBlock.NumberU64())
@@ -255,44 +214,37 @@ func (bc *BlockChain) loadLastState() error {
 	return nil
 }
 
-                                                                                    
-                                                                                
-                                                                                   
-                            
 func (bc *BlockChain) SetHead(head uint64) error {
 	log.Warn("Rewinding blockchain", "target", head)
 
 	bc.mu.Lock()
 	defer bc.mu.Unlock()
 
-	                                                                
 	delFn := func(hash common.Hash, num uint64) {
 		DeleteBody(bc.db, hash, num)
 	}
 	bc.hc.SetHead(head, delFn)
 	currentHeader := bc.hc.CurrentHeader()
 
-	                                              
 	bc.bodyCache.Purge()
 	bc.bodyRLPCache.Purge()
 	bc.blockCache.Purge()
 	bc.futureBlocks.Purge()
 
-	                                                                               
 	if bc.currentBlock != nil && currentHeader.Number.Uint64() < bc.currentBlock.NumberU64() {
 		bc.currentBlock = bc.GetBlock(currentHeader.Hash(), currentHeader.Number.Uint64())
 	}
 	if bc.currentBlock != nil {
 		if _, err := state.New(bc.currentBlock.Root(), bc.stateCache); err != nil {
-			                                                                       
+
 			bc.currentBlock = nil
 		}
 	}
-	                                                              
+
 	if bc.currentFastBlock != nil && currentHeader.Number.Uint64() < bc.currentFastBlock.NumberU64() {
 		bc.currentFastBlock = bc.GetBlock(currentHeader.Hash(), currentHeader.Number.Uint64())
 	}
-	                                                           
+
 	if bc.currentBlock == nil {
 		bc.currentBlock = bc.genesisBlock
 	}
@@ -308,10 +260,8 @@ func (bc *BlockChain) SetHead(head uint64) error {
 	return bc.loadLastState()
 }
 
-                                                                                
-                                                 
 func (bc *BlockChain) FastSyncCommitHead(hash common.Hash) error {
-	                                                                 
+
 	block := bc.GetBlockByHash(hash)
 	if block == nil {
 		return fmt.Errorf("non existent block [%x…]", hash[:4])
@@ -319,7 +269,7 @@ func (bc *BlockChain) FastSyncCommitHead(hash common.Hash) error {
 	if _, err := trie.NewSecure(block.Root(), bc.stateCache.TrieDB(), 0); err != nil {
 		return err
 	}
-	                                                 
+
 	bc.mu.Lock()
 	bc.currentBlock = block
 	bc.mu.Unlock()
@@ -328,7 +278,6 @@ func (bc *BlockChain) FastSyncCommitHead(hash common.Hash) error {
 	return nil
 }
 
-                                                            
 func (bc *BlockChain) GasLimit() uint64 {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
@@ -336,8 +285,6 @@ func (bc *BlockChain) GasLimit() uint64 {
 	return bc.currentBlock.GasLimit()
 }
 
-                                                                            
-                                                           
 func (bc *BlockChain) CurrentBlock() *types.Block {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
@@ -345,8 +292,6 @@ func (bc *BlockChain) CurrentBlock() *types.Block {
 	return bc.currentBlock
 }
 
-                                                                               
-                                                                      
 func (bc *BlockChain) CurrentFastBlock() *types.Block {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
@@ -354,60 +299,50 @@ func (bc *BlockChain) CurrentFastBlock() *types.Block {
 	return bc.currentFastBlock
 }
 
-                                                                           
 func (bc *BlockChain) SetProcessor(processor Processor) {
 	bc.procmu.Lock()
 	defer bc.procmu.Unlock()
 	bc.processor = processor
 }
 
-                                                                             
 func (bc *BlockChain) SetValidator(validator Validator) {
 	bc.procmu.Lock()
 	defer bc.procmu.Unlock()
 	bc.validator = validator
 }
 
-                                           
 func (bc *BlockChain) Validator() Validator {
 	bc.procmu.RLock()
 	defer bc.procmu.RUnlock()
 	return bc.validator
 }
 
-                                           
 func (bc *BlockChain) Processor() Processor {
 	bc.procmu.RLock()
 	defer bc.procmu.RUnlock()
 	return bc.processor
 }
 
-                                                                     
 func (bc *BlockChain) State() (*state.StateDB, error) {
 	return bc.StateAt(bc.CurrentBlock().Root())
 }
 
-                                                                           
 func (bc *BlockChain) StateAt(root common.Hash) (*state.StateDB, error) {
 	return state.New(root, bc.stateCache)
 }
 
-                                                                         
 func (bc *BlockChain) Reset() error {
 	return bc.ResetWithGenesisBlock(bc.genesisBlock)
 }
 
-                                                                          
-                           
 func (bc *BlockChain) ResetWithGenesisBlock(genesis *types.Block) error {
-	                                                   
+
 	if err := bc.SetHead(0); err != nil {
 		return err
 	}
 	bc.mu.Lock()
 	defer bc.mu.Unlock()
 
-	                                                       
 	if err := bc.hc.WriteTd(genesis.Hash(), genesis.NumberU64(), genesis.Difficulty()); err != nil {
 		log.Crit("Failed to write genesis block TD", "err", err)
 	}
@@ -424,30 +359,22 @@ func (bc *BlockChain) ResetWithGenesisBlock(genesis *types.Block) error {
 	return nil
 }
 
-                                                                                  
-                                                                                
-                                                                                
-  
-                                                                                
-                              
 func (bc *BlockChain) repair(head **types.Block) error {
 	for {
-		                                                                         
+
 		if _, err := state.New((*head).Root(), bc.stateCache); err == nil {
 			log.Info("Rewound blockchain to past state", "number", (*head).Number(), "hash", (*head).Hash())
 			return nil
 		}
-		                                                                  
+
 		(*head) = bc.GetBlock((*head).ParentHash(), (*head).NumberU64()-1)
 	}
 }
 
-                                                      
 func (bc *BlockChain) Export(w io.Writer) error {
 	return bc.ExportN(w, uint64(0), bc.currentBlock.NumberU64())
 }
 
-                                                                   
 func (bc *BlockChain) ExportN(w io.Writer, first uint64, last uint64) error {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
@@ -471,17 +398,10 @@ func (bc *BlockChain) ExportN(w io.Writer, first uint64, last uint64) error {
 	return nil
 }
 
-                                                                            
-                                                                            
-                                                                                
-                                            
-  
-                                                           
 func (bc *BlockChain) insert(block *types.Block) {
-	                                                                                   
+
 	updateHeads := GetCanonicalHash(bc.db, block.NumberU64()) != block.Hash()
 
-	                                                                          
 	if err := WriteCanonicalHash(bc.db, block.Hash(), block.NumberU64()); err != nil {
 		log.Crit("Failed to insert block number", "err", err)
 	}
@@ -490,7 +410,6 @@ func (bc *BlockChain) insert(block *types.Block) {
 	}
 	bc.currentBlock = block
 
-	                                                                                      
 	if updateHeads {
 		bc.hc.SetCurrentHeader(block.Header())
 
@@ -501,15 +420,12 @@ func (bc *BlockChain) insert(block *types.Block) {
 	}
 }
 
-                                               
 func (bc *BlockChain) Genesis() *types.Block {
 	return bc.genesisBlock
 }
 
-                                                                                
-                             
 func (bc *BlockChain) GetBody(hash common.Hash) *types.Body {
-	                                                                       
+
 	if cached, ok := bc.bodyCache.Get(hash); ok {
 		body := cached.(*types.Body)
 		return body
@@ -518,15 +434,13 @@ func (bc *BlockChain) GetBody(hash common.Hash) *types.Body {
 	if body == nil {
 		return nil
 	}
-	                                                
+
 	bc.bodyCache.Add(hash, body)
 	return body
 }
 
-                                                                               
-                       
 func (bc *BlockChain) GetBodyRLP(hash common.Hash) rlp.RawValue {
-	                                                                       
+
 	if cached, ok := bc.bodyRLPCache.Get(hash); ok {
 		return cached.(rlp.RawValue)
 	}
@@ -534,12 +448,11 @@ func (bc *BlockChain) GetBodyRLP(hash common.Hash) rlp.RawValue {
 	if len(body) == 0 {
 		return nil
 	}
-	                                                
+
 	bc.bodyRLPCache.Add(hash, body)
 	return body
 }
 
-                                                                      
 func (bc *BlockChain) HasBlock(hash common.Hash, number uint64) bool {
 	if bc.blockCache.Contains(hash) {
 		return true
@@ -548,16 +461,13 @@ func (bc *BlockChain) HasBlock(hash common.Hash, number uint64) bool {
 	return ok
 }
 
-                                                                         
 func (bc *BlockChain) HasState(hash common.Hash) bool {
 	_, err := bc.stateCache.OpenTrie(hash)
 	return err == nil
 }
 
-                                                                                
-                                                 
 func (bc *BlockChain) HasBlockAndState(hash common.Hash, number uint64) bool {
-	                                             
+
 	block := bc.GetBlock(hash, number)
 	if block == nil {
 		return false
@@ -565,10 +475,8 @@ func (bc *BlockChain) HasBlockAndState(hash common.Hash, number uint64) bool {
 	return bc.HasState(block.Root())
 }
 
-                                                                   
-                       
 func (bc *BlockChain) GetBlock(hash common.Hash, number uint64) *types.Block {
-	                                                                        
+
 	if block, ok := bc.blockCache.Get(hash); ok {
 		return block.(*types.Block)
 	}
@@ -576,18 +484,15 @@ func (bc *BlockChain) GetBlock(hash common.Hash, number uint64) *types.Block {
 	if block == nil {
 		return nil
 	}
-	                                                 
+
 	bc.blockCache.Add(block.Hash(), block)
 	return block
 }
 
-                                                                                   
 func (bc *BlockChain) GetBlockByHash(hash common.Hash) *types.Block {
 	return bc.GetBlock(hash, bc.hc.GetBlockNumber(hash))
 }
 
-                                                                             
-                                       
 func (bc *BlockChain) GetBlockByNumber(number uint64) *types.Block {
 	hash := GetCanonicalHash(bc.db, number)
 	if hash == (common.Hash{}) {
@@ -596,13 +501,10 @@ func (bc *BlockChain) GetBlockByNumber(number uint64) *types.Block {
 	return bc.GetBlock(hash, number)
 }
 
-                                                                                  
 func (bc *BlockChain) GetReceiptsByHash(hash common.Hash) types.Receipts {
 	return GetBlockReceipts(bc.db, hash, GetBlockNumber(bc.db, hash))
 }
 
-                                                                                     
-                         
 func (bc *BlockChain) GetBlocksFromHash(hash common.Hash, n int) (blocks []*types.Block) {
 	number := bc.hc.GetBlockNumber(hash)
 	for i := 0; i < n; i++ {
@@ -617,8 +519,6 @@ func (bc *BlockChain) GetBlocksFromHash(hash common.Hash, n int) (blocks []*type
 	return
 }
 
-                                                                               
-                                  
 func (bc *BlockChain) GetUnclesInChain(block *types.Block, length int) []*types.Header {
 	uncles := []*types.Header{}
 	for i := 0; block != nil && i < length; i++ {
@@ -628,34 +528,21 @@ func (bc *BlockChain) GetUnclesInChain(block *types.Block, length int) []*types.
 	return uncles
 }
 
-                                                                               
-                                                                     
 func (bc *BlockChain) TrieNode(hash common.Hash) ([]byte, error) {
 	return bc.stateCache.TrieDB().Node(hash)
 }
 
-                                                                              
-                                              
 func (bc *BlockChain) Stop() {
 	if !atomic.CompareAndSwapInt32(&bc.running, 0, 1) {
 		return
 	}
-	                                                           
+
 	bc.scope.Close()
 	close(bc.quit)
 	atomic.StoreInt32(&bc.procInterrupt, 1)
 
 	bc.wg.Wait()
 
-	                                                                            
-	                                                                             
-	                                                                           
-	                                                                            
-	                                                                           
-	                                        
-	  
-	                                                                               
-	            
 	if !bc.cacheConfig.Disabled {
 		triedb := bc.stateCache.TrieDB()
 		if number := bc.CurrentBlock().NumberU64(); number >= triesInMemory {
@@ -686,14 +573,12 @@ func (bc *BlockChain) procFutureBlocks() {
 	if len(blocks) > 0 {
 		types.BlockBy(types.Number).Sort(blocks)
 
-		                                                                                
 		for i := range blocks {
 			bc.InsertChain(blocks[i : i+1])
 		}
 	}
 }
 
-                              
 type WriteStatus byte
 
 const (
@@ -702,8 +587,6 @@ const (
 	SideStatTy
 )
 
-                                                                                
-                              
 func (bc *BlockChain) Rollback(chain []common.Hash) {
 	bc.mu.Lock()
 	defer bc.mu.Unlock()
@@ -726,29 +609,27 @@ func (bc *BlockChain) Rollback(chain []common.Hash) {
 	}
 }
 
-                                                                        
 func SetReceiptsData(config *params.ChainConfig, block *types.Block, receipts types.Receipts) {
 	signer := types.MakeSigner(config, block.Number())
 
 	transactions, logIndex := block.Transactions(), uint(0)
 
 	for j := 0; j < len(receipts); j++ {
-		                                                                    
+
 		receipts[j].TxHash = transactions[j].Hash()
 
-		                                                                  
 		if transactions[j].To() == nil {
-			                                                                    
+
 			from, _ := types.Sender(signer, transactions[j])
 			receipts[j].ContractAddress = crypto.CreateAddress(from, transactions[j].Nonce())
 		}
-		                                                            
+
 		if j == 0 {
 			receipts[j].GasUsed = receipts[j].CumulativeGasUsed
 		} else {
 			receipts[j].GasUsed = receipts[j].CumulativeGasUsed - receipts[j-1].CumulativeGasUsed
 		}
-		                                                                          
+
 		for k := 0; k < len(receipts[j].Logs); k++ {
 			receipts[j].Logs[k].BlockNumber = block.NumberU64()
 			receipts[j].Logs[k].BlockHash = block.Hash()
@@ -760,13 +641,10 @@ func SetReceiptsData(config *params.ChainConfig, block *types.Block, receipts ty
 	}
 }
 
-                                                                                
-                                
 func (bc *BlockChain) InsertReceiptChain(blockChain types.Blocks, receiptChain []types.Receipts) (int, error) {
 	bc.wg.Add(1)
 	defer bc.wg.Done()
 
-	                                                                           
 	for i := 1; i < len(blockChain); i++ {
 		if blockChain[i].NumberU64() != blockChain[i-1].NumberU64()+1 || blockChain[i].ParentHash() != blockChain[i-1].Hash() {
 			log.Error("Non contiguous receipt insert", "number", blockChain[i].Number(), "hash", blockChain[i].Hash(), "parent", blockChain[i].ParentHash(),
@@ -784,22 +662,22 @@ func (bc *BlockChain) InsertReceiptChain(blockChain types.Blocks, receiptChain [
 	)
 	for i, block := range blockChain {
 		receipts := receiptChain[i]
-		                                                                
+
 		if atomic.LoadInt32(&bc.procInterrupt) == 1 {
 			return 0, nil
 		}
-		                                               
+
 		if !bc.HasHeader(block.Hash(), block.NumberU64()) {
 			return i, fmt.Errorf("containing header #%d [%x…] unknown", block.Number(), block.Hash().Bytes()[:4])
 		}
-		                                           
+
 		if bc.HasBlock(block.Hash(), block.NumberU64()) {
 			stats.ignored++
 			continue
 		}
-		                                                       
+
 		SetReceiptsData(bc.chainConfig, block, receipts)
-		                                           
+
 		if err := WriteBody(batch, block.Hash(), block.NumberU64(), block.Body()); err != nil {
 			return i, fmt.Errorf("failed to write block body: %v", err)
 		}
@@ -826,10 +704,9 @@ func (bc *BlockChain) InsertReceiptChain(blockChain types.Blocks, receiptChain [
 		}
 	}
 
-	                                            
 	bc.mu.Lock()
 	head := blockChain[len(blockChain)-1]
-	if td := bc.GetTd(head.Hash(), head.NumberU64()); td != nil {                                               
+	if td := bc.GetTd(head.Hash(), head.NumberU64()); td != nil { 
 		if bc.GetTd(bc.currentFastBlock.Hash(), bc.currentFastBlock.NumberU64()).Cmp(td) < 0 {
 			if err := WriteHeadFastBlockHash(bc.db, head.Hash()); err != nil {
 				log.Crit("Failed to update head fast block hash", "err", err)
@@ -851,9 +728,6 @@ func (bc *BlockChain) InsertReceiptChain(blockChain types.Blocks, receiptChain [
 
 var lastWrite uint64
 
-                                                                                 
-                                                                               
-                                                                    
 func (bc *BlockChain) WriteBlockWithoutState(block *types.Block, td *big.Int) (err error) {
 	bc.wg.Add(1)
 	defer bc.wg.Done()
@@ -867,28 +741,25 @@ func (bc *BlockChain) WriteBlockWithoutState(block *types.Block, td *big.Int) (e
 	return nil
 }
 
-                                                                                 
 func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.Receipt, state *state.StateDB) (status WriteStatus, err error) {
 	bc.wg.Add(1)
 	defer bc.wg.Done()
 
-	                                              
 	ptd := bc.GetTd(block.ParentHash(), block.NumberU64()-1)
 	if ptd == nil {
 		return NonStatTy, consensus.ErrUnknownAncestor
 	}
-	                                                             
+
 	bc.mu.Lock()
 	defer bc.mu.Unlock()
 
 	localTd := bc.GetTd(bc.currentBlock.Hash(), bc.currentBlock.NumberU64())
 	externTd := new(big.Int).Add(block.Difficulty(), ptd)
 
-	                                                                             
 	if err := bc.hc.WriteTd(block.Hash(), block.NumberU64(), externTd); err != nil {
 		return NonStatTy, err
 	}
-	                                        
+
 	batch := bc.db.NewBatch()
 	if err := WriteBlock(batch, block); err != nil {
 		return NonStatTy, err
@@ -899,30 +770,26 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 	}
 	triedb := bc.stateCache.TrieDB()
 
-	                                                 
 	if bc.cacheConfig.Disabled {
 		if err := triedb.Commit(root, false); err != nil {
 			return NonStatTy, err
 		}
 	} else {
-		                                                          
-		triedb.Reference(root, common.Hash{})                                         
+
+		triedb.Reference(root, common.Hash{}) 
 		bc.triegc.Push(root, -float32(block.NumberU64()))
 
 		if current := block.NumberU64(); current > triesInMemory {
-			                                             
+
 			header := bc.GetHeaderByNumber(current - triesInMemory)
 			chosen := header.Number.Uint64()
 
-			                                                                            
-			                                        
 			var (
 				size  = triedb.Size()
 				limit = common.StorageSize(bc.cacheConfig.TrieNodeLimit) * 1024 * 1024
 			)
 			if size > limit || bc.gcproc > bc.cacheConfig.TrieTimeLimit {
-				                                                                           
-				                                                      
+
 				if chosen < lastWrite+triesInMemory {
 					switch {
 					case size >= 2*limit:
@@ -931,14 +798,14 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 						log.Info("State in memory for too long, committing", "time", bc.gcproc, "allowance", bc.cacheConfig.TrieTimeLimit, "optimum", float64(chosen-lastWrite)/triesInMemory)
 					}
 				}
-				                                                       
+
 				if chosen >= lastWrite+triesInMemory || size >= 2*limit || bc.gcproc >= 2*bc.cacheConfig.TrieTimeLimit {
 					triedb.Commit(header.Root, true)
 					lastWrite = chosen
 					bc.gcproc = 0
 				}
 			}
-			                                                              
+
 			for !bc.triegc.Empty() {
 				root, number := bc.triegc.Pop()
 				if uint64(-number) > chosen {
@@ -952,26 +819,24 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 	if err := WriteBlockReceipts(batch, block.Hash(), block.NumberU64(), receipts); err != nil {
 		return NonStatTy, err
 	}
-	                                                                                  
-	                                                                                 
-	                                                                             
+
 	reorg := externTd.Cmp(localTd) > 0
 	if !reorg && externTd.Cmp(localTd) == 0 {
-		                                                         
+
 		reorg = block.NumberU64() < bc.currentBlock.NumberU64() || (block.NumberU64() == bc.currentBlock.NumberU64() && mrand.Float64() < 0.5)
 	}
 	if reorg {
-		                                                           
+
 		if block.ParentHash() != bc.currentBlock.Hash() {
 			if err := bc.reorg(bc.currentBlock, block); err != nil {
 				return NonStatTy, err
 			}
 		}
-		                                                                    
+
 		if err := WriteTxLookupEntries(batch, block); err != nil {
 			return NonStatTy, err
 		}
-		                       
+
 		if err := WritePreimages(bc.db, block.NumberU64(), state.Preimages()); err != nil {
 			return NonStatTy, err
 		}
@@ -983,7 +848,6 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 		return NonStatTy, err
 	}
 
-	                
 	if status == CanonStatTy {
 		bc.insert(block)
 	}
@@ -991,26 +855,17 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 	return status, nil
 }
 
-                                                                               
-                                                                             
-                                                                              
-         
-  
-                                                                 
 func (bc *BlockChain) InsertChain(chain types.Blocks) (int, error) {
 	n, events, logs, err := bc.insertChain(chain)
 	bc.PostChainEvents(events, logs)
 	return n, err
 }
 
-                                                                                 
-                                                                              
-                            
 func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*types.Log, error) {
-	                                                                           
+
 	for i := 1; i < len(chain); i++ {
 		if chain[i].NumberU64() != chain[i-1].NumberU64()+1 || chain[i].ParentHash() != chain[i-1].Hash() {
-			                                                                            
+
 			log.Error("Non contiguous block insert", "number", chain[i].Number(), "hash", chain[i].Hash(),
 				"parent", chain[i].ParentHash(), "prevnumber", chain[i-1].Number(), "prevhash", chain[i-1].Hash())
 
@@ -1018,23 +873,20 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 				chain[i-1].Hash().Bytes()[:4], i, chain[i].NumberU64(), chain[i].Hash().Bytes()[:4], chain[i].ParentHash().Bytes()[:4])
 		}
 	}
-	                                                  
+
 	bc.wg.Add(1)
 	defer bc.wg.Done()
 
 	bc.chainmu.Lock()
 	defer bc.chainmu.Unlock()
 
-	                                                            
-	                                                           
-	             
 	var (
 		stats         = insertStats{startTime: mclock.Now()}
 		events        = make([]interface{}, 0, len(chain))
 		lastCanon     *types.Block
 		coalescedLogs []*types.Log
 	)
-	                                     
+
 	headers := make([]*types.Header, len(chain))
 	seals := make([]bool, len(chain))
 
@@ -1045,19 +897,18 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 	abort, results := bc.engine.VerifyHeaders(bc, headers, seals)
 	defer close(abort)
 
-	                                                               
 	for i, block := range chain {
-		                                                      
+
 		if atomic.LoadInt32(&bc.procInterrupt) == 1 {
 			log.Debug("Premature abort during blocks processing")
 			break
 		}
-		                                                    
+
 		if BadHashes[block.Hash()] {
 			bc.reportBlock(block, nil, ErrBlacklistedHash)
 			return i, events, coalescedLogs, ErrBlacklistedHash
 		}
-		                                                
+
 		bstart := time.Now()
 
 		err := <-results
@@ -1066,16 +917,14 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		}
 		switch {
 		case err == ErrKnownBlock:
-			                                                                            
-			                                                                       
+
 			if bc.CurrentBlock().NumberU64() >= block.NumberU64() {
 				stats.ignored++
 				continue
 			}
 
 		case err == consensus.ErrFutureBlock:
-			                                                                               
-			                                                                 
+
 			max := big.NewInt(time.Now().Unix() + maxTimeFutureBlocks)
 			if block.Time().Cmp(max) > 0 {
 				return i, events, coalescedLogs, fmt.Errorf("future block: %v > %v", block.Time(), max)
@@ -1090,8 +939,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 			continue
 
 		case err == consensus.ErrPrunedAncestor:
-			                                                                               
-			                                                      
+
 			localTd := bc.GetTd(bc.currentBlock.Hash(), bc.currentBlock.NumberU64())
 			externTd := new(big.Int).Add(bc.GetTd(block.ParentHash(), block.NumberU64()-1), block.Difficulty())
 			if localTd.Cmp(externTd) > 0 {
@@ -1100,7 +948,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 				}
 				continue
 			}
-			                                                                              
+
 			var winner []*types.Block
 
 			parent := bc.GetBlock(block.ParentHash(), block.NumberU64()-1)
@@ -1111,7 +959,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 			for j := 0; j < len(winner)/2; j++ {
 				winner[j], winner[len(winner)-1-j] = winner[len(winner)-1-j], winner[j]
 			}
-			                                                           
+
 			bc.chainmu.Unlock()
 			_, evs, logs, err := bc.insertChain(winner)
 			bc.chainmu.Lock()
@@ -1125,8 +973,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 			bc.reportBlock(block, nil, err)
 			return i, events, coalescedLogs, err
 		}
-		                                                            
-		                     
+
 		var parent *types.Block
 		if i == 0 {
 			parent = bc.GetBlock(block.ParentHash(), block.NumberU64()-1)
@@ -1137,13 +984,13 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		if err != nil {
 			return i, events, coalescedLogs, err
 		}
-		                                                           
+
 		receipts, logs, usedGas, err := bc.processor.Process(block, state, bc.vmConfig)
 		if err != nil {
 			bc.reportBlock(block, receipts, err)
 			return i, events, coalescedLogs, err
 		}
-		                                                 
+
 		err = bc.Validator().ValidateState(block, parent, state, receipts, usedGas)
 		if err != nil {
 			bc.reportBlock(block, receipts, err)
@@ -1151,7 +998,6 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		}
 		proctime := time.Since(bstart)
 
-		                                                   
 		status, err := bc.WriteBlockWithState(block, receipts, state)
 		if err != nil {
 			return i, events, coalescedLogs, err
@@ -1166,7 +1012,6 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 			events = append(events, ChainEvent{block, block.Hash(), logs})
 			lastCanon = block
 
-			                                                     
 			bc.gcproc += proctime
 
 		case SideStatTy:
@@ -1180,14 +1025,13 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		stats.usedGas += usedGas
 		stats.report(chain, i, bc.stateCache.TrieDB().Size())
 	}
-	                                                                 
+
 	if lastCanon != nil && bc.CurrentBlock().Hash() == lastCanon.Hash() {
 		events = append(events, ChainHeadEvent{lastCanon})
 	}
 	return 0, events, coalescedLogs, nil
 }
 
-                                                     
 type insertStats struct {
 	queued, processed, ignored int
 	usedGas                    uint64
@@ -1195,19 +1039,15 @@ type insertStats struct {
 	startTime                  mclock.AbsTime
 }
 
-                                                                               
-                                                                
 const statsReportLimit = 8 * time.Second
 
-                                                                        
-                                                                 
 func (st *insertStats) report(chain []*types.Block, index int, cache common.StorageSize) {
-	                                  
+
 	var (
 		now     = mclock.Now()
 		elapsed = time.Duration(now) - time.Duration(st.startTime)
 	)
-	                                                                        
+
 	if index == len(chain)-1 || elapsed >= statsReportLimit {
 		var (
 			end = chain[index]
@@ -1237,9 +1077,6 @@ func countTransactions(chain []*types.Block) (c int) {
 	return c
 }
 
-                                                                                                         
-                                                                                                   
-                   
 func (bc *BlockChain) reorg(oldBlock, newBlock *types.Block) error {
 	var (
 		newChain    types.Blocks
@@ -1247,11 +1084,9 @@ func (bc *BlockChain) reorg(oldBlock, newBlock *types.Block) error {
 		commonBlock *types.Block
 		deletedTxs  types.Transactions
 		deletedLogs []*types.Log
-		                                                               
-		                                                                
-		                                             
+
 		collectLogs = func(h common.Hash) {
-			                                   
+
 			receipts := GetBlockReceipts(bc.db, h, bc.hc.GetBlockNumber(h))
 			for _, receipt := range receipts {
 				for _, log := range receipt.Logs {
@@ -1263,9 +1098,8 @@ func (bc *BlockChain) reorg(oldBlock, newBlock *types.Block) error {
 		}
 	)
 
-	                                       
 	if oldBlock.NumberU64() > newBlock.NumberU64() {
-		                   
+
 		for ; oldBlock != nil && oldBlock.NumberU64() != newBlock.NumberU64(); oldBlock = bc.GetBlock(oldBlock.ParentHash(), oldBlock.NumberU64()-1) {
 			oldChain = append(oldChain, oldBlock)
 			deletedTxs = append(deletedTxs, oldBlock.Transactions()...)
@@ -1273,7 +1107,7 @@ func (bc *BlockChain) reorg(oldBlock, newBlock *types.Block) error {
 			collectLogs(oldBlock.Hash())
 		}
 	} else {
-		                                                                      
+
 		for ; newBlock != nil && newBlock.NumberU64() != oldBlock.NumberU64(); newBlock = bc.GetBlock(newBlock.ParentHash(), newBlock.NumberU64()-1) {
 			newChain = append(newChain, newBlock)
 		}
@@ -1304,7 +1138,7 @@ func (bc *BlockChain) reorg(oldBlock, newBlock *types.Block) error {
 			return fmt.Errorf("Invalid new chain")
 		}
 	}
-	                                    
+
 	if len(oldChain) > 0 && len(newChain) > 0 {
 		logFn := log.Debug
 		if len(oldChain) > 63 {
@@ -1315,21 +1149,20 @@ func (bc *BlockChain) reorg(oldBlock, newBlock *types.Block) error {
 	} else {
 		log.Error("Impossible reorg, please file an issue", "oldnum", oldBlock.Number(), "oldhash", oldBlock.Hash(), "newnum", newBlock.Number(), "newhash", newBlock.Hash())
 	}
-	                                                                    
+
 	var addedTxs types.Transactions
 	for i := len(newChain) - 1; i >= 0; i-- {
-		                                                            
+
 		bc.insert(newChain[i])
-		                                                                   
+
 		if err := WriteTxLookupEntries(bc.db, newChain[i]); err != nil {
 			return err
 		}
 		addedTxs = append(addedTxs, newChain[i].Transactions()...)
 	}
-	                                                                  
+
 	diff := types.TxDifference(deletedTxs, addedTxs)
-	                                                                 
-	                                                              
+
 	for _, tx := range diff {
 		DeleteTxLookupEntry(bc.db, tx.Hash())
 	}
@@ -1347,11 +1180,8 @@ func (bc *BlockChain) reorg(oldBlock, newBlock *types.Block) error {
 	return nil
 }
 
-                                                                              
-                                  
-                                                                                            
 func (bc *BlockChain) PostChainEvents(events []interface{}, logs []*types.Log) {
-	                                         
+
 	if logs != nil {
 		bc.logsFeed.Send(logs)
 	}
@@ -1382,13 +1212,11 @@ func (bc *BlockChain) update() {
 	}
 }
 
-                                                                                        
 type BadBlockArgs struct {
 	Hash   common.Hash   `json:"hash"`
 	Header *types.Header `json:"header"`
 }
 
-                                                                                            
 func (bc *BlockChain) BadBlocks() ([]BadBlockArgs, error) {
 	headers := make([]BadBlockArgs, 0, bc.badBlocks.Len())
 	for _, hash := range bc.badBlocks.Keys() {
@@ -1400,12 +1228,10 @@ func (bc *BlockChain) BadBlocks() ([]BadBlockArgs, error) {
 	return headers, nil
 }
 
-                                                          
 func (bc *BlockChain) addBadBlock(block *types.Block) {
 	bc.badBlocks.Add(block.Header().Hash(), block.Header())
 }
 
-                                      
 func (bc *BlockChain) reportBlock(block *types.Block, receipts types.Receipts, err error) {
 	bc.addBadBlock(block)
 
@@ -1426,21 +1252,12 @@ Error: %v
 `, bc.chainConfig, block.Number(), block.Hash(), receiptString, err))
 }
 
-                                                                              
-                                                                                
-                                                                                  
-  
-                                                                           
-                                                                              
-                                                                               
-                                                                      
 func (bc *BlockChain) InsertHeaderChain(chain []*types.Header, checkFreq int) (int, error) {
 	start := time.Now()
 	if i, err := bc.hc.ValidateHeaderChain(chain, checkFreq); err != nil {
 		return i, err
 	}
 
-	                                                          
 	bc.chainmu.Lock()
 	defer bc.chainmu.Unlock()
 
@@ -1458,15 +1275,6 @@ func (bc *BlockChain) InsertHeaderChain(chain []*types.Header, checkFreq int) (i
 	return bc.hc.InsertHeaderChain(chain, whFunc, start)
 }
 
-                                                                             
-                                                                              
-                                                                       
-  
-                                                                                
-                                                                               
-                                                                               
-                                                                               
-                                                       
 func (bc *BlockChain) writeHeader(header *types.Header) error {
 	bc.wg.Add(1)
 	defer bc.wg.Done()
@@ -1478,8 +1286,6 @@ func (bc *BlockChain) writeHeader(header *types.Header) error {
 	return err
 }
 
-                                                                              
-                                                             
 func (bc *BlockChain) CurrentHeader() *types.Header {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
@@ -1487,75 +1293,54 @@ func (bc *BlockChain) CurrentHeader() *types.Header {
 	return bc.hc.CurrentHeader()
 }
 
-                                                                             
-                                                    
 func (bc *BlockChain) GetTd(hash common.Hash, number uint64) *big.Int {
 	return bc.hc.GetTd(hash, number)
 }
 
-                                                                                   
-                                         
 func (bc *BlockChain) GetTdByHash(hash common.Hash) *big.Int {
 	return bc.hc.GetTdByHash(hash)
 }
 
-                                                                           
-                       
 func (bc *BlockChain) GetHeader(hash common.Hash, number uint64) *types.Header {
 	return bc.hc.GetHeader(hash, number)
 }
 
-                                                                                    
-         
 func (bc *BlockChain) GetHeaderByHash(hash common.Hash) *types.Header {
 	return bc.hc.GetHeaderByHash(hash)
 }
 
-                                                                                
-                 
 func (bc *BlockChain) HasHeader(hash common.Hash, number uint64) bool {
 	return bc.hc.HasHeader(hash, number)
 }
 
-                                                                                
-                                            
 func (bc *BlockChain) GetBlockHashesFromHash(hash common.Hash, max uint64) []common.Hash {
 	return bc.hc.GetBlockHashesFromHash(hash, max)
 }
 
-                                                                          
-                                                  
 func (bc *BlockChain) GetHeaderByNumber(number uint64) *types.Header {
 	return bc.hc.GetHeaderByNumber(number)
 }
 
-                                                         
 func (bc *BlockChain) Config() *params.ChainConfig { return bc.chainConfig }
 
-                                                      
 func (bc *BlockChain) Engine() consensus.Engine { return bc.engine }
 
-                                                                          
 func (bc *BlockChain) SubscribeRemovedLogsEvent(ch chan<- RemovedLogsEvent) event.Subscription {
 	return bc.scope.Track(bc.rmLogsFeed.Subscribe(ch))
 }
 
-                                                              
 func (bc *BlockChain) SubscribeChainEvent(ch chan<- ChainEvent) event.Subscription {
 	return bc.scope.Track(bc.chainFeed.Subscribe(ch))
 }
 
-                                                                      
 func (bc *BlockChain) SubscribeChainHeadEvent(ch chan<- ChainHeadEvent) event.Subscription {
 	return bc.scope.Track(bc.chainHeadFeed.Subscribe(ch))
 }
 
-                                                                      
 func (bc *BlockChain) SubscribeChainSideEvent(ch chan<- ChainSideEvent) event.Subscription {
 	return bc.scope.Track(bc.chainSideFeed.Subscribe(ch))
 }
 
-                                                               
 func (bc *BlockChain) SubscribeLogsEvent(ch chan<- []*types.Log) event.Subscription {
 	return bc.scope.Track(bc.logsFeed.Subscribe(ch))
 }

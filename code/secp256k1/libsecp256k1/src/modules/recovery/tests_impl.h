@@ -1,8 +1,3 @@
-/**********************************************************************
- * Copyright (c) 2013-2015 Pieter Wuille                              *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
 
 #ifndef _SECP256K1_MODULE_RECOVERY_TESTS_
 #define _SECP256K1_MODULE_RECOVERY_TESTS_
@@ -13,23 +8,22 @@ static int recovery_test_nonce_function(unsigned char *nonce32, const unsigned c
     (void) algo16;
     (void) data;
 
-    /* On the first run, return 0 to force a second run */
     if (counter == 0) {
         memset(nonce32, 0, 32);
         return 1;
     }
-    /* On the second run, return an overflow to force a third run */
+
     if (counter == 1) {
         memset(nonce32, 0xff, 32);
         return 1;
     }
-    /* On the next run, return a valid nonce, but flip a coin as to whether or not to fail signing. */
+
     memset(nonce32, 1, 32);
     return secp256k1_rand_bits(1);
 }
 
 void test_ecdsa_recovery_api(void) {
-    /* Setup contexts that just count errors */
+
     secp256k1_context *none = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
     secp256k1_context *sign = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
     secp256k1_context *vrfy = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY);
@@ -58,11 +52,9 @@ void test_ecdsa_recovery_api(void) {
     secp256k1_context_set_illegal_callback(vrfy, counting_illegal_callback_fn, &ecount);
     secp256k1_context_set_illegal_callback(both, counting_illegal_callback_fn, &ecount);
 
-    /* Construct and verify corresponding public key. */
     CHECK(secp256k1_ec_seckey_verify(ctx, privkey) == 1);
     CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, privkey) == 1);
 
-    /* Check bad contexts and NULLs for signing */
     ecount = 0;
     CHECK(secp256k1_ecdsa_sign_recoverable(none, &recsig, message, privkey, NULL, NULL) == 0);
     CHECK(ecount == 1);
@@ -78,19 +70,16 @@ void test_ecdsa_recovery_api(void) {
     CHECK(ecount == 4);
     CHECK(secp256k1_ecdsa_sign_recoverable(both, &recsig, message, NULL, NULL, NULL) == 0);
     CHECK(ecount == 5);
-    /* This will fail or succeed randomly, and in either case will not ARG_CHECK failure */
+
     secp256k1_ecdsa_sign_recoverable(both, &recsig, message, privkey, recovery_test_nonce_function, NULL);
     CHECK(ecount == 5);
-    /* These will all fail, but not in ARG_CHECK way */
+
     CHECK(secp256k1_ecdsa_sign_recoverable(both, &recsig, message, zero_privkey, NULL, NULL) == 0);
     CHECK(secp256k1_ecdsa_sign_recoverable(both, &recsig, message, over_privkey, NULL, NULL) == 0);
-    /* This one will succeed. */
+
     CHECK(secp256k1_ecdsa_sign_recoverable(both, &recsig, message, privkey, NULL, NULL) == 1);
     CHECK(ecount == 5);
 
-    /* Check signing with a goofy nonce function */
-
-    /* Check bad contexts and NULLs for recovery */
     ecount = 0;
     CHECK(secp256k1_ecdsa_recover(none, &recpubkey, &recsig, message) == 0);
     CHECK(ecount == 1);
@@ -107,7 +96,6 @@ void test_ecdsa_recovery_api(void) {
     CHECK(secp256k1_ecdsa_recover(both, &recpubkey, &recsig, NULL) == 0);
     CHECK(ecount == 5);
 
-    /* Check NULLs for conversion */
     CHECK(secp256k1_ecdsa_sign(both, &normal_sig, message, privkey, NULL, NULL) == 1);
     ecount = 0;
     CHECK(secp256k1_ecdsa_recoverable_signature_convert(both, NULL, &recsig) == 0);
@@ -116,7 +104,6 @@ void test_ecdsa_recovery_api(void) {
     CHECK(ecount == 2);
     CHECK(secp256k1_ecdsa_recoverable_signature_convert(both, &normal_sig, &recsig) == 1);
 
-    /* Check NULLs for de/serialization */
     CHECK(secp256k1_ecdsa_sign_recoverable(both, &recsig, message, privkey, NULL, NULL) == 1);
     ecount = 0;
     CHECK(secp256k1_ecdsa_recoverable_signature_serialize_compact(both, NULL, &recid, &recsig) == 0);
@@ -135,12 +122,11 @@ void test_ecdsa_recovery_api(void) {
     CHECK(ecount == 6);
     CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(both, &recsig, sig, 5) == 0);
     CHECK(ecount == 7);
-    /* overflow in signature will fail but not affect ecount */
+
     memcpy(sig, over_privkey, 32);
     CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(both, &recsig, sig, recid) == 0);
     CHECK(ecount == 7);
 
-    /* cleanup */
     secp256k1_context_destroy(none);
     secp256k1_context_destroy(sign);
     secp256k1_context_destroy(vrfy);
@@ -158,7 +144,6 @@ void test_ecdsa_recovery_end_to_end(void) {
     secp256k1_pubkey recpubkey;
     int recid = 0;
 
-    /* Generate a random key and message. */
     {
         secp256k1_scalar msg, key;
         random_scalar_order_test(&msg);
@@ -167,11 +152,9 @@ void test_ecdsa_recovery_end_to_end(void) {
         secp256k1_scalar_get_b32(message, &msg);
     }
 
-    /* Construct and verify corresponding public key. */
     CHECK(secp256k1_ec_seckey_verify(ctx, privkey) == 1);
     CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, privkey) == 1);
 
-    /* Serialize/parse compact and verify/recover. */
     extra[0] = 0;
     CHECK(secp256k1_ecdsa_sign_recoverable(ctx, &rsignature[0], message, privkey, NULL, NULL) == 1);
     CHECK(secp256k1_ecdsa_sign(ctx, &signature[0], message, privkey, NULL, NULL) == 1);
@@ -190,22 +173,21 @@ void test_ecdsa_recovery_end_to_end(void) {
     CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsignature[4], sig, recid) == 1);
     CHECK(secp256k1_ecdsa_recoverable_signature_convert(ctx, &signature[4], &rsignature[4]) == 1);
     CHECK(secp256k1_ecdsa_verify(ctx, &signature[4], message, &pubkey) == 1);
-    /* Parse compact (with recovery id) and recover. */
+
     CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsignature[4], sig, recid) == 1);
     CHECK(secp256k1_ecdsa_recover(ctx, &recpubkey, &rsignature[4], message) == 1);
     CHECK(memcmp(&pubkey, &recpubkey, sizeof(pubkey)) == 0);
-    /* Serialize/destroy/parse signature and verify again. */
+
     CHECK(secp256k1_ecdsa_recoverable_signature_serialize_compact(ctx, sig, &recid, &rsignature[4]) == 1);
     sig[secp256k1_rand_bits(6)] += 1 + secp256k1_rand_int(255);
     CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsignature[4], sig, recid) == 1);
     CHECK(secp256k1_ecdsa_recoverable_signature_convert(ctx, &signature[4], &rsignature[4]) == 1);
     CHECK(secp256k1_ecdsa_verify(ctx, &signature[4], message, &pubkey) == 0);
-    /* Recover again */
+
     CHECK(secp256k1_ecdsa_recover(ctx, &recpubkey, &rsignature[4], message) == 0 ||
           memcmp(&pubkey, &recpubkey, sizeof(pubkey)) != 0);
 }
 
-/* Tests several edge cases. */
 void test_ecdsa_recovery_edge_cases(void) {
     const unsigned char msg32[32] = {
         'T', 'h', 'i', 's', ' ', 'i', 's', ' ',
@@ -214,8 +196,7 @@ void test_ecdsa_recovery_edge_cases(void) {
         's', 's', 'a', 'g', 'e', '.', '.', '.'
     };
     const unsigned char sig64[64] = {
-        /* Generated by signing the above message with nonce 'This is the nonce we will use...'
-         * and secret key 0 (which is not valid), resulting in recid 0. */
+
         0x67, 0xCB, 0x28, 0x5F, 0x9C, 0xD1, 0x94, 0xE8,
         0x40, 0xD6, 0x29, 0x39, 0x7A, 0xF5, 0x56, 0x96,
         0x62, 0xFD, 0xE4, 0x46, 0x49, 0x99, 0x59, 0x63,
@@ -226,7 +207,7 @@ void test_ecdsa_recovery_edge_cases(void) {
         0x6E, 0x1B, 0xE8, 0xEC, 0xC7, 0xDD, 0x95, 0x57
     };
     secp256k1_pubkey pubkey;
-    /* signature (r,s) = (4,4), which can be recovered with all 4 recids. */
+
     const unsigned char sigb64[64] = {
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -254,7 +235,7 @@ void test_ecdsa_recovery_edge_cases(void) {
     for (recid = 0; recid < 4; recid++) {
         int i;
         int recid2;
-        /* (4,4) encoded in DER. */
+
         unsigned char sigbder[8] = {0x30, 0x06, 0x02, 0x01, 0x04, 0x02, 0x01, 0x04};
         unsigned char sigcder_zr[7] = {0x30, 0x05, 0x02, 0x00, 0x02, 0x01, 0x01};
         unsigned char sigcder_zs[7] = {0x30, 0x05, 0x02, 0x01, 0x01, 0x02, 0x00};
@@ -286,7 +267,7 @@ void test_ecdsa_recovery_edge_cases(void) {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04,
         };
-        /* (order + r,4) encoded in DER. */
+
         unsigned char sigbderlong[40] = {
             0x30, 0x26, 0x02, 0x21, 0x00, 0xFF, 0xFF, 0xFF,
             0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -302,15 +283,14 @@ void test_ecdsa_recovery_edge_cases(void) {
             secp256k1_pubkey pubkey2b;
             CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsig, sigb64, recid2) == 1);
             CHECK(secp256k1_ecdsa_recover(ctx, &pubkey2b, &rsig, msg32) == 1);
-            /* Verifying with (order + r,4) should always fail. */
+
             CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbderlong, sizeof(sigbderlong)) == 1);
             CHECK(secp256k1_ecdsa_verify(ctx, &sig, msg32, &pubkeyb) == 0);
         }
-        /* DER parsing tests. */
-        /* Zero length r/s. */
+
         CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigcder_zr, sizeof(sigcder_zr)) == 0);
         CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigcder_zs, sizeof(sigcder_zs)) == 0);
-        /* Leading zeros. */
+
         CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbderalt1, sizeof(sigbderalt1)) == 0);
         CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbderalt2, sizeof(sigbderalt2)) == 0);
         CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbderalt3, sizeof(sigbderalt3)) == 0);
@@ -321,7 +301,7 @@ void test_ecdsa_recovery_edge_cases(void) {
         sigbderalt4[7] = 1;
         CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbderalt4, sizeof(sigbderalt4)) == 1);
         CHECK(secp256k1_ecdsa_verify(ctx, &sig, msg32, &pubkeyb) == 0);
-        /* Damage signature. */
+
         sigbder[7]++;
         CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbder, sizeof(sigbder)) == 1);
         CHECK(secp256k1_ecdsa_verify(ctx, &sig, msg32, &pubkeyb) == 0);
@@ -331,7 +311,7 @@ void test_ecdsa_recovery_edge_cases(void) {
         for(i = 0; i < 8; i++) {
             int c;
             unsigned char orig = sigbder[i];
-            /*Try every single-byte change.*/
+
             for (c = 0; c < 256; c++) {
                 if (c == orig ) {
                     continue;
@@ -343,9 +323,8 @@ void test_ecdsa_recovery_edge_cases(void) {
         }
     }
 
-    /* Test r/s equal to zero */
     {
-        /* (1,1) encoded in DER. */
+
         unsigned char sigcder[8] = {0x30, 0x06, 0x02, 0x01, 0x01, 0x02, 0x01, 0x01};
         unsigned char sigc64[64] = {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,

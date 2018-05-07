@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package trie
 
@@ -22,12 +7,9 @@ import (
 	"github.com/epvchain/go-epvchain/public"
 )
 
-                                                                                    
-                                                                                  
-                                                         
 type MissingNodeError struct {
-	NodeHash common.Hash                            
-	Path     []byte                                             
+	NodeHash common.Hash 
+	Path     []byte      
 }
 
 func (err *MissingNodeError) Error() string {

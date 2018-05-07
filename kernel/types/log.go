@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package types
 
@@ -25,34 +10,26 @@ import (
 	"github.com/epvchain/go-epvchain/process"
 )
 
-                                                                                   
+//go:generate gencodec -type Log -field-override logMarshaling -out gen_log_json.go
 
-                                                                                        
-                              
 type Log struct {
-	                    
-	                                                   
+
 	Address common.Address `json:"address" gencodec:"required"`
-	                                           
+
 	Topics []common.Hash `json:"topics" gencodec:"required"`
-	                                                
+
 	Data []byte `json:"data" gencodec:"required"`
 
-	                                                         
-	                                
-	                                              
 	BlockNumber uint64 `json:"blockNumber"`
-	                          
+
 	TxHash common.Hash `json:"transactionHash" gencodec:"required"`
-	                                        
+
 	TxIndex uint `json:"transactionIndex" gencodec:"required"`
-	                                                          
+
 	BlockHash common.Hash `json:"blockHash"`
-	                                  
+
 	Index uint `json:"logIndex" gencodec:"required"`
 
-	                                                                                    
-	                                                                                   
 	Removed bool `json:"removed"`
 }
 
@@ -80,12 +57,10 @@ type rlpStorageLog struct {
 	Index       uint
 }
 
-                                    
 func (l *Log) EncodeRLP(w io.Writer) error {
 	return rlp.Encode(w, rlpLog{Address: l.Address, Topics: l.Topics, Data: l.Data})
 }
 
-                                    
 func (l *Log) DecodeRLP(s *rlp.Stream) error {
 	var dec rlpLog
 	err := s.Decode(&dec)
@@ -99,11 +74,8 @@ func (l *Log) String() string {
 	return fmt.Sprintf(`log: %x %x %x %x %d %x %d`, l.Address, l.Topics, l.Data, l.TxHash, l.TxIndex, l.BlockHash, l.Index)
 }
 
-                                                                                         
-                                        
 type LogForStorage Log
 
-                                    
 func (l *LogForStorage) EncodeRLP(w io.Writer) error {
 	return rlp.Encode(w, rlpStorageLog{
 		Address:     l.Address,
@@ -117,7 +89,6 @@ func (l *LogForStorage) EncodeRLP(w io.Writer) error {
 	})
 }
 
-                                    
 func (l *LogForStorage) DecodeRLP(s *rlp.Stream) error {
 	var dec rlpStorageLog
 	err := s.Decode(&dec)

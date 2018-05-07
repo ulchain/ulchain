@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package bloombits
 
@@ -22,20 +7,14 @@ import (
 	"github.com/epvchain/go-epvchain/kernel/types"
 )
 
-                                                                                
-                                                                                 
 var errSectionOutOfBounds = errors.New("section out of bounds")
 
-                                                                                 
-                                    
 type Generator struct {
-	blooms   [types.BloomBitLength][]byte                                       
-	sections uint                                                                
-	nextBit  uint                                                               
+	blooms   [types.BloomBitLength][]byte 
+	sections uint                         
+	nextBit  uint                         
 }
 
-                                                                             
-                               
 func NewGenerator(sections uint) (*Generator, error) {
 	if sections%8 != 0 {
 		return nil, errors.New("section count not multiple of 8")
@@ -47,17 +26,15 @@ func NewGenerator(sections uint) (*Generator, error) {
 	return b, nil
 }
 
-                                                                             
-                         
 func (b *Generator) AddBloom(index uint, bloom types.Bloom) error {
-	                                                                  
+
 	if b.nextBit >= b.sections {
 		return errSectionOutOfBounds
 	}
 	if b.nextBit != index {
 		return errors.New("bloom filter with unexpected index")
 	}
-	                                                  
+
 	byteIndex := b.nextBit / 8
 	bitMask := byte(1) << byte(7-b.nextBit%8)
 
@@ -74,8 +51,6 @@ func (b *Generator) AddBloom(index uint, bloom types.Bloom) error {
 	return nil
 }
 
-                                                                           
-                          
 func (b *Generator) Bitset(idx uint) ([]byte, error) {
 	if b.nextBit != b.sections {
 		return nil, errors.New("bloom not fully generated yet")

@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package epvdb
 
@@ -23,7 +8,6 @@ import (
 	"github.com/epvchain/go-epvchain/public"
 )
 
-                                                                                                 
 type MemDatabase struct {
 	db   map[string][]byte
 	lock sync.RWMutex

@@ -1,20 +1,4 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
-                                                                                
 package metrics
 
 import (
@@ -28,16 +12,11 @@ import (
 	"github.com/rcrowley/go-metrics/exp"
 )
 
-                                                                                
 const MetricsEnabledFlag = "metrics"
 const DashboardEnabledFlag = "dashboard"
 
-                                                               
 var Enabled = false
 
-                                                                                
-                                                                                  
-                                                            
 func init() {
 	for _, arg := range os.Args {
 		if flag := strings.TrimLeft(arg, "-"); flag == MetricsEnabledFlag || flag == DashboardEnabledFlag {
@@ -48,8 +27,6 @@ func init() {
 	exp.Exp(metrics.DefaultRegistry)
 }
 
-                                                                                     
-                       
 func NewCounter(name string) metrics.Counter {
 	if !Enabled {
 		return new(metrics.NilCounter)
@@ -57,8 +34,6 @@ func NewCounter(name string) metrics.Counter {
 	return metrics.GetOrRegisterCounter(name, metrics.DefaultRegistry)
 }
 
-                                                                                 
-                       
 func NewMeter(name string) metrics.Meter {
 	if !Enabled {
 		return new(metrics.NilMeter)
@@ -66,8 +41,6 @@ func NewMeter(name string) metrics.Meter {
 	return metrics.GetOrRegisterMeter(name, metrics.DefaultRegistry)
 }
 
-                                                                                 
-                       
 func NewTimer(name string) metrics.Timer {
 	if !Enabled {
 		return new(metrics.NilTimer)
@@ -75,21 +48,19 @@ func NewTimer(name string) metrics.Timer {
 	return metrics.GetOrRegisterTimer(name, metrics.DefaultRegistry)
 }
 
-                                                                                
-           
 func CollectProcessMetrics(refresh time.Duration) {
-	                                                  
+
 	if !Enabled {
 		return
 	}
-	                                     
+
 	memstats := make([]*runtime.MemStats, 2)
 	diskstats := make([]*DiskStats, 2)
 	for i := 0; i < len(memstats); i++ {
 		memstats[i] = new(runtime.MemStats)
 		diskstats[i] = new(DiskStats)
 	}
-	                                        
+
 	memAllocs := metrics.GetOrRegisterMeter("system/memory/allocs", metrics.DefaultRegistry)
 	memFrees := metrics.GetOrRegisterMeter("system/memory/frees", metrics.DefaultRegistry)
 	memInuse := metrics.GetOrRegisterMeter("system/memory/inuse", metrics.DefaultRegistry)
@@ -104,7 +75,7 @@ func CollectProcessMetrics(refresh time.Duration) {
 	} else {
 		log.Debug("Failed to read disk metrics", "err", err)
 	}
-	                                                              
+
 	for i := 1; ; i++ {
 		runtime.ReadMemStats(memstats[i%2])
 		memAllocs.Mark(int64(memstats[i%2].Mallocs - memstats[(i-1)%2].Mallocs))

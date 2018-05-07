@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package core
 
@@ -27,58 +12,45 @@ import (
 	"github.com/epvchain/go-epvchain/process"
 )
 
-                                                                              
-                                                        
 var errNoActiveJournal = errors.New("no active journal")
 
-                                                                            
-                                                                             
-                                                                           
-                         
 type devNull struct{}
 
 func (*devNull) Write(p []byte) (n int, err error) { return len(p), nil }
 func (*devNull) Close() error                      { return nil }
 
-                                                                              
-                                                                            
 type txJournal struct {
-	path   string                                                        
-	writer io.WriteCloser                                                
+	path   string         
+	writer io.WriteCloser 
 }
 
-                                                    
 func newTxJournal(path string) *txJournal {
 	return &txJournal{
 		path: path,
 	}
 }
 
-                                                                              
-                      
 func (journal *txJournal) load(add func(*types.Transaction) error) error {
-	                                                            
+
 	if _, err := os.Stat(journal.path); os.IsNotExist(err) {
 		return nil
 	}
-	                                                     
+
 	input, err := os.Open(journal.path)
 	if err != nil {
 		return err
 	}
 	defer input.Close()
 
-	                                                                       
 	journal.writer = new(devNull)
 	defer func() { journal.writer = nil }()
 
-	                                                         
 	stream := rlp.NewStream(input, 0)
 	total, dropped := 0, 0
 
 	var failure error
 	for {
-		                                                    
+
 		tx := new(types.Transaction)
 		if err = stream.Decode(tx); err != nil {
 			if err != io.EOF {
@@ -86,7 +58,7 @@ func (journal *txJournal) load(add func(*types.Transaction) error) error {
 			}
 			break
 		}
-		                                                                    
+
 		total++
 		if err = add(tx); err != nil {
 			log.Debug("Failed to add journaled transaction", "err", err)
@@ -99,7 +71,6 @@ func (journal *txJournal) load(add func(*types.Transaction) error) error {
 	return failure
 }
 
-                                                                   
 func (journal *txJournal) insert(tx *types.Transaction) error {
 	if journal.writer == nil {
 		return errNoActiveJournal
@@ -110,17 +81,15 @@ func (journal *txJournal) insert(tx *types.Transaction) error {
 	return nil
 }
 
-                                                                              
-                        
 func (journal *txJournal) rotate(all map[common.Address]types.Transactions) error {
-	                                             
+
 	if journal.writer != nil {
 		if err := journal.writer.Close(); err != nil {
 			return err
 		}
 		journal.writer = nil
 	}
-	                                                               
+
 	replacement, err := os.OpenFile(journal.path+".new", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		return err
@@ -137,7 +106,6 @@ func (journal *txJournal) rotate(all map[common.Address]types.Transactions) erro
 	}
 	replacement.Close()
 
-	                                                        
 	if err = os.Rename(journal.path+".new", journal.path); err != nil {
 		return err
 	}
@@ -151,7 +119,6 @@ func (journal *txJournal) rotate(all map[common.Address]types.Transactions) erro
 	return nil
 }
 
-                                                                              
 func (journal *txJournal) close() error {
 	var err error
 

@@ -1,38 +1,5 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package trie
-
-                                                        
-  
-                                                                                   
-                               
-  
-                                                                                     
-                                                                                     
-                                                                                     
-                        
-  
-                                                                                    
-                                                                                        
-                                                                                      
-                                                                                         
-                                                                                          
-                                                                                        
-                                                                               
 
 func hexToCompact(hex []byte) []byte {
 	terminator := byte(0)
@@ -41,10 +8,10 @@ func hexToCompact(hex []byte) []byte {
 		hex = hex[:len(hex)-1]
 	}
 	buf := make([]byte, len(hex)/2+1)
-	buf[0] = terminator << 5                 
+	buf[0] = terminator << 5 
 	if len(hex)&1 == 1 {
-		buf[0] |= 1 << 4            
-		buf[0] |= hex[0]                                               
+		buf[0] |= 1 << 4 
+		buf[0] |= hex[0] 
 		hex = hex[1:]
 	}
 	decodeNibbles(hex, buf[1:])
@@ -54,11 +21,11 @@ func hexToCompact(hex []byte) []byte {
 func compactToHex(compact []byte) []byte {
 	base := keybytesToHex(compact)
 	base = base[:len(base)-1]
-	                        
+
 	if base[0] >= 2 {
 		base = append(base, 16)
 	}
-	                 
+
 	chop := 2 - base[0]&1
 	return base[chop:]
 }
@@ -74,8 +41,6 @@ func keybytesToHex(str []byte) []byte {
 	return nibbles
 }
 
-                                                  
-                                                 
 func hexToKeybytes(hex []byte) []byte {
 	if hasTerm(hex) {
 		hex = hex[:len(hex)-1]
@@ -94,7 +59,6 @@ func decodeNibbles(nibbles []byte, bytes []byte) {
 	}
 }
 
-                                                                
 func prefixLen(a, b []byte) int {
 	var i, length = 0, len(a)
 	if len(b) < length {
@@ -108,7 +72,6 @@ func prefixLen(a, b []byte) int {
 	return i
 }
 
-                                                             
 func hasTerm(s []byte) bool {
 	return len(s) > 0 && s[len(s)-1] == 16
 }

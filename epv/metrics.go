@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package epv
 
@@ -56,15 +41,11 @@ var (
 	miscOutTrafficMeter       = metrics.NewMeter("epv/misc/out/traffic")
 )
 
-                                                                           
-                                                                            
 type meteredMsgReadWriter struct {
-	p2p.MsgReadWriter                                       
-	version           int                                             
+	p2p.MsgReadWriter     
+	version           int 
 }
 
-                                                                              
-                                                                         
 func newMeteredMsgWriter(rw p2p.MsgReadWriter) p2p.MsgReadWriter {
 	if !metrics.Enabled {
 		return rw
@@ -72,19 +53,17 @@ func newMeteredMsgWriter(rw p2p.MsgReadWriter) p2p.MsgReadWriter {
 	return &meteredMsgReadWriter{MsgReadWriter: rw}
 }
 
-                                                                            
-                                                                          
 func (rw *meteredMsgReadWriter) Init(version int) {
 	rw.version = version
 }
 
 func (rw *meteredMsgReadWriter) ReadMsg() (p2p.Msg, error) {
-	                                                         
+
 	msg, err := rw.MsgReadWriter.ReadMsg()
 	if err != nil {
 		return msg, err
 	}
-	                               
+
 	packets, traffic := miscInPacketsMeter, miscInTrafficMeter
 	switch {
 	case msg.Code == BlockHeadersMsg:
@@ -111,7 +90,7 @@ func (rw *meteredMsgReadWriter) ReadMsg() (p2p.Msg, error) {
 }
 
 func (rw *meteredMsgReadWriter) WriteMsg(msg p2p.Msg) error {
-	                               
+
 	packets, traffic := miscOutPacketsMeter, miscOutTrafficMeter
 	switch {
 	case msg.Code == BlockHeadersMsg:
@@ -134,6 +113,5 @@ func (rw *meteredMsgReadWriter) WriteMsg(msg p2p.Msg) error {
 	packets.Mark(1)
 	traffic.Mark(int64(msg.Size))
 
-	                                   
 	return rw.MsgReadWriter.WriteMsg(msg)
 }

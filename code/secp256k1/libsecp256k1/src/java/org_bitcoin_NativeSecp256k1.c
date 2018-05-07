@@ -6,7 +6,6 @@
 #include "include/secp256k1_ecdh.h"
 #include "include/secp256k1_recovery.h"
 
-
 SECP256K1_API jlong JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1ctx_1clone
   (JNIEnv* env, jclass classObject, jlong ctx_l)
 {
@@ -239,7 +238,7 @@ SECP256K1_API jobjectArray JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1p
   (JNIEnv* env, jclass classObject, jobject byteBufferObject, jlong ctx_l, jint publen)
 {
   secp256k1_context *ctx = (secp256k1_context*)(uintptr_t)ctx_l;
-/*  secp256k1_pubkey* pubkey = (secp256k1_pubkey*) (*env)->GetDirectBufferAddress(env, byteBufferObject);*/
+
   unsigned char* pkey = (*env)->GetDirectBufferAddress(env, byteBufferObject);
   const unsigned char* tweak = (unsigned char*) (pkey + publen);
 

@@ -1,18 +1,3 @@
-                                         
-                                                
-  
-                                                                                  
-                                                                              
-                                                                    
-                                      
-  
-                                                                             
-                                                                 
-                                                               
-                                                      
-  
-                                                                           
-                                                                                  
 
 package bloombits
 
@@ -30,11 +15,8 @@ import (
 	"github.com/epvchain/go-epvchain/code"
 )
 
-                                                                              
-               
 type bloomIndexes [3]uint
 
-                                                                                    
 func calcBloomIndexes(b []byte) bloomIndexes {
 	b = crypto.Keccak256(b)
 
@@ -45,21 +27,11 @@ func calcBloomIndexes(b []byte) bloomIndexes {
 	return idxs
 }
 
-                                                                               
-                                                                              
-                                                                               
-                                                    
 type partialMatches struct {
 	section uint64
 	bitset  []byte
 }
 
-                                                                            
-                                                                                 
-                                                                                
-  
-                                                                                  
-                                                                
 type Retrieval struct {
 	Bit      uint
 	Sections []uint64
@@ -69,28 +41,22 @@ type Retrieval struct {
 	Error   error
 }
 
-                                                                               
-                                                                              
-                                      
 type Matcher struct {
-	sectionSize uint64                                         
+	sectionSize uint64 
 
-	filters    [][]bloomIndexes                                        
-	schedulers map[uint]*scheduler                                               
+	filters    [][]bloomIndexes    
+	schedulers map[uint]*scheduler 
 
-	retrievers chan chan uint                                                         
-	counters   chan chan uint                                                            
-	retrievals chan chan *Retrieval                                                    
-	deliveries chan *Retrieval                                                                 
+	retrievers chan chan uint       
+	counters   chan chan uint       
+	retrievals chan chan *Retrieval 
+	deliveries chan *Retrieval      
 
-	running uint32                                                
+	running uint32 
 }
 
-                                                                               
-                                                                              
-                                                                           
 func NewMatcher(sectionSize uint64, filters [][][]byte) *Matcher {
-	                              
+
 	m := &Matcher{
 		sectionSize: sectionSize,
 		schedulers:  make(map[uint]*scheduler),
@@ -99,11 +65,11 @@ func NewMatcher(sectionSize uint64, filters [][][]byte) *Matcher {
 		retrievals:  make(chan chan *Retrieval),
 		deliveries:  make(chan *Retrieval),
 	}
-	                                                                     
+
 	m.filters = nil
 
 	for _, filter := range filters {
-		                                                                           
+
 		if len(filter) == 0 {
 			continue
 		}
@@ -115,12 +81,12 @@ func NewMatcher(sectionSize uint64, filters [][][]byte) *Matcher {
 			}
 			bloomBits[i] = calcBloomIndexes(clause)
 		}
-		                                                        
+
 		if bloomBits != nil {
 			m.filters = append(m.filters, bloomBits)
 		}
 	}
-	                                                                     
+
 	for _, bloomIndexLists := range m.filters {
 		for _, bloomIndexList := range bloomIndexLists {
 			for _, bloomIndex := range bloomIndexList {
@@ -131,9 +97,6 @@ func NewMatcher(sectionSize uint64, filters [][][]byte) *Matcher {
 	return m
 }
 
-                                                                                
-                                                                               
-                                  
 func (m *Matcher) addScheduler(idx uint) {
 	if _, ok := m.schedulers[idx]; ok {
 		return
@@ -141,17 +104,13 @@ func (m *Matcher) addScheduler(idx uint) {
 	m.schedulers[idx] = newScheduler(idx)
 }
 
-                                                                             
-                                                                                 
-                     
 func (m *Matcher) Start(ctx context.Context, begin, end uint64, results chan uint64) (*MatcherSession, error) {
-	                                                   
+
 	if atomic.SwapUint32(&m.running, 1) == 1 {
 		return nil, errors.New("matcher already running")
 	}
 	defer atomic.StoreUint32(&m.running, 0)
 
-	                                
 	session := &MatcherSession{
 		matcher: m,
 		quit:    make(chan struct{}),
@@ -163,7 +122,6 @@ func (m *Matcher) Start(ctx context.Context, begin, end uint64, results chan uin
 	}
 	sink := m.run(begin, end, cap(results), session)
 
-	                                                               
 	session.pend.Add(1)
 	go func() {
 		defer session.pend.Done()
@@ -175,11 +133,11 @@ func (m *Matcher) Start(ctx context.Context, begin, end uint64, results chan uin
 				return
 
 			case res, ok := <-sink:
-				                         
+
 				if !ok {
 					return
 				}
-				                                                     
+
 				sectionStart := res.section * m.sectionSize
 
 				first := sectionStart
@@ -190,9 +148,9 @@ func (m *Matcher) Start(ctx context.Context, begin, end uint64, results chan uin
 				if end < last {
 					last = end
 				}
-				                                                                          
+
 				for i := first; i <= last; i++ {
-					                                                                                             
+
 					next := res.bitset[(i-sectionStart)/8]
 					if next == 0 {
 						if i%8 == 0 {
@@ -200,7 +158,7 @@ func (m *Matcher) Start(ctx context.Context, begin, end uint64, results chan uin
 						}
 						continue
 					}
-					                                             
+
 					if bit := 7 - i%8; next&(1<<bit) != 0 {
 						select {
 						case <-session.quit:
@@ -215,15 +173,8 @@ func (m *Matcher) Start(ctx context.Context, begin, end uint64, results chan uin
 	return session, nil
 }
 
-                                                                             
-                                                                                
-                                                                             
-                                                                                
-  
-                                                                                
-                                                                  
 func (m *Matcher) run(begin, end uint64, buffer int, session *MatcherSession) chan *partialMatches {
-	                                                          
+
 	source := make(chan *partialMatches, buffer)
 
 	session.pend.Add(1)
@@ -239,26 +190,22 @@ func (m *Matcher) run(begin, end uint64, buffer int, session *MatcherSession) ch
 			}
 		}
 	}()
-	                                                
+
 	next := source
 	dist := make(chan *request, buffer)
 
 	for _, bloom := range m.filters {
 		next = m.subMatch(next, dist, bloom, session)
 	}
-	                                 
+
 	session.pend.Add(1)
 	go m.distributor(dist, session)
 
 	return next
 }
 
-                                                                                                                
-                                                                                                       
-                                                                                                                              
-                                                                 
 func (m *Matcher) subMatch(source chan *partialMatches, dist chan *request, bloom []bloomIndexes, session *MatcherSession) chan *partialMatches {
-	                                                                            
+
 	sectionSources := make([][3]chan uint64, len(bloom))
 	sectionSinks := make([][3]chan []byte, len(bloom))
 	for i, bits := range bloom {
@@ -270,12 +217,12 @@ func (m *Matcher) subMatch(source chan *partialMatches, dist chan *request, bloo
 		}
 	}
 
-	process := make(chan *partialMatches, cap(source))                                                                            
+	process := make(chan *partialMatches, cap(source)) 
 	results := make(chan *partialMatches, cap(source))
 
 	session.pend.Add(2)
 	go func() {
-		                                                            
+
 		defer session.pend.Done()
 		defer close(process)
 
@@ -286,18 +233,18 @@ func (m *Matcher) subMatch(source chan *partialMatches, dist chan *request, bloo
 				}
 			}
 		}()
-		                                                                              
+
 		for {
 			select {
 			case <-session.quit:
 				return
 
 			case subres, ok := <-source:
-				                                   
+
 				if !ok {
 					return
 				}
-				                                                    
+
 				for _, bloomSources := range sectionSources {
 					for _, bitSource := range bloomSources {
 						select {
@@ -307,7 +254,7 @@ func (m *Matcher) subMatch(source chan *partialMatches, dist chan *request, bloo
 						}
 					}
 				}
-				                                                               
+
 				select {
 				case <-session.quit:
 					return
@@ -318,22 +265,21 @@ func (m *Matcher) subMatch(source chan *partialMatches, dist chan *request, bloo
 	}()
 
 	go func() {
-		                                                               
+
 		defer session.pend.Done()
 		defer close(results)
 
-		                                                                  
 		for {
 			select {
 			case <-session.quit:
 				return
 
 			case subres, ok := <-process:
-				                                        
+
 				if !ok {
 					return
 				}
-				                                                     
+
 				var orVector []byte
 				for _, bloomSinks := range sectionSinks {
 					var andVector []byte
@@ -377,30 +323,26 @@ func (m *Matcher) subMatch(source chan *partialMatches, dist chan *request, bloo
 	return results
 }
 
-                                                                               
-                                                                                
 func (m *Matcher) distributor(dist chan *request, session *MatcherSession) {
 	defer session.pend.Done()
 
 	var (
-		requests   = make(map[uint][]uint64)                                                               
-		unallocs   = make(map[uint]struct{})                                                                 
-		retrievers chan chan uint                                                                       
+		requests   = make(map[uint][]uint64) 
+		unallocs   = make(map[uint]struct{}) 
+		retrievers chan chan uint            
 	)
 	var (
-		allocs   int                                                                                
-		shutdown = session.quit                                                                       
+		allocs   int            
+		shutdown = session.quit 
 	)
 
-	                                                                          
-	                                                                    
 	assign := func(bit uint) {
 		select {
 		case fetcher := <-m.retrievers:
 			allocs++
 			fetcher <- bit
 		default:
-			                                                     
+
 			retrievers = m.retrievers
 			unallocs[bit] = struct{}{}
 		}
@@ -409,36 +351,35 @@ func (m *Matcher) distributor(dist chan *request, session *MatcherSession) {
 	for {
 		select {
 		case <-shutdown:
-			                                                                            
+
 			if allocs == 0 {
 				return
 			}
 			shutdown = nil
 
 		case <-session.kill:
-			                                                        
+
 			return
 
 		case req := <-dist:
-			                                                                          
+
 			queue := requests[req.bit]
 			index := sort.Search(len(queue), func(i int) bool { return queue[i] >= req.section })
 			requests[req.bit] = append(queue[:index], append([]uint64{req.section}, queue[index:]...)...)
 
-			                                                                   
 			if len(queue) == 0 {
 				assign(req.bit)
 			}
 
 		case fetcher := <-retrievers:
-			                                                                  
+
 			bit, best := uint(0), uint64(math.MaxUint64)
 			for idx := range unallocs {
 				if requests[idx][0] < best {
 					bit, best = idx, requests[idx][0]
 				}
 			}
-			                                                                                
+
 			delete(unallocs, bit)
 			if len(unallocs) == 0 {
 				retrievers = nil
@@ -447,11 +388,11 @@ func (m *Matcher) distributor(dist chan *request, session *MatcherSession) {
 			fetcher <- bit
 
 		case fetcher := <-m.counters:
-			                                                         
+
 			fetcher <- uint(len(requests[<-fetcher]))
 
 		case fetcher := <-m.retrievals:
-			                                                    
+
 			task := <-fetcher
 			if want := len(task.Sections); want >= len(requests[task.Bit]) {
 				task.Sections = requests[task.Bit]
@@ -462,14 +403,12 @@ func (m *Matcher) distributor(dist chan *request, session *MatcherSession) {
 			}
 			fetcher <- task
 
-			                                                                  
 			if len(requests[task.Bit]) > 0 {
 				assign(task.Bit)
 			}
 
 		case result := <-m.deliveries:
-			                                                                           
-			                        
+
 			var (
 				sections = make([]uint64, 0, len(result.Sections))
 				bitsets  = make([][]byte, 0, len(result.Bitsets))
@@ -486,7 +425,6 @@ func (m *Matcher) distributor(dist chan *request, session *MatcherSession) {
 			m.schedulers[result.Bit].deliver(sections, bitsets)
 			allocs--
 
-			                                                                  
 			if len(missing) > 0 {
 				queue := requests[result.Bit]
 				for _, section := range missing {
@@ -499,7 +437,7 @@ func (m *Matcher) distributor(dist chan *request, session *MatcherSession) {
 					assign(result.Bit)
 				}
 			}
-			                                                      
+
 			if allocs == 0 && shutdown == nil {
 				return
 			}
@@ -507,34 +445,28 @@ func (m *Matcher) distributor(dist chan *request, session *MatcherSession) {
 	}
 }
 
-                                                                             
-                                               
 type MatcherSession struct {
 	matcher *Matcher
 
-	closer sync.Once                                                     
-	quit   chan struct{}                                                
-	kill   chan struct{}                                                       
+	closer sync.Once     
+	quit   chan struct{} 
+	kill   chan struct{} 
 
-	ctx context.Context                                                       
-	err atomic.Value                                                                 
+	ctx context.Context 
+	err atomic.Value    
 
 	pend sync.WaitGroup
 }
 
-                                                                               
-                                                                                
-                                                             
 func (s *MatcherSession) Close() {
 	s.closer.Do(func() {
-		                                                              
+
 		close(s.quit)
 		time.AfterFunc(time.Second, func() { close(s.kill) })
 		s.pend.Wait()
 	})
 }
 
-                                                                     
 func (s *MatcherSession) Error() error {
 	if err := s.err.Load(); err != nil {
 		return err.(error)
@@ -542,9 +474,6 @@ func (s *MatcherSession) Error() error {
 	return nil
 }
 
-                                                                                  
-                                                                                 
-                                                    
 func (s *MatcherSession) AllocateRetrieval() (uint, bool) {
 	fetcher := make(chan uint)
 
@@ -557,8 +486,6 @@ func (s *MatcherSession) AllocateRetrieval() (uint, bool) {
 	}
 }
 
-                                                                                
-                             
 func (s *MatcherSession) PendingSections(bit uint) int {
 	fetcher := make(chan uint)
 
@@ -571,8 +498,6 @@ func (s *MatcherSession) PendingSections(bit uint) int {
 	}
 }
 
-                                                                              
-                             
 func (s *MatcherSession) AllocateSections(bit uint, count int) []uint64 {
 	fetcher := make(chan *Retrieval)
 
@@ -589,8 +514,6 @@ func (s *MatcherSession) AllocateSections(bit uint, count int) []uint64 {
 	}
 }
 
-                                                                               
-                                                         
 func (s *MatcherSession) DeliverSections(bit uint, sections []uint64, bitsets [][]byte) {
 	select {
 	case <-s.kill:
@@ -599,44 +522,38 @@ func (s *MatcherSession) DeliverSections(bit uint, sections []uint64, bitsets []
 	}
 }
 
-                                                                                 
-                                                                            
-  
-                                                                                 
-                                                                                 
-                                
 func (s *MatcherSession) Multiplex(batch int, wait time.Duration, mux chan chan *Retrieval) {
 	for {
-		                                                                          
+
 		bit, ok := s.AllocateRetrieval()
 		if !ok {
 			return
 		}
-		                                                               
+
 		if s.PendingSections(bit) < batch {
 			select {
 			case <-s.quit:
-				                                                            
+
 				s.AllocateSections(bit, 0)
 				s.DeliverSections(bit, []uint64{}, [][]byte{})
 				return
 
 			case <-time.After(wait):
-				                                            
+
 			}
 		}
-		                                                          
+
 		sections := s.AllocateSections(bit, batch)
 		request := make(chan *Retrieval)
 
 		select {
 		case <-s.quit:
-			                                                            
+
 			s.DeliverSections(bit, sections, make([][]byte, len(sections)))
 			return
 
 		case mux <- request:
-			                                                                  
+
 			request <- &Retrieval{Bit: bit, Sections: sections, Context: s.ctx}
 
 			result := <-request
