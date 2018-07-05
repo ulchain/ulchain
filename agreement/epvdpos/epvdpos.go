@@ -416,7 +416,7 @@ func (c *DPos) Prepare(chain consensus.ChainReader, header *types.Header) error 
 	if parent == nil {
 		return consensus.ErrUnknownAncestor
 	}
-	header.TimeMS = new(big.Int).Add(parent.Time, new(big.Int).SetUint64(c.config.Period))
+	header.TimeMS = new(big.Int).Add(parent.TimeMS, new(big.Int).SetUint64(c.config.Period))
 	if header.TimeMS.Int64() < time.Now().UnixNano()/1000000 {
 		header.TimeMS = big.NewInt(time.Now().UnixNano()/1000000)
 	}

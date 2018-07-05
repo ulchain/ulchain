@@ -47,17 +47,17 @@ type blockChain interface {
 }
 
 type Service struct {
-	server *p2p.Server        
-	epv    *epv.EPVchain      
-	les    *les.LightEPVchain 
-	engine consensus.Engine   
+	server *p2p.Server
+	epv    *epv.EPVchain
+	les    *les.LightEPVchain
+	engine consensus.Engine
 
-	node string 
-	pass string 
-	host string 
+	node string
+	pass string
+	host string
 
-	pongCh chan struct{} 
-	histCh chan []uint64 
+	pongCh chan struct{}
+	histCh chan []uint64
 }
 
 func New(url string, epvServ *epv.EPVchain, lesServ *les.LightEPVchain) (*Service, error) {
@@ -166,7 +166,7 @@ func (s *Service) loop() {
 		path := fmt.Sprintf("%s/api", s.host)
 		urls := []string{path}
 
-		if !strings.Contains(path, "://") { 
+		if !strings.Contains(path, "://") {
 			urls = []string{"wss://" + path, "ws://" + path}
 		}
 
@@ -278,7 +278,7 @@ func (s *Service) readLoop(conn *websocket.Conn) {
 			if !ok {
 				log.Warn("Invalid stats history request", "msg", msg["emit"][1])
 				s.histCh <- nil
-				continue 
+				continue
 			}
 			list, ok := request["list"].([]interface{})
 			if !ok {
@@ -500,7 +500,7 @@ func (s *Service) assembleBlockStats(block *types.Block) *blockStats {
 		Number:     header.Number,
 		Hash:       header.Hash(),
 		ParentHash: header.ParentHash,
-		Timestamp:  header.Time,
+		Timestamp:  header.TimeMS,
 		Miner:      author,
 		GasUsed:    header.GasUsed,
 		GasLimit:   header.GasLimit,

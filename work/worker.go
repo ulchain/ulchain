@@ -350,12 +350,12 @@ func (self *worker) commitNewWork() {
 	tstart := time.Now()
 	parent := self.chain.CurrentBlock()
 
-	tstamp := tstart.Unix()
-	if parent.Time().Cmp(new(big.Int).SetInt64(tstamp)) >= 0 {
-		tstamp = parent.Time().Int64() + 1
+	tstamp := tstart.UnixNano()/1000000
+	if parent.TimeMS().Cmp(new(big.Int).SetInt64(tstamp)) >= 0 {
+		tstamp = parent.TimeMS().Int64() + 1
 	}
-	if now := time.Now().Unix(); tstamp > now+1 {
-		wait := time.Duration(tstamp-now) * time.Second
+	if now := time.Now().UnixNano()/1000000; tstamp > now+1 {
+		wait := time.Duration(tstamp-now) * time.Millisecond
 		log.Info("Mining too far in the future", "wait", common.PrettyDuration(wait))
 		time.Sleep(wait)
 	}
@@ -366,7 +366,7 @@ func (self *worker) commitNewWork() {
 		Number:     num.Add(num, common.Big1),
 		GasLimit:   core.CalcGasLimit(parent),
 		Extra:      self.extra,
-		Time:       big.NewInt(tstamp),
+		TimeMS:       big.NewInt(tstamp),
 	}
 	if atomic.LoadInt32(&self.mining) == 1 {
 		header.Coinbase = self.coinbase
